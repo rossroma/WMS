@@ -1,19 +1,19 @@
 import request from '@/utils/request'
 
+// 获取分类树
+export function getCategoryTree() {
+  return request({
+    url: '/categories/tree',
+    method: 'get'
+  })
+}
+
 // 获取分类列表
 export function getCategoryList(params) {
   return request({
     url: '/categories',
     method: 'get',
     params
-  })
-}
-
-// 获取分类详情
-export function getCategoryDetail(id) {
-  return request({
-    url: '/categories/' + id,
-    method: 'get'
   })
 }
 
@@ -41,4 +41,13 @@ export function deleteCategory(id) {
     url: '/categories/' + id,
     method: 'delete'
   })
-} 
+}
+
+// 批量更新分类排序
+export function batchUpdateSort(data) {
+  return request({
+    url: '/categories/batch-sort',
+    method: 'post',
+    data
+  })
+}

@@ -1,65 +1,178 @@
 const Category = require('../models/Category');
+const { AppError } = require('../middleware/errorHandler');
+const { Op } = require('sequelize');
+const sequelize = require('../config/database');
+
+// 获取分类树
+exports.getCategoryTree = async (req, res, next) => {
+  try {
+    const categories = await Category.findAll({
+      order: [
+        ['sort', 'ASC'],
+        ['id', 'ASC']
+      ]
+    });
+
+    // 构建分类树
+    const buildTree = (items, parentId = null) => {
+      return items
+        .filter(item => item.parentId === parentId)
+        .map(item => ({
+          id: item.id,
+          name: item.name,
+          parentId: item.parentId,
+          sort: item.sort,
+          children: buildTree(items, item.id)
+        }));
+    };
+
+    const tree = buildTree(categories);
+    res.json({ code: 0, data: tree });
+  } catch (error) {
+    next(new AppError('获取分类失败', 500));
+  }
+};
 
 // 创建分类
-exports.createCategory = async (req, res) => {
+exports.createCategory = async (req, res, next) => {
   try {
-    const category = await Category.create(req.body);
+    const { name, parentId } = req.body;
+
+    // 如果指定了父分类，检查父分类的层级
+    let level = 1;
+    if (parentId) {
+      const parentCategory = await Category.findByPk(parentId);
+      if (!parentCategory) {
+        return next(new AppError('父分类不存在', 400));
+      }
+      if (parentCategory.level >= 3) {
+        return next(new AppError('最多只能创建三级分类', 400));
+      }
+      level = parentCategory.level + 1;
+    }
+
+    // 自动计算排序值：同级分类的最大排序值 + 1
+    const maxSort = await Category.max('sort', {
+      where: {
+        parentId: parentId || null
+      }
+    });
+    const sort = (maxSort || 0) + 1;
+
+    const category = await Category.create({
+      name,
+      parentId,
+      level,
+      sort
+    });
+
     res.status(201).json(category);
   } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-// 获取所有分类
-exports.getAllCategories = async (req, res) => {
-  try {
-    const categories = await Category.findAll();
-    res.status(200).json(categories);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// 获取单个分类
-exports.getCategoryById = async (req, res) => {
-  try {
-    const category = await Category.findByPk(req.params.id);
-    if (category) {
-      res.status(200).json(category);
-    } else {
-      res.status(404).json({ error: 'Category not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('创建分类失败', 500));
   }
 };
 
 // 更新分类
-exports.updateCategory = async (req, res) => {
+exports.updateCategory = async (req, res, next) => {
   try {
-    const category = await Category.findByPk(req.params.id);
-    if (category) {
-      await category.update(req.body);
-      res.status(200).json(category);
-    } else {
-      res.status(404).json({ error: 'Category not found' });
+    const { id } = req.params;
+    const { name } = req.body;
+
+    if (!name) {
+      return next(new AppError('分类名称不能为空', 400));
     }
+
+    const category = await Category.findByPk(id);
+    if (!category) {
+      return next(new AppError('分类不存在', 404));
+    }
+
+    await category.update({ name });
+    res.json(category);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(new AppError('更新分类失败', 500));
   }
 };
 
 // 删除分类
-exports.deleteCategory = async (req, res) => {
+exports.deleteCategory = async (req, res, next) => {
   try {
-    const category = await Category.findByPk(req.params.id);
-    if (category) {
-      await category.destroy();
-      res.status(204).send();
-    } else {
-      res.status(404).json({ error: 'Category not found' });
+    const { id } = req.params;
+
+    // 检查是否有子分类
+    const hasChildren = await Category.findOne({
+      where: { parentId: id }
+    });
+
+    if (hasChildren) {
+      return next(new AppError('请先删除子分类', 400));
     }
+
+    const category = await Category.findByPk(id);
+    if (!category) {
+      return next(new AppError('分类不存在', 404));
+    }
+
+    await category.destroy();
+    res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('删除分类失败', 500));
+  }
+};
+
+// 批量更新分类排序
+exports.batchUpdateSort = async (req, res, next) => {
+  const t = await sequelize.transaction();
+  
+  try {
+    const { items } = req.body;
+    
+    if (!Array.isArray(items)) {
+      await t.rollback();
+      return next(new AppError('无效的请求数据', 400));
+    }
+
+    // 批量更新排序
+    for (const item of items) {
+      await Category.update(
+        { sort: item.sort },
+        { 
+          where: { id: item.id },
+          transaction: t
+        }
+      );
+    }
+
+    await t.commit();
+    res.json({ message: '更新成功' });
+  } catch (error) {
+    await t.rollback();
+    next(new AppError('批量更新排序失败', 500));
+  }
+};
+
+// 获取分类列表（扁平结构）
+exports.getCategoryList = async (req, res, next) => {
+  try {
+    const { keyword } = req.query;
+    
+    const where = {};
+    if (keyword) {
+      where.name = {
+        [Op.like]: `%${keyword}%`
+      };
+    }
+
+    const categories = await Category.findAll({
+      where,
+      order: [
+        ['sort', 'ASC'],
+        ['id', 'ASC']
+      ]
+    });
+
+    res.json(categories);
+  } catch (error) {
+    next(new AppError('获取分类列表失败', 500));
   }
 }; 

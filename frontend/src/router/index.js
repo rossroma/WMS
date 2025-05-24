@@ -28,6 +28,48 @@ const router = createRouter({
           meta: { title: '修改密码', requiresAuth: true }
         }
       ]
+    },
+    {
+      path: '/product',
+      component: () => import('@/layout/Index.vue'),
+      redirect: '/product/list',
+      name: 'Product',
+      meta: {
+        title: '商品管理',
+        icon: 'ShoppingCart'
+      },
+      children: [
+        {
+          path: 'list',
+          name: 'ProductList',
+          component: () => import('@/views/product/Index.vue'),
+          meta: {
+            title: '商品列表',
+            icon: 'List'
+          }
+        }
+      ]
+    },
+    {
+      path: '/supplier',
+      component: () => import('@/layout/Index.vue'),
+      redirect: '/supplier/list',
+      name: 'Supplier',
+      meta: {
+        title: '供应商管理',
+        icon: 'OfficeBuilding'
+      },
+      children: [
+        {
+          path: 'list',
+          name: 'SupplierList',
+          component: () => import('@/views/supplier/Index.vue'),
+          meta: {
+            title: '供应商列表',
+            icon: 'List'
+          }
+        }
+      ]
     }
   ]
 })
@@ -69,4 +111,4 @@ router.beforeEach(async (to, from, next) => {
   next()
 })
 
-export default router 
+export default router
