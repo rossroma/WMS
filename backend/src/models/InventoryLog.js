@@ -1,12 +1,12 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Product = require('./Product');
+const Inventory = require('./Inventory');
 
 const InventoryLog = sequelize.define('InventoryLog', {
-  productId: {
+  inventoryId: {
     type: DataTypes.INTEGER,
     references: {
-      model: Product,
+      model: Inventory,
       key: 'id'
     }
   },
@@ -29,5 +29,7 @@ const InventoryLog = sequelize.define('InventoryLog', {
     type: DataTypes.STRING
   }
 });
+
+// InventoryLog.sync({ alter: true });
 
 module.exports = InventoryLog; 

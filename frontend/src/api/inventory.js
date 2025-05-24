@@ -9,19 +9,11 @@ export function getInventoryList(params) {
   })
 }
 
-// 获取库存详情
-export function getInventoryDetail(id) {
+// 获取库存流水记录
+export function getInventoryLogs(params) {
   return request({
-    url: '/inventory/' + id,
-    method: 'get'
-  })
-}
-
-// 更新库存
-export function updateInventory(id, data) {
-  return request({
-    url: '/inventory/' + id,
-    method: 'put',
-    data
+    url: '/inventory/logs',
+    method: 'get',
+    params
   })
 } 

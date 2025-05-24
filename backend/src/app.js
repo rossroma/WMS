@@ -11,6 +11,10 @@ const config = require('./config/config');
 const logger = require('./services/loggerService');
 const { errorHandler } = require('./middleware/errorHandler');
 const sequelize = require('./config/database');
+
+// 导入模型关联配置
+require('./models/associations');
+
 const productRoutes = require('./routes/productRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');

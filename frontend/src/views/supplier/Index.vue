@@ -1,8 +1,7 @@
 <template>
-  <div class="supplier-container">
-    <!-- 搜索和操作栏 -->
-    <div class="search-bar">
-      <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+  <ListPageLayout>
+    <template #filter>
+      <el-form :inline="true" :model="searchForm" class="filter-form">
         <el-form-item label="供应商名称">
           <el-input v-model="searchForm.name" placeholder="请输入供应商名称" />
         </el-form-item>
@@ -14,7 +13,7 @@
             v-model="searchForm.creditRating" 
             placeholder="请选择信用评级" 
             clearable
-            style="width: 200px"
+            style="width: 150px"
             value-key="value"
           >
             <el-option 
@@ -28,63 +27,63 @@
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button @click="resetSearch">重置</el-button>
+          <el-button type="primary" @click="handleAdd">新增供应商</el-button>
         </el-form-item>
       </el-form>
-      <div class="operation-bar">
-        <el-button type="primary" @click="handleAdd">新增供应商</el-button>
+    </template>
+
+    <template #content>
+      <!-- 供应商列表 -->
+      <el-table
+        v-loading="loading"
+        :data="supplierList"
+        border
+        style="width: 100%"
+      >
+        <el-table-column prop="name" label="供应商名称" min-width="150" />
+        <el-table-column prop="contactPerson" label="联系人" width="100" />
+        <el-table-column prop="phone" label="联系电话" width="120" />
+        <el-table-column prop="email" label="邮箱" width="180" />
+        <el-table-column prop="address" label="地址" min-width="200" />
+        <el-table-column prop="creditRating" label="信用评级" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="getCreditRatingType(row.creditRating)">
+              {{ getCreditRatingText(row.creditRating) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="paymentMethod" label="支付方式" width="120" />
+        <el-table-column prop="manager" label="负责人" width="100">
+          <template #default="{ row }">
+            {{ getUserNameById(row.manager) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="createdAt" label="创建时间" width="150">
+          <template #default="{ row }">
+            {{ formatDate(row.createdAt) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="130" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
       </div>
-    </div>
-
-    <!-- 供应商列表 -->
-    <el-table
-      v-loading="loading"
-      :data="supplierList"
-      border
-      style="width: 100%"
-    >
-      <el-table-column prop="name" label="供应商名称" min-width="150" />
-      <el-table-column prop="contactPerson" label="联系人" width="100" />
-      <el-table-column prop="phone" label="联系电话" width="120" />
-      <el-table-column prop="email" label="邮箱" width="180" />
-      <el-table-column prop="address" label="地址" min-width="200" />
-      <el-table-column prop="creditRating" label="信用评级" width="100" align="center">
-        <template #default="{ row }">
-          <el-tag :type="getCreditRatingType(row.creditRating)">
-            {{ getCreditRatingText(row.creditRating) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="paymentMethod" label="支付方式" width="120" />
-      <el-table-column prop="manager" label="负责人" width="100">
-        <template #default="{ row }">
-          {{ getUserNameById(row.manager) }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="createdAt" label="创建时间" width="150">
-        <template #default="{ row }">
-          {{ formatDate(row.createdAt) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="130" fixed="right">
-        <template #default="{ row }">
-          <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-          <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分页 -->
-    <div class="pagination">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :page-sizes="[10, 20, 50, 100]"
-        :total="total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
-    </div>
+    </template>
 
     <!-- 供应商表单弹窗 -->
     <BaseDialog
@@ -143,7 +142,7 @@
         </el-form-item>
       </template>
     </BaseDialog>
-  </div>
+  </ListPageLayout>
 </template>
 
 <script setup>
@@ -155,6 +154,7 @@ import UserSelect from '@/components/UserSelect.vue'
 import AddressSelect from '@/components/AddressSelect.vue'
 import { useUserStore } from '@/stores/user'
 import BaseDialog from '@/components/BaseDialog.vue'
+import ListPageLayout from '@/components/ListPageLayout.vue'
 
 // 用户store
 const userStore = useUserStore()
@@ -441,30 +441,4 @@ onMounted(async () => {
 watch(searchForm, (newVal) => {
   console.log('searchForm变化:', newVal)
 }, { deep: true })
-</script>
-
-<style lang="scss" scoped>
-.supplier-container {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 4px;
-
-  .search-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-
-    .operation-bar {
-      display: flex;
-      gap: 10px;
-    }
-  }
-
-  .pagination {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
-  }
-}
-</style> 
+</script> 

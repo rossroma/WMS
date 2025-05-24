@@ -70,6 +70,36 @@ const router = createRouter({
           }
         }
       ]
+    },
+    {
+      path: '/inventory',
+      component: () => import('@/layout/Index.vue'),
+      redirect: '/inventory/list',
+      name: 'Inventory',
+      meta: {
+        title: '库存管理',
+        icon: 'DataBoard'
+      },
+      children: [
+        {
+          path: 'list',
+          name: 'InventoryList',
+          component: () => import('@/views/inventory/Index.vue'),
+          meta: {
+            title: '库存查询',
+            icon: 'Search'
+          }
+        },
+        {
+          path: 'logs',
+          name: 'InventoryLogs',
+          component: () => import('@/views/inventory/Logs.vue'),
+          meta: {
+            title: '库存流水',
+            icon: 'List'
+          }
+        }
+      ]
     }
   ]
 })

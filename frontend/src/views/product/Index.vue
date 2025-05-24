@@ -1,8 +1,7 @@
 <template>
-  <div class="product-container">
-    <!-- 搜索和操作栏 -->
-    <div class="search-bar">
-      <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+  <ListPageLayout>
+    <template #filter>
+      <el-form :inline="true" :model="searchForm" class="filter-form">
         <el-form-item label="商品名称">
           <el-input v-model="searchForm.name" placeholder="请输入商品名称" />
         </el-form-item>
@@ -15,6 +14,7 @@
             :options="categoryOptions"
             :props="{ checkStrictly: true, value: 'id', label: 'name' }"
             placeholder="请选择商品分类"
+            style="width: 150px"
             clearable
           />
         </el-form-item>
@@ -24,6 +24,7 @@
             placeholder="请选择供应商" 
             clearable
             value-key="id"
+            style="width: 150px"
             filterable
           >
             <el-option
@@ -37,85 +38,85 @@
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button @click="resetSearch">重置</el-button>
+          <el-button type="primary" @click="handleAdd">新增商品</el-button>
+          <el-button @click="handleCategoryManage">分类管理</el-button>
         </el-form-item>
       </el-form>
-      <div class="operation-bar">
-        <el-button type="primary" @click="handleAdd">新增商品</el-button>
-        <el-button @click="handleCategoryManage">分类管理</el-button>
+    </template>
+
+    <template #content>
+      <!-- 商品列表 -->
+      <el-table
+        v-loading="loading"
+        :data="productList"
+        border
+        style="width: 100%"
+      >
+        <el-table-column prop="name" label="商品名称" min-width="150" />
+        <el-table-column label="图片" width="80" align="center">
+          <template #default="{ row }">
+            <div class="product-image-cell">
+              <el-image 
+                v-if="row.image"
+                :src="getListThumbnail(row.image)"
+                :preview-src-list="[row.image]"
+                :initial-index="0"
+                fit="cover"
+                class="product-image"
+                preview-teleported
+              />
+              <span v-else class="no-image">暂无图片</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="code" label="商品编码" width="120" />
+        <el-table-column prop="brand" label="品牌" width="120" />
+        <el-table-column label="商品分类" width="150">
+          <template #default="{ row }">
+            {{ row.Category?.name || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="specification" label="规格" width="120" />
+        <el-table-column prop="unit" label="单位" width="80" />
+        <el-table-column label="采购价格" width="100">
+          <template #default="{ row }">
+            ¥{{ row.purchasePrice?.toFixed(2) || '0.00' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="零售价格" width="100">
+          <template #default="{ row }">
+            ¥{{ row.retailPrice?.toFixed(2) || '0.00' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="供应商" width="150">
+          <template #default="{ row }">
+            {{ row.Supplier?.name || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="warehouse" label="仓库" width="100" />
+        <el-table-column prop="stockAlertQuantity" label="预警库存" width="100" />
+        <el-table-column label="操作" width="180" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+            <el-button link type="success" @click="handleCopy(row)">复制</el-button>
+            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
       </div>
-    </div>
-
-    <!-- 商品列表 -->
-    <el-table
-      v-loading="loading"
-      :data="productList"
-      border
-      style="width: 100%"
-    >
-      <el-table-column prop="name" label="商品名称" min-width="150" />
-      <el-table-column label="图片" width="80" align="center">
-        <template #default="{ row }">
-          <div class="product-image-cell">
-            <el-image 
-              v-if="row.image"
-              :src="getListThumbnail(row.image)"
-              :preview-src-list="[row.image]"
-              :initial-index="0"
-              fit="cover"
-              class="product-image"
-              preview-teleported
-            />
-            <span v-else class="no-image">暂无图片</span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column prop="code" label="商品编码" width="120" />
-      <el-table-column prop="brand" label="品牌" width="120" />
-      <el-table-column label="商品分类" width="150">
-        <template #default="{ row }">
-          {{ row.Category?.name || '-' }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="specification" label="规格" width="120" />
-      <el-table-column prop="unit" label="单位" width="80" />
-      <el-table-column label="采购价格" width="100">
-        <template #default="{ row }">
-          ¥{{ row.purchasePrice?.toFixed(2) || '0.00' }}
-        </template>
-      </el-table-column>
-      <el-table-column label="零售价格" width="100">
-        <template #default="{ row }">
-          ¥{{ row.retailPrice?.toFixed(2) || '0.00' }}
-        </template>
-      </el-table-column>
-      <el-table-column label="供应商" width="150">
-        <template #default="{ row }">
-          {{ row.Supplier?.name || '-' }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="warehouse" label="仓库" width="100" />
-      <el-table-column prop="stockAlertQuantity" label="预警库存" width="100" />
-      <el-table-column label="操作" width="250" fixed="right">
-        <template #default="{ row }">
-          <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-          <el-button link type="success" @click="handleCopy(row)">复制</el-button>
-          <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分页 -->
-    <div class="pagination">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :page-sizes="[10, 20, 50, 100]"
-        :total="total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
-    </div>
+    </template>
 
     <!-- 商品表单弹窗 -->
     <BaseDialog
@@ -230,7 +231,7 @@
     >
       <category-management @close="categoryDialogVisible = false" />
     </el-dialog>
-  </div>
+  </ListPageLayout>
 </template>
 
 <script setup>
@@ -244,6 +245,7 @@ import { useUserStore } from '@/stores/user'
 import BaseDialog from '@/components/BaseDialog.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import { getListThumbnail } from '@/utils/image'
+import ListPageLayout from '@/components/ListPageLayout.vue'
 
 const userStore = useUserStore()
 
@@ -529,30 +531,6 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.product-container {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 4px;
-
-  .search-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-
-    .operation-bar {
-      display: flex;
-      gap: 10px;
-    }
-  }
-
-  .pagination {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
-  }
-}
-
 // 商品图片显示样式
 .product-image-cell {
   display: flex;

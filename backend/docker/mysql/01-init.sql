@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS stocktaking_orders (
 -- 创建库存日志表
 CREATE TABLE IF NOT EXISTS inventory_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    product_id INT NOT NULL,
+    inventory_id INT NOT NULL,
     change_quantity INT NOT NULL,
     type VARCHAR(50) NOT NULL,
     date DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS inventory_logs (
     operator VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (product_id) REFERENCES products(id)
+    FOREIGN KEY (inventory_id) REFERENCES inventories(id)
 );
 
 -- 创建消息表
@@ -175,7 +175,7 @@ CREATE INDEX idx_inventories_product ON inventories(product_id);
 CREATE INDEX idx_inbound_orders_product ON inbound_orders(product_id);
 CREATE INDEX idx_outbound_orders_product ON outbound_orders(product_id);
 CREATE INDEX idx_stocktaking_orders_product ON stocktaking_orders(product_id);
-CREATE INDEX idx_inventory_logs_product ON inventory_logs(product_id);
+CREATE INDEX idx_inventory_logs_inventory ON inventory_logs(inventory_id);
 CREATE INDEX idx_user_roles_user ON user_roles(user_id);
 CREATE INDEX idx_user_roles_role ON user_roles(role_id);
 
