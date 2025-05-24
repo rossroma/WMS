@@ -87,37 +87,34 @@
     </div>
 
     <!-- 供应商表单弹窗 -->
-    <el-dialog
+    <BaseDialog
       v-model="dialogVisible"
       :title="dialogType === 'add' ? '新增供应商' : '编辑供应商'"
-      width="600px"
-      :before-close="handleClose"
+      :form-data="form"
+      :rules="rules"
+      :loading="submitting"
+      @confirm="handleSubmit"
+      @cancel="handleCancel"
     >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="100px"
-        class="supplier-form"
-      >
+      <template #form="{ form: formData }">
         <el-form-item label="供应商名称" prop="name" required>
-          <el-input v-model="form.name" placeholder="请输入供应商名称" />
+          <el-input v-model="formData.name" placeholder="请输入供应商名称" />
         </el-form-item>
         
         <el-form-item label="联系人" prop="contactPerson" required>
-          <el-input v-model="form.contactPerson" placeholder="请输入联系人" />
+          <el-input v-model="formData.contactPerson" placeholder="请输入联系人" />
         </el-form-item>
         
         <el-form-item label="联系电话" prop="phone" required>
-          <el-input v-model="form.phone" placeholder="请输入联系电话" />
+          <el-input v-model="formData.phone" placeholder="请输入联系电话" />
         </el-form-item>
         
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" placeholder="请输入邮箱" />
+          <el-input v-model="formData.email" placeholder="请输入邮箱" />
         </el-form-item>
         
         <el-form-item label="信用评级" prop="creditRating">
-          <el-select v-model="form.creditRating" placeholder="请选择信用评级" style="width: 100%">
+          <el-select v-model="formData.creditRating" placeholder="请选择信用评级">
             <el-option label="AAA级" :value="5" />
             <el-option label="AA级" :value="4" />
             <el-option label="A级" :value="3" />
@@ -127,7 +124,7 @@
         </el-form-item>
         
         <el-form-item label="支付方式" prop="paymentMethod">
-          <el-select v-model="form.paymentMethod" placeholder="请选择支付方式" style="width: 100%">
+          <el-select v-model="formData.paymentMethod" placeholder="请选择支付方式">
             <el-option label="现金" value="cash" />
             <el-option label="银行转账" value="bank_transfer" />
             <el-option label="支票" value="check" />
@@ -138,26 +135,14 @@
         </el-form-item>
         
         <el-form-item label="负责人" prop="manager" required>
-          <UserSelect 
-            v-model="form.manager" 
-          />
+          <UserSelect v-model="formData.manager" />
         </el-form-item>
         
         <el-form-item label="地址" prop="address" required>
-          <AddressSelect 
-            v-model="form.address"
-          />
+          <AddressSelect v-model="formData.address" />
         </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="handleClose">取消</el-button>
-          <el-button type="primary" @click="handleSubmit" :loading="submitting">
-            确定
-          </el-button>
-        </span>
       </template>
-    </el-dialog>
+    </BaseDialog>
   </div>
 </template>
 
@@ -169,6 +154,7 @@ import { getUserList } from '@/api/user'
 import UserSelect from '@/components/UserSelect.vue'
 import AddressSelect from '@/components/AddressSelect.vue'
 import { useUserStore } from '@/stores/user'
+import BaseDialog from '@/components/BaseDialog.vue'
 
 // 用户store
 const userStore = useUserStore()
@@ -205,7 +191,6 @@ const creditRatingOptions = [
 const dialogVisible = ref(false)
 const dialogType = ref('add') // add, edit
 const submitting = ref(false)
-const formRef = ref(null)
 const form = ref({
   name: '',
   contactPerson: '',
@@ -369,29 +354,29 @@ const handleDelete = (row) => {
 }
 
 // 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      submitting.value = true
-      try {
-        if (dialogType.value === 'add') {
-          await createSupplier(form.value)
-          ElMessage.success('新增成功')
-        } else {
-          await updateSupplier(form.value.id, form.value)
-          ElMessage.success('更新成功')
-        }
-        dialogVisible.value = false
-        fetchSupplierList()
-      } catch (error) {
-        console.error('保存供应商失败:', error)
-      } finally {
-        submitting.value = false
-      }
+const handleSubmit = async (formData) => {
+  submitting.value = true
+  try {
+    if (dialogType.value === 'add') {
+      await createSupplier(formData)
+      ElMessage.success('新增成功')
+    } else {
+      await updateSupplier(formData.id, formData)
+      ElMessage.success('更新成功')
     }
-  })
+    dialogVisible.value = false
+    fetchSupplierList()
+  } catch (error) {
+    console.error('保存供应商失败:', error)
+    ElMessage.error('保存失败')
+  } finally {
+    submitting.value = false
+  }
+}
+
+// 取消弹窗
+const handleCancel = () => {
+  dialogVisible.value = false
 }
 
 // 分页大小改变
@@ -404,14 +389,6 @@ const handleSizeChange = (val) => {
 const handleCurrentChange = (val) => {
   currentPage.value = val
   fetchSupplierList()
-}
-
-// 关闭弹窗
-const handleClose = () => {
-  dialogVisible.value = false
-  if (formRef.value) {
-    formRef.value.resetFields()
-  }
 }
 
 // 格式化日期
@@ -489,36 +466,5 @@ watch(searchForm, (newVal) => {
     display: flex;
     justify-content: flex-end;
   }
-}
-
-.supplier-form {
-  padding: 20px 60px;
-
-  :deep(.el-form-item) {
-    margin-bottom: 24px;
-    
-    .el-form-item__label {
-      font-weight: 500;
-      color: #606266;
-    }
-    
-    .el-textarea {
-      .el-textarea__inner {
-        padding: 12px 15px;
-        line-height: 1.5;
-      }
-    }
-  }
-  
-  :deep(.el-form-item:last-child) {
-    margin-bottom: 0;
-  }
-}
-
-.dialog-footer {
-  text-align: right;
-  padding-top: 20px;
-  border-top: 1px solid #ebeef5;
-  margin-top: 20px;
 }
 </style> 

@@ -41,46 +41,4 @@ export function deleteProduct(id) {
     url: '/products/' + id,
     method: 'delete'
   })
-}
-
-// 获取商品分类列表
-export function getCategories() {
-  return request({
-    url: '/categories',
-    method: 'get'
-  })
-}
-
-// 获取供应商列表
-export function getSuppliers() {
-  return request({
-    url: '/suppliers',
-    method: 'get'
-  })
-}
-
-// 创建商品分类
-export function createCategory(data) {
-  return request({
-    url: '/categories',
-    method: 'post',
-    data
-  })
-}
-
-// 更新商品分类
-export function updateCategory(id, data) {
-  return request({
-    url: `/categories/${id}`,
-    method: 'put',
-    data
-  })
-}
-
-// 删除商品分类
-export function deleteCategory(id) {
-  return request({
-    url: `/categories/${id}`,
-    method: 'delete'
-  })
 } 

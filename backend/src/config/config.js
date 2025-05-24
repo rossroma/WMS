@@ -41,7 +41,7 @@ module.exports = {
   // 文件上传配置
   upload: {
     maxSize: process.env.UPLOAD_MAX_SIZE || 5 * 1024 * 1024, // 5MB
-    allowedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+    allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'],
     path: process.env.UPLOAD_PATH || 'uploads'
   },
 
