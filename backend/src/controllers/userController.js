@@ -7,7 +7,7 @@ const { AppError } = require('../middleware/errorHandler');
 exports.getUserList = async (req, res, next) => {
   try {
     const users = await User.findAll({
-      attributes: ['id', 'username', 'email', 'fullname', 'status', 'created_at', 'updated_at'],
+      attributes: ['id', 'username', 'email', 'fullname', 'status', 'createdAt', 'updatedAt'],
       include: [{
         model: Role,
         through: UserRole,

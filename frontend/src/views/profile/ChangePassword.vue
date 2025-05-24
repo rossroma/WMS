@@ -53,7 +53,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
-import { changePassword } from '@/api/auth'
+import { changeUserPassword } from '@/api/user'
 
 const pwdFormRef = ref()
 const loading = ref(false)
@@ -94,7 +94,7 @@ const handleSubmit = async () => {
     if (valid) {
       loading.value = true
       try {
-        await changePassword({
+        await changeUserPassword({
           oldPassword: pwdForm.oldPassword,
           newPassword: pwdForm.newPassword
         })

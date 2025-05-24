@@ -1,15 +1,11 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import router from '@/router'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  timeout: 10000
 })
 
 // 请求拦截器
@@ -17,12 +13,11 @@ service.interceptors.request.use(
   config => {
     const userStore = useUserStore()
     if (userStore.token) {
-      config.headers['Authorization'] = `Bearer ${userStore.token}`
+      config.headers.Authorization = `Bearer ${userStore.token}`
     }
     return config
   },
   error => {
-    console.error('请求错误:', error)
     return Promise.reject(error)
   }
 )
@@ -34,18 +29,36 @@ service.interceptors.response.use(
     return res
   },
   error => {
-    console.error('响应错误:', error)
-    const userStore = useUserStore()
+    let message = '请求失败'
     
-    // 处理401未授权的情况
-    if (error.status === 401) {
-      userStore.clearUserInfo()
-      router.push('/login')
-      ElMessage.error(error.response.data?.message || '登录已过期，请重新登录')
+    if (error.response) {
+      const { status, data } = error.response
+      switch (status) {
+        case 401:
+          message = '未授权，请重新登录'
+          const userStore = useUserStore()
+          userStore.clearUserInfo()
+          window.location.href = '/login'
+          break
+        case 403:
+          message = '拒绝访问'
+          break
+        case 404:
+          message = '请求地址出错'
+          break
+        case 500:
+          message = '服务器内部错误'
+          break
+        default:
+          message = data?.message || '请求失败'
+      }
+    } else if (error.code === 'ECONNABORTED') {
+      message = '请求超时'
     } else {
-      ElMessage.error(error.response?.data?.message || '请求失败')
+      message = '网络连接失败'
     }
-    
+
+    ElMessage.error(message)
     return Promise.reject(error)
   }
 )

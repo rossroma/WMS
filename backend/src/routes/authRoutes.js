@@ -71,4 +71,20 @@ const { authenticate } = require('../middleware/auth');
  */
 router.post('/login', authController.login);
 
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   get:
+ *     summary: 获取当前用户信息
+ *     tags: [认证]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功获取用户信息
+ *       401:
+ *         description: 未授权
+ */
+router.get('/profile', authenticate, authController.getCurrentUser);
+
 module.exports = router; 

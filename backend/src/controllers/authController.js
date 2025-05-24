@@ -66,3 +66,30 @@ exports.login = async (req, res, next) => {
     next(new AppError('登录失败', 500));
   }
 };
+
+// 获取当前用户信息
+exports.getCurrentUser = async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      include: [{
+        model: Role,
+        through: UserRole
+      }]
+    });
+
+    if (!user) {
+      return next(new AppError('用户不存在', 404));
+    }
+
+    res.json({
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      roles: user.Roles.map(role => role.name)
+    });
+  } catch (error) {
+    next(new AppError('获取用户信息失败', 500));
+  }
+};
