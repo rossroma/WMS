@@ -27,7 +27,11 @@ exports.getCategoryTree = async (req, res, next) => {
     };
 
     const tree = buildTree(categories);
-    res.json({ code: 0, data: tree });
+    res.json({ 
+      status: 'success',
+      message: '获取分类树成功',
+      data: tree 
+    });
   } catch (error) {
     next(new AppError('获取分类失败', 500));
   }
@@ -66,7 +70,11 @@ exports.createCategory = async (req, res, next) => {
       sort
     });
 
-    res.status(201).json(category);
+    res.status(201).json({
+      status: 'success',
+      message: '分类创建成功',
+      data: category
+    });
   } catch (error) {
     next(new AppError('创建分类失败', 500));
   }
@@ -88,7 +96,11 @@ exports.updateCategory = async (req, res, next) => {
     }
 
     await category.update({ name });
-    res.json(category);
+    res.json({
+      status: 'success',
+      message: '分类更新成功',
+      data: category
+    });
   } catch (error) {
     next(new AppError('更新分类失败', 500));
   }
@@ -114,7 +126,10 @@ exports.deleteCategory = async (req, res, next) => {
     }
 
     await category.destroy();
-    res.status(204).send();
+    res.status(200).json({
+      status: 'success',
+      message: '分类删除成功'
+    });
   } catch (error) {
     next(new AppError('删除分类失败', 500));
   }
@@ -144,7 +159,10 @@ exports.batchUpdateSort = async (req, res, next) => {
     }
 
     await t.commit();
-    res.json({ message: '更新成功' });
+    res.json({ 
+      status: 'success',
+      message: '排序更新成功' 
+    });
   } catch (error) {
     await t.rollback();
     next(new AppError('批量更新排序失败', 500));
@@ -171,7 +189,11 @@ exports.getCategoryList = async (req, res, next) => {
       ]
     });
 
-    res.json(categories);
+    res.json({
+      status: 'success',
+      message: '获取分类列表成功',
+      data: categories
+    });
   } catch (error) {
     next(new AppError('获取分类列表失败', 500));
   }

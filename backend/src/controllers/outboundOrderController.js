@@ -1,70 +1,90 @@
 const OutboundOrder = require('../models/OutboundOrder');
 const Product = require('../models/Product');
+const { AppError } = require('../middleware/errorHandler');
 
 // 创建出库单
-exports.createOutboundOrder = async (req, res) => {
+exports.createOutboundOrder = async (req, res, next) => {
   try {
     const order = await OutboundOrder.create(req.body);
-    res.status(201).json(order);
+    res.status(201).json({
+      status: 'success',
+      message: '出库单创建成功',
+      data: order
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(new AppError('创建出库单失败', 400));
   }
 };
 
 // 获取所有出库单
-exports.getAllOutboundOrders = async (req, res) => {
+exports.getAllOutboundOrders = async (req, res, next) => {
   try {
     const orders = await OutboundOrder.findAll({
       include: [{ model: Product }]
     });
-    res.status(200).json(orders);
+    res.status(200).json({
+      status: 'success',
+      message: '获取出库单列表成功',
+      data: orders
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取出库单列表失败', 500));
   }
 };
 
 // 获取单个出库单
-exports.getOutboundOrderById = async (req, res) => {
+exports.getOutboundOrderById = async (req, res, next) => {
   try {
     const order = await OutboundOrder.findByPk(req.params.id, {
       include: [{ model: Product }]
     });
-    if (order) {
-      res.status(200).json(order);
-    } else {
-      res.status(404).json({ error: 'Outbound order not found' });
+    if (!order) {
+      return next(new AppError('出库单不存在', 404));
     }
+    
+    res.status(200).json({
+      status: 'success',
+      message: '获取出库单成功',
+      data: order
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取出库单失败', 500));
   }
 };
 
 // 更新出库单
-exports.updateOutboundOrder = async (req, res) => {
+exports.updateOutboundOrder = async (req, res, next) => {
   try {
     const order = await OutboundOrder.findByPk(req.params.id);
-    if (order) {
-      await order.update(req.body);
-      res.status(200).json(order);
-    } else {
-      res.status(404).json({ error: 'Outbound order not found' });
+    if (!order) {
+      return next(new AppError('出库单不存在', 404));
     }
+    
+    await order.update(req.body);
+    res.status(200).json({
+      status: 'success',
+      message: '出库单更新成功',
+      data: order
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(new AppError('更新出库单失败', 400));
   }
 };
 
 // 删除出库单
-exports.deleteOutboundOrder = async (req, res) => {
+exports.deleteOutboundOrder = async (req, res, next) => {
   try {
     const order = await OutboundOrder.findByPk(req.params.id);
-    if (order) {
-      await order.destroy();
-      res.status(204).send();
-    } else {
-      res.status(404).json({ error: 'Outbound order not found' });
+    if (!order) {
+      return next(new AppError('出库单不存在', 404));
     }
+    
+    await order.destroy();
+    res.status(200).json({
+      status: 'success',
+      message: '出库单删除成功'
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('删除出库单失败', 500));
   }
 }; 

@@ -2,19 +2,24 @@ const Product = require('../models/Product');
 const Supplier = require('../models/Supplier');
 const Category = require('../models/Category');
 const { Op } = require('sequelize');
+const { AppError } = require('../middleware/errorHandler');
 
 // 创建商品
-exports.createProduct = async (req, res) => {
+exports.createProduct = async (req, res, next) => {
   try {
     const product = await Product.create(req.body);
-    res.status(201).json(product);
+    res.status(201).json({
+      status: 'success',
+      message: '商品创建成功',
+      data: product
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(new AppError('创建商品失败', 400));
   }
 };
 
 // 获取所有商品（支持分页和搜索）
-exports.getAllProducts = async (req, res) => {
+exports.getAllProducts = async (req, res, next) => {
   try {
     const { 
       page = 1, 
@@ -74,6 +79,8 @@ exports.getAllProducts = async (req, res) => {
 
     // 返回分页数据
     res.status(200).json({
+      status: 'success',
+      message: '获取商品列表成功',
       data: {
         list: rows,
         total: count,
@@ -83,51 +90,61 @@ exports.getAllProducts = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('获取商品列表失败:', error);
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取商品列表失败', 500));
   }
 };
 
 // 获取单个商品
-exports.getProductById = async (req, res) => {
+exports.getProductById = async (req, res, next) => {
   try {
     const product = await Product.findByPk(req.params.id);
-    if (product) {
-      res.status(200).json(product);
-    } else {
-      res.status(404).json({ error: 'Product not found' });
+    if (!product) {
+      return next(new AppError('商品不存在', 404));
     }
+    
+    res.status(200).json({
+      status: 'success',
+      message: '获取商品成功',
+      data: product
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取商品失败', 500));
   }
 };
 
 // 更新商品
-exports.updateProduct = async (req, res) => {
+exports.updateProduct = async (req, res, next) => {
   try {
     const product = await Product.findByPk(req.params.id);
-    if (product) {
-      await product.update(req.body);
-      res.status(200).json(product);
-    } else {
-      res.status(404).json({ error: 'Product not found' });
+    if (!product) {
+      return next(new AppError('商品不存在', 404));
     }
+    
+    await product.update(req.body);
+    res.status(200).json({
+      status: 'success',
+      message: '商品更新成功',
+      data: product
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(new AppError('更新商品失败', 400));
   }
 };
 
 // 删除商品
-exports.deleteProduct = async (req, res) => {
+exports.deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findByPk(req.params.id);
-    if (product) {
-      await product.destroy();
-      res.status(204).send();
-    } else {
-      res.status(404).json({ error: 'Product not found' });
+    if (!product) {
+      return next(new AppError('商品不存在', 404));
     }
+    
+    await product.destroy();
+    res.status(200).json({
+      status: 'success',
+      message: '商品删除成功'
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('删除商品失败', 500));
   }
 }; 

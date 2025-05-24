@@ -1,29 +1,38 @@
 const Inventory = require('../models/Inventory');
 const InventoryLog = require('../models/InventoryLog');
 const Product = require('../models/Product');
-const { Message, MessageType, MessageTypeDisplay } = require('../models/Message');
+const { Message, MessageType } = require('../models/Message');
+const { AppError } = require('../middleware/errorHandler');
 
 // 库存查询
-exports.getInventory = async (req, res) => {
+exports.getInventory = async (req, res, next) => {
   try {
     const inventories = await Inventory.findAll({
       include: [{ model: Product }]
     });
-    res.status(200).json(inventories);
+    res.status(200).json({
+      status: 'success',
+      message: '获取库存信息成功',
+      data: inventories
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取库存信息失败', 500));
   }
 };
 
 // 库存流水查询
-exports.getInventoryLogs = async (req, res) => {
+exports.getInventoryLogs = async (req, res, next) => {
   try {
     const logs = await InventoryLog.findAll({
       include: [{ model: Product }]
     });
-    res.status(200).json(logs);
+    res.status(200).json({
+      status: 'success',
+      message: '获取库存流水成功',
+      data: logs
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取库存流水失败', 500));
   }
 };
 

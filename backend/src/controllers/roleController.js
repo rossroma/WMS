@@ -15,19 +15,27 @@ exports.createRole = async (req, res, next) => {
       permissions
     });
 
-    res.status(201).json(role);
+    res.status(201).json({
+      status: 'success',
+      message: '角色创建成功',
+      data: role
+    });
   } catch (error) {
     next(new AppError('创建角色失败', 500));
   }
 };
 
 // 获取所有角色
-exports.getAllRoles = async (req, res) => {
+exports.getAllRoles = async (req, res, next) => {
   try {
     const roles = await Role.findAll();
-    res.json(roles);
+    res.json({
+      status: 'success',
+      message: '获取角色列表成功',
+      data: roles
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取角色列表失败', 500));
   }
 };
 
@@ -37,16 +45,21 @@ exports.updateRole = async (req, res, next) => {
     const { name, description, permissions } = req.body;
     const role = await Role.findByPk(req.params.id);
 
-    if (role) {
-      await role.update({
-        name,
-        description,
-        permissions
-      });
-      res.json(role);
-    } else {
+    if (!role) {
       return next(new AppError('角色不存在', 404));
     }
+
+    await role.update({
+      name,
+      description,
+      permissions
+    });
+    
+    res.json({
+      status: 'success',
+      message: '角色更新成功',
+      data: role
+    });
   } catch (error) {
     next(new AppError('更新角色失败', 500));
   }
@@ -56,12 +69,15 @@ exports.updateRole = async (req, res, next) => {
 exports.deleteRole = async (req, res, next) => {
   try {
     const role = await Role.findByPk(req.params.id);
-    if (role) {
-      await role.destroy();
-      res.status(204).send();
-    } else {
+    if (!role) {
       return next(new AppError('角色不存在', 404));
     }
+    
+    await role.destroy();
+    res.status(200).json({
+      status: 'success',
+      message: '角色删除成功'
+    });
   } catch (error) {
     next(new AppError('删除角色失败', 500));
   }
@@ -106,7 +122,8 @@ exports.assignRoleToUser = async (req, res, next) => {
 
     await transaction.commit();
 
-    res.status(201).json({
+    res.status(200).json({
+      status: 'success',
       message: '角色分配成功',
       data: {
         userId,
@@ -116,7 +133,7 @@ exports.assignRoleToUser = async (req, res, next) => {
   } catch (error) {
     await transaction.rollback();
     console.error('分配角色失败:', error);
-    next(new AppError('分配角色失败: ' + error.message, 500));
+    next(new AppError('分配角色失败', 500));
   }
 };
 
@@ -141,6 +158,8 @@ exports.getUserRoles = async (req, res, next) => {
     });
 
     res.json({
+      status: 'success',
+      message: '获取用户角色成功',
       data: userRoles.map(ur => ({
         id: ur.Role.id,
         name: ur.Role.name,
@@ -169,7 +188,10 @@ exports.removeAllRolesFromUser = async (req, res, next) => {
       where: { userId }
     });
 
-    res.status(204).send();
+    res.status(200).json({
+      status: 'success',
+      message: '移除角色成功'
+    });
   } catch (error) {
     next(new AppError('移除角色失败', 500));
   }

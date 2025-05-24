@@ -1,13 +1,15 @@
 const { Op } = require('sequelize');
+const sequelize = require('../config/database');
 const Product = require('../models/Product');
 const Inventory = require('../models/Inventory');
 const InboundOrder = require('../models/InboundOrder');
 const OutboundOrder = require('../models/OutboundOrder');
 const StocktakingOrder = require('../models/StocktakingOrder');
 const Message = require('../models/Message');
+const { AppError } = require('../middleware/errorHandler');
 
 // 获取库存概览数据
-exports.getInventoryOverview = async (req, res) => {
+exports.getInventoryOverview = async (req, res, next) => {
   try {
     // 获取库存总量
     const totalInventory = await Inventory.sum('quantity');
@@ -40,18 +42,22 @@ exports.getInventoryOverview = async (req, res) => {
     );
 
     res.json({
-      totalInventory,
-      productCount,
-      alertCount,
-      inventoryValue
+      status: 'success',
+      message: '获取库存概览成功',
+      data: {
+        totalInventory,
+        productCount,
+        alertCount,
+        inventoryValue
+      }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取库存概览失败', 500));
   }
 };
 
 // 获取出入库统计
-exports.getInOutStatistics = async (req, res) => {
+exports.getInOutStatistics = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
     const whereClause = {};
@@ -85,16 +91,20 @@ exports.getInOutStatistics = async (req, res) => {
     });
 
     res.json({
-      inbound: inboundStats,
-      outbound: outboundStats
+      status: 'success',
+      message: '获取出入库统计成功',
+      data: {
+        inbound: inboundStats,
+        outbound: outboundStats
+      }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取出入库统计失败', 500));
   }
 };
 
 // 获取盘点统计
-exports.getStocktakingStatistics = async (req, res) => {
+exports.getStocktakingStatistics = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
     const whereClause = {};
@@ -115,14 +125,18 @@ exports.getStocktakingStatistics = async (req, res) => {
       ]
     });
 
-    res.json(stocktakingStats[0]);
+    res.json({
+      status: 'success',
+      message: '获取盘点统计成功',
+      data: stocktakingStats[0]
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取盘点统计失败', 500));
   }
 };
 
 // 获取消息统计
-exports.getMessageStatistics = async (req, res) => {
+exports.getMessageStatistics = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
     const whereClause = {};
@@ -143,14 +157,18 @@ exports.getMessageStatistics = async (req, res) => {
       group: ['type']
     });
 
-    res.json(messageStats);
+    res.json({
+      status: 'success',
+      message: '获取消息统计成功',
+      data: messageStats
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取消息统计失败', 500));
   }
 };
 
 // 获取库存趋势数据
-exports.getInventoryTrend = async (req, res) => {
+exports.getInventoryTrend = async (req, res, next) => {
   try {
     const { days = 30 } = req.query;
     const startDate = new Date();
@@ -171,14 +189,18 @@ exports.getInventoryTrend = async (req, res) => {
       order: [[sequelize.fn('DATE', sequelize.col('createdAt')), 'ASC']]
     });
 
-    res.json(dailyInventory);
+    res.json({
+      status: 'success',
+      message: '获取库存趋势成功',
+      data: dailyInventory
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取库存趋势失败', 500));
   }
 };
 
 // 获取热门商品排行
-exports.getTopProducts = async (req, res) => {
+exports.getTopProducts = async (req, res, next) => {
   try {
     const { limit = 10 } = req.query;
 
@@ -197,8 +219,12 @@ exports.getTopProducts = async (req, res) => {
       limit: parseInt(limit)
     });
 
-    res.json(topOutboundProducts);
+    res.json({
+      status: 'success',
+      message: '获取热门商品排行成功',
+      data: topOutboundProducts
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(new AppError('获取热门商品排行失败', 500));
   }
 }; 

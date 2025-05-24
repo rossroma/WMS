@@ -45,6 +45,7 @@ exports.getLogs = async (req, res, next) => {
 
     res.json({
       status: 'success',
+      message: '获取日志列表成功',
       data: logs
     });
   } catch (error) {

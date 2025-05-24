@@ -61,6 +61,7 @@ exports.uploadFile = async (req, res, next) => {
 
     res.json({
       status: 'success',
+      message: '文件上传成功',
       data: result
     });
   } catch (error) {
@@ -81,6 +82,7 @@ exports.getUploadToken = (req, res) => {
   const token = qiniuService.getUploadToken();
   res.json({
     status: 'success',
+    message: '获取上传凭证成功',
     data: { token }
   });
 };

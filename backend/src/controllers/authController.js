@@ -53,13 +53,17 @@ exports.login = async (req, res, next) => {
     const token = generateToken(user);
 
     res.json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        email: user.email,
-        roles: user.Roles.map(role => role.name)
+      status: 'success',
+      message: '登录成功',
+      data: {
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          email: user.email,
+          roles: user.Roles.map(role => role.name)
+        }
       }
     });
   } catch (error) {
@@ -82,12 +86,16 @@ exports.getCurrentUser = async (req, res, next) => {
     }
 
     res.json({
-      id: user.id,
-      username: user.username,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      roles: user.Roles.map(role => role.name)
+      status: 'success',
+      message: '获取用户信息成功',
+      data: {
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        roles: user.Roles.map(role => role.name)
+      }
     });
   } catch (error) {
     next(new AppError('获取用户信息失败', 500));
