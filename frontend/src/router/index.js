@@ -102,6 +102,15 @@ const router = createRouter({
             title: '库存流水',
             icon: 'List'
           }
+        },
+        {
+          path: 'stocktaking',
+          name: 'Stocktaking',
+          component: () => import('@/views/inventory/Stocktaking.vue'),
+          meta: {
+            title: '商品盘点',
+            icon: 'DocumentChecked'
+          }
         }
       ]
     },

@@ -54,7 +54,7 @@
         style="width: 100%"
       >
         <el-table-column type="index" width="50" />
-        <el-table-column prop="orderNo" label="出库单号" min-width="150" />
+        <el-table-column prop="orderNo" label="出库单号" width="180" />
         <el-table-column prop="type" label="出库类型" width="120">
           <template #default="{ row }">
             {{ getTypeText(row.type) }}
@@ -62,10 +62,14 @@
         </el-table-column>
         <el-table-column prop="orderDate" label="出库日期" width="120">
           <template #default="{ row }">
-            {{ formatDateTime(row.orderDate) }}
+            {{ formatDateOnly(row.orderDate) }}
           </template>
         </el-table-column>
-        <el-table-column prop="operator" label="操作员" width="100" />
+        <el-table-column prop="operator" label="操作员" width="110">
+          <template #default="{ row }">
+            <UserDisplay :value="row.operator" />
+          </template>
+        </el-table-column>
         <el-table-column prop="totalQuantity" label="总数量" width="100" />
         <el-table-column prop="totalAmount" label="总金额" width="120">
           <template #default="{ row }">
@@ -266,7 +270,8 @@ import UserSelect from '@/components/UserSelect.vue'
 import OrderItemsDialog from '@/components/OrderItemsDialog.vue'
 import ProductSelectDialog from '@/components/ProductSelectDialog.vue'
 import { useUserStore } from '@/stores/user'
-import { formatDateTime, getToday } from '@/utils/date'
+import { formatDateTime, getToday, formatDateOnly } from '@/utils/date'
+import UserDisplay from '@/components/UserDisplay.vue'
 
 const userStore = useUserStore()
 

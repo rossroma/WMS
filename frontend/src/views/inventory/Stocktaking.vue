@@ -1,32 +1,36 @@
 <template>
-  <div class="stocktaking-container">
-    <div class="header">
-      <h2>商品盘点</h2>
-      <el-button type="primary" @click="handleCreate">
-        <el-icon><Plus /></el-icon>新建盘点
-      </el-button>
-    </div>
-
-    <el-card class="filter-card">
+  <ListPageLayout>
+    <template #filter>
       <el-form :inline="true" :model="queryParams" class="filter-form">
-        <el-form-item label="盘点编号">
-          <el-input v-model="queryParams.code" placeholder="请输入盘点编号" clearable />
+        <el-form-item label="盘点单号">
+          <el-input v-model="queryParams.orderNo" placeholder="请输入盘点单号" />
         </el-form-item>
-        <el-form-item label="盘点状态">
-          <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
-            <el-option label="进行中" value="processing" />
-            <el-option label="已完成" value="completed" />
-            <el-option label="已取消" value="cancelled" />
+        <el-form-item label="操作员">
+          <el-select 
+            v-model="queryParams.operator" 
+            placeholder="请选择操作员" 
+            clearable
+            filterable
+            style="width: 150px"
+          >
+            <el-option
+              v-for="user in userList"
+              :key="user.id"
+              :label="user.fullname"
+              :value="user.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="盘点日期">
           <el-date-picker
-            v-model="queryParams.dateRange"
+            v-model="dateRange"
             type="daterange"
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY-MM-DD"
+            @change="handleDateChange"
+            style="width: 240px"
           />
         </el-form-item>
         <el-form-item>
@@ -36,11 +40,14 @@
           <el-button @click="resetQuery">
             <el-icon><Refresh /></el-icon>重置
           </el-button>
+          <el-button type="primary" @click="handleCreate">
+            <el-icon><Plus /></el-icon>新建盘点
+          </el-button>
         </el-form-item>
       </el-form>
-    </el-card>
+    </template>
 
-    <el-card class="table-card">
+    <template #content>
       <el-table
         v-loading="loading"
         :data="stocktakingList"
@@ -48,46 +55,31 @@
         style="width: 100%"
       >
         <el-table-column type="index" width="50" />
-        <el-table-column prop="code" label="盘点编号" />
-        <el-table-column prop="createTime" label="创建时间" width="160">
+        <el-table-column prop="orderNo" label="盘点单号" width="180" />
+        <el-table-column prop="stocktakingDate" label="盘点日期" width="180">
           <template #default="{ row }">
-            {{ formatDateTime(row.createTime) }}
+            {{ formatDateOnly(row.stocktakingDate) }}
           </template>
         </el-table-column>
-        <el-table-column prop="operator" label="操作人" />
-        <el-table-column prop="totalProducts" label="盘点商品数" />
-        <el-table-column prop="accuracy" label="准确率">
+        <el-table-column prop="operator" label="操作员" width="100">
           <template #default="{ row }">
-            {{ row.accuracy }}%
+            <UserDisplay :value="row.operator" />
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="totalItems" label="盘点商品数" width="120" />
+        <el-table-column prop="remark" label="备注" min-width="120" />
+        <el-table-column prop="createdAt" label="创建时间" width="160">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">
-              {{ getStatusText(row.status) }}
-            </el-tag>
+            {{ formatDateTime(row.createdAt) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleDetail(row)">
-              详情
+              盘点明细
             </el-button>
-            <el-button
-              v-if="row.status === 'processing'"
-              type="primary"
-              link
-              @click="handleComplete(row)"
-            >
-              完成
-            </el-button>
-            <el-button
-              v-if="row.status === 'processing'"
-              type="danger"
-              link
-              @click="handleCancel(row)"
-            >
-              取消
+            <el-button type="danger" link @click="handleDelete(row)">
+              删除
             </el-button>
           </template>
         </el-table-column>
@@ -99,152 +91,247 @@
           v-model:page-size="queryParams.pageSize"
           :total="total"
           :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next"
+          layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
       </div>
-    </el-card>
+    </template>
 
     <!-- 新建盘点对话框 -->
-    <el-dialog
-      title="新建盘点"
+    <BaseDialog
       v-model="dialogVisible"
-      width="800px"
-      append-to-body
+      :title="dialogTitle"
+      :form-data="form"
+      :rules="rules"
+      :loading="submitting"
+      width="1000px"
+      @confirm="handleSubmit"
+      @cancel="handleCancel"
     >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="100px"
-      >
-        <el-form-item label="盘点说明" prop="description">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            placeholder="请输入盘点说明"
+      <template #form="{ form: formData }">
+        <el-form-item label="盘点日期" prop="stocktakingDate">
+          <el-date-picker
+            v-model="formData.stocktakingDate"
+            type="date"
+            placeholder="请选择盘点日期"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
           />
         </el-form-item>
-        <el-form-item label="盘点商品">
-          <el-table :data="form.products" border style="width: 100%">
-            <el-table-column type="index" width="50" />
-            <el-table-column prop="name" label="商品名称" />
-            <el-table-column prop="specification" label="规格" />
-            <el-table-column prop="unit" label="单位" />
-            <el-table-column prop="systemStock" label="系统库存" />
-            <el-table-column prop="actualStock" label="实际库存">
-              <template #default="{ row }">
-                <el-input-number
-                  v-model="row.actualStock"
-                  :min="0"
-                  :precision="0"
-                />
-              </template>
-            </el-table-column>
-            <el-table-column prop="difference" label="差异">
-              <template #default="{ row }">
-                {{ row.actualStock - row.systemStock }}
-              </template>
-            </el-table-column>
-          </el-table>
+        
+        <el-form-item label="操作员" prop="operator">
+          <UserSelect v-model="formData.operator" />
         </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-        </div>
+        
+        <el-form-item label="备注" prop="remark">
+          <el-input
+            v-model="formData.remark"
+            type="textarea"
+            placeholder="请输入备注信息"
+            :rows="3"
+          />
+        </el-form-item>
+        
+        <el-form-item label="盘点商品">
+          <div class="product-section">
+            <div class="product-header">
+              <el-button type="primary" @click="handleAddProduct">
+                <el-icon><Plus /></el-icon>选择商品
+              </el-button>
+              <span class="product-count" v-if="formData.items.length > 0">
+                已选择 {{ formData.items.length }} 个商品
+              </span>
+            </div>
+            <el-table :data="formData.items" border style="width: 100%; margin-top: 10px;" v-if="formData.items.length > 0">
+              <el-table-column type="index" label="序号" width="54" />
+              <el-table-column label="商品信息" min-width="180">
+                <template #default="{ row }">
+                  <div class="product-info">
+                    <div class="product-name">{{ row.productName }}</div>
+                    <div class="product-code">编码：{{ row.productCode }}</div>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="specification" label="规格" width="100" />
+              <el-table-column prop="unit" label="单位" width="60" />
+              <el-table-column label="系统库存" width="100">
+                <template #default="{ row }">
+                  <span class="system-stock">{{ row.systemQuantity || 0 }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="实际数量" width="120">
+                <template #default="{ row }">
+                  <el-input-number
+                    v-model="row.actualQuantity"
+                    :min="0"
+                    :precision="0"
+                    size="small"
+                  />
+                </template>
+              </el-table-column>
+              <el-table-column label="差异" width="80">
+                <template #default="{ row }">
+                  <span 
+                    :class="getDifferenceClass((row.actualQuantity || 0) - (row.systemQuantity || 0))"
+                  >
+                    {{ (row.actualQuantity || 0) - (row.systemQuantity || 0) }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="60">
+                <template #default="{ $index }">
+                  <el-button
+                    type="danger"
+                    link
+                    @click="handleRemoveProduct($index)"
+                    size="small"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="empty-state" v-else>
+              <el-empty description="暂无商品，请点击上方按钮选择商品" :image-size="80" />
+            </div>
+            <div class="summary-info" v-if="formData.items.length > 0">
+              <div class="summary-item">
+                <span>盘点商品总数：{{ formData.items.length }}</span>
+              </div>
+              <div class="summary-item">
+                <span>盘盈商品：{{ profitCount }}</span>
+                <span class="profit">盘亏商品：{{ lossCount }}</span>
+              </div>
+            </div>
+          </div>
+        </el-form-item>
       </template>
-    </el-dialog>
-  </div>
+    </BaseDialog>
+
+    <!-- 商品选择弹窗 -->
+    <ProductSelectDialog
+      v-model="productSelectVisible"
+      :selected-product-ids="selectedProductIds"
+      @confirm="handleProductSelectConfirm"
+    />
+
+    <!-- 盘点明细弹窗 -->
+    <StocktakingItemsDialog
+      v-model="itemsDialogVisible"
+      :stocktaking-order-id="selectedOrderId"
+    />
+  </ListPageLayout>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, Refresh } from '@element-plus/icons-vue'
-import { formatDateTime } from '@/utils/date'
+import { 
+  getStocktakingList, 
+  createStocktaking, 
+  deleteStocktaking 
+} from '@/api/stocktaking'
+import { getUserList } from '@/api/user'
+import ListPageLayout from '@/components/ListPageLayout.vue'
+import BaseDialog from '@/components/BaseDialog.vue'
+import UserSelect from '@/components/UserSelect.vue'
+import ProductSelectDialog from '@/components/ProductSelectDialog.vue'
+import StocktakingItemsDialog from '@/components/StocktakingItemsDialog.vue'
+import { useUserStore } from '@/stores/user'
+import { formatDateTime, getToday, formatDateOnly } from '@/utils/date'
+import UserDisplay from '@/components/UserDisplay.vue'
+
+const userStore = useUserStore()
 
 // 查询参数
 const queryParams = reactive({
   page: 1,
   pageSize: 10,
-  code: '',
-  status: undefined,
-  dateRange: []
+  orderNo: '',
+  operator: '',
+  startDate: '',
+  endDate: ''
 })
 
 // 数据列表
 const loading = ref(false)
 const stocktakingList = ref([])
 const total = ref(0)
+const dateRange = ref([]) // 日期范围选择器
+const userList = ref([]) // 用户列表
 
 // 表单相关
 const dialogVisible = ref(false)
-const formRef = ref()
-const form = reactive({
-  description: '',
-  products: []
+const submitting = ref(false)
+const form = ref({
+  stocktakingDate: '',
+  operator: null,
+  remark: '',
+  items: []
 })
 
 const rules = {
-  description: [
-    { required: true, message: '请输入盘点说明', trigger: 'blur' }
+  stocktakingDate: [
+    { required: true, message: '请选择盘点日期', trigger: 'change' }
+  ],
+  operator: [
+    { required: true, message: '请选择操作员', trigger: 'change' }
   ]
 }
+
+// 商品选择弹窗
+const productSelectVisible = ref(false)
+
+// 盘点明细弹窗
+const itemsDialogVisible = ref(false)
+const selectedOrderId = ref(null)
+
+// 计算属性
+const dialogTitle = computed(() => '新建盘点单')
+
+// 获取已选择的商品ID列表
+const selectedProductIds = computed(() => {
+  return form.value.items.map(item => item.productId).filter(id => id)
+})
+
+// 盘盈商品数量
+const profitCount = computed(() => {
+  return form.value.items.filter(item => 
+    (item.actualQuantity || 0) > (item.systemQuantity || 0)
+  ).length
+})
+
+// 盘亏商品数量
+const lossCount = computed(() => {
+  return form.value.items.filter(item => 
+    (item.actualQuantity || 0) < (item.systemQuantity || 0)
+  ).length
+})
 
 // 获取盘点列表
 const getList = async () => {
   loading.value = true
   try {
-    // TODO: 调用后端API获取盘点列表
-    // 模拟数据
-    stocktakingList.value = [
-      {
-        id: 1,
-        code: 'PD202403150001',
-        createTime: '2024-03-15 10:00:00',
-        operator: '张三',
-        totalProducts: 100,
-        accuracy: 99.5,
-        status: 'processing'
-      },
-      {
-        id: 2,
-        code: 'PD202403150002',
-        createTime: '2024-03-15 14:00:00',
-        operator: '李四',
-        totalProducts: 80,
-        accuracy: 100,
-        status: 'completed'
-      }
-    ]
-    total.value = 2
+    const res = await getStocktakingList(queryParams)
+    stocktakingList.value = res.data.list
+    total.value = res.data.total
   } catch (error) {
     console.error('获取盘点列表失败:', error)
+    ElMessage.error('获取盘点列表失败')
   }
   loading.value = false
 }
 
-// 获取状态类型
-const getStatusType = (status) => {
-  const map = {
-    processing: 'warning',
-    completed: 'success',
-    cancelled: 'info'
+// 获取用户列表
+const getUsersList = async () => {
+  try {
+    const response = await getUserList({ pageSize: 1000 }) // 获取所有用户
+    userList.value = response.data || []
+  } catch (error) {
+    console.error('获取用户列表失败:', error)
   }
-  return map[status]
-}
-
-// 获取状态文本
-const getStatusText = (status) => {
-  const map = {
-    processing: '进行中',
-    completed: '已完成',
-    cancelled: '已取消'
-  }
-  return map[status]
 }
 
 // 查询按钮
@@ -255,87 +342,152 @@ const handleQuery = () => {
 
 // 重置按钮
 const resetQuery = () => {
-  queryParams.code = ''
-  queryParams.status = undefined
-  queryParams.dateRange = []
+  queryParams.orderNo = ''
+  queryParams.operator = ''
+  queryParams.startDate = ''
+  queryParams.endDate = ''
+  dateRange.value = []
   handleQuery()
+}
+
+// 处理日期范围变化
+const handleDateChange = (dates) => {
+  if (dates && dates.length === 2) {
+    queryParams.startDate = dates[0]
+    queryParams.endDate = dates[1]
+  } else {
+    queryParams.startDate = ''
+    queryParams.endDate = ''
+  }
 }
 
 // 新建盘点
 const handleCreate = () => {
-  // TODO: 获取商品列表
-  form.products = [
-    {
-      id: 1,
-      name: '商品A',
-      specification: '500ml/瓶',
-      unit: '瓶',
-      systemStock: 100,
-      actualStock: 100
-    },
-    {
-      id: 2,
-      name: '商品B',
-      specification: '1kg/袋',
-      unit: '袋',
-      systemStock: 50,
-      actualStock: 50
-    }
-  ]
+  form.value = {
+    stocktakingDate: getToday(),
+    operator: userStore.userInfo?.username || null,
+    remark: '',
+    items: []
+  }
   dialogVisible.value = true
 }
 
-// 查看详情
+// 查看盘点明细
 const handleDetail = (row) => {
-  // TODO: 实现查看详情功能
-  console.log('查看详情:', row)
+  selectedOrderId.value = row.id
+  itemsDialogVisible.value = true
 }
 
-// 完成盘点
-const handleComplete = (row) => {
-  ElMessageBox.confirm('确认要完成该盘点吗？', '提示', {
+// 删除盘点单
+const handleDelete = (row) => {
+  ElMessageBox.confirm('确认要删除该盘点单吗？删除后不可恢复！', '提示', {
     type: 'warning'
   }).then(async () => {
     try {
-      // TODO: 调用后端API完成盘点
-      ElMessage.success('盘点已完成')
+      await deleteStocktaking(row.id)
+      ElMessage.success('删除成功')
       getList()
     } catch (error) {
-      console.error('完成盘点失败:', error)
+      console.error('删除盘点单失败:', error)
+      ElMessage.error('删除失败')
     }
   })
 }
 
-// 取消盘点
-const handleCancel = (row) => {
-  ElMessageBox.confirm('确认要取消该盘点吗？', '提示', {
-    type: 'warning'
-  }).then(async () => {
-    try {
-      // TODO: 调用后端API取消盘点
-      ElMessage.success('盘点已取消')
-      getList()
-    } catch (error) {
-      console.error('取消盘点失败:', error)
+// 添加商品
+const handleAddProduct = () => {
+  productSelectVisible.value = true
+}
+
+// 商品选择确认
+const handleProductSelectConfirm = async (selectedProducts) => {
+  try {
+    // 获取选中商品的库存信息
+    const productIds = selectedProducts.map(p => p.id)
+    
+    // 过滤掉已经存在的商品
+    const existingProductIds = form.value.items.map(item => item.productId)
+    const newProducts = selectedProducts.filter(p => !existingProductIds.includes(p.id))
+    
+    if (newProducts.length === 0) {
+      ElMessage.warning('所选商品已存在于盘点列表中')
+      return
     }
-  })
+    
+    // 添加新商品到盘点列表
+    const newItems = newProducts.map(product => ({
+      productId: product.id,
+      productName: product.name,
+      productCode: product.code,
+      specification: product.specification || '',
+      unit: product.unit,
+      systemQuantity: product.currentStock || 0,
+      actualQuantity: product.currentStock || 0 // 默认实际数量等于系统库存
+    }))
+    
+    form.value.items.push(...newItems)
+    ElMessage.success(`成功添加 ${newProducts.length} 个商品`)
+  } catch (error) {
+    console.error('添加商品失败:', error)
+    ElMessage.error('添加商品失败')
+  }
+}
+
+// 移除商品
+const handleRemoveProduct = (index) => {
+  form.value.items.splice(index, 1)
+}
+
+// 获取差异样式类
+const getDifferenceClass = (difference) => {
+  if (difference > 0) return 'profit'
+  if (difference < 0) return 'loss'
+  return 'normal'
 }
 
 // 提交表单
-const submitForm = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        // TODO: 调用后端API创建盘点
-        ElMessage.success('创建成功')
-        dialogVisible.value = false
-        getList()
-      } catch (error) {
-        console.error('创建盘点失败:', error)
-      }
+const handleSubmit = async () => {
+  if (form.value.items.length === 0) {
+    ElMessage.warning('请至少选择一个商品进行盘点')
+    return
+  }
+  
+  submitting.value = true
+  try {
+    const submitData = {
+      stocktakingDate: form.value.stocktakingDate,
+      operator: form.value.operator,
+      remark: form.value.remark,
+      items: form.value.items.map(item => ({
+        productId: item.productId,
+        actualQuantity: item.actualQuantity || 0
+      }))
     }
-  })
+    
+    const res = await createStocktaking(submitData)
+    
+    // 显示创建结果信息
+    let message = res.message || '盘点单创建成功'
+    if (res.data.autoCreatedOrders && res.data.autoCreatedOrders.length > 0) {
+      const orderInfo = res.data.autoCreatedOrders.map(order => 
+        `${order.type}(${order.orderNo})`
+      ).join('、')
+      message += `，已自动创建：${orderInfo}`
+    }
+    
+    ElMessage.success(message)
+    dialogVisible.value = false
+    getList()
+  } catch (error) {
+    console.error('创建盘点单失败:', error)
+    ElMessage.error(error.message || '创建失败')
+  }
+  submitting.value = false
+}
+
+// 取消对话框
+const handleCancel = () => {
+  dialogVisible.value = false
 }
 
 // 分页相关
@@ -351,42 +503,85 @@ const handleCurrentChange = (val) => {
 
 onMounted(() => {
   getList()
+  getUsersList()
 })
 </script>
 
 <style scoped>
-.stocktaking-container {
-  padding: 20px;
+.product-section {
+  width: 100%;
 }
 
-.header {
+.product-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
-.filter-card {
-  margin-bottom: 20px;
+.product-count {
+  color: #409eff;
+  font-size: 14px;
 }
 
-.filter-form {
+.product-info {
+  line-height: 1.4;
+}
+
+.product-name {
+  font-weight: 500;
+  color: #303133;
+}
+
+.product-code {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 2px;
+}
+
+.system-stock {
+  color: #606266;
+  font-weight: 500;
+}
+
+.profit {
+  color: #67c23a;
+  font-weight: 500;
+}
+
+.loss {
+  color: #f56c6c;
+  font-weight: 500;
+}
+
+.normal {
+  color: #606266;
+}
+
+.summary-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.table-card {
-  margin-bottom: 20px;
+.summary-item {
+  display: flex;
+  gap: 20px;
+  font-size: 14px;
+  color: #606266;
+}
+
+.empty-state {
+  margin: 20px 0;
 }
 
 .pagination {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
-}
-
-.dialog-footer {
-  text-align: right;
 }
 </style> 

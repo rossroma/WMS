@@ -4,7 +4,8 @@ const InventoryLog = require('./InventoryLog');
 const { InboundOrder } = require('./InboundOrder');
 const { OutboundOrder } = require('./OutboundOrder');
 const { OrderItem, OrderItemType } = require('./OrderItem');
-const StocktakingOrder = require('./StocktakingOrder');
+const { StocktakingOrder } = require('./StocktakingOrder');
+const { StocktakingItem } = require('./StocktakingItem');
 const Supplier = require('./Supplier');
 const Category = require('./Category');
 
@@ -67,9 +68,27 @@ Category.hasMany(Product, { foreignKey: 'categoryId' });
 Category.belongsTo(Category, { as: 'ParentCategory', foreignKey: 'parentId' });
 Category.hasMany(Category, { as: 'SubCategories', foreignKey: 'parentId' });
 
-// StocktakingOrder 关联关系
-StocktakingOrder.belongsTo(Product, { foreignKey: 'productId' });
-Product.hasMany(StocktakingOrder, { foreignKey: 'productId' });
+// 盘点单与盘点商品的一对多关系
+StocktakingOrder.hasMany(StocktakingItem, {
+  foreignKey: 'stocktakingOrderId',
+  as: 'items'
+});
+
+StocktakingItem.belongsTo(StocktakingOrder, {
+  foreignKey: 'stocktakingOrderId',
+  as: 'stocktakingOrder'
+});
+
+// 盘点商品与商品的多对一关系
+StocktakingItem.belongsTo(Product, {
+  foreignKey: 'productId',
+  as: 'product'
+});
+
+Product.hasMany(StocktakingItem, {
+  foreignKey: 'productId',
+  as: 'stocktakingItems'
+});
 
 module.exports = {
   Product,
@@ -80,6 +99,7 @@ module.exports = {
   OrderItem,
   OrderItemType,
   StocktakingOrder,
+  StocktakingItem,
   Supplier,
   Category
 }; 

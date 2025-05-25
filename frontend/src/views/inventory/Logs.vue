@@ -95,9 +95,9 @@
             {{ formatDate(row.date) }}
           </template>
         </el-table-column>
-        <el-table-column prop="operator" label="操作员" width="100">
+        <el-table-column prop="operator" label="操作员" width="110">
           <template #default="{ row }">
-            {{ row.operator || '-' }}
+            <UserDisplay :value="row.operator" />
           </template>
         </el-table-column>
         <el-table-column prop="relatedDocument" label="相关单据" min-width="120">
@@ -131,8 +131,7 @@ import { getUserList } from '@/api/user'
 import { ElMessage } from 'element-plus'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import { formatDateTime } from '@/utils/date'
-
-const router = useRouter()
+import UserDisplay from '@/components/UserDisplay.vue'
 
 // 查询参数
 const queryParams = reactive({
