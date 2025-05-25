@@ -60,7 +60,7 @@ exports.login = async (req, res, next) => {
         user: {
           id: user.id,
           username: user.username,
-          name: user.name,
+          fullname: user.name,
           email: user.email,
           roles: user.Roles.map(role => role.name)
         }
@@ -91,7 +91,7 @@ exports.getCurrentUser = async (req, res, next) => {
       data: {
         id: user.id,
         username: user.username,
-        name: user.name,
+        fullname: user.name,
         email: user.email,
         phone: user.phone,
         roles: user.Roles.map(role => role.name)

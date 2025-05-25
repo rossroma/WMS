@@ -11,6 +11,23 @@ const router = createRouter({
       meta: { title: '登录', requiresAuth: false }
     },
     {
+      path: '/',
+      component: () => import('@/layout/Index.vue'),
+      redirect: '/dashboard',
+      children: [
+        {
+          path: 'dashboard',
+          name: 'Dashboard',
+          component: () => import('@/views/dashboard/Index.vue'),
+          meta: { 
+            title: '仪表盘', 
+            icon: 'DataBoard',
+            requiresAuth: true 
+          }
+        }
+      ]
+    },
+    {
       path: '/organization',
       component: () => import('@/layout/Index.vue'),
       redirect: '/organization/users',
@@ -199,7 +216,7 @@ router.beforeEach(async (to, from, next) => {
   
   // 已登录用户访问登录页，重定向到首页
   if (to.name === 'Login' && userStore.token) {
-    next({ name: 'Users' })
+    next({ name: 'Dashboard' })
     return
   }
   

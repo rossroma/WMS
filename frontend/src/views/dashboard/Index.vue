@@ -11,7 +11,7 @@
             </div>
           </template>
           <div class="card-body">
-            <div class="number">{{ statistics.todayInbound }}</div>
+            <div class="number">{{ dashboardData.todayInbound || 0 }}</div>
             <div class="text">件</div>
           </div>
         </el-card>
@@ -25,7 +25,7 @@
             </div>
           </template>
           <div class="card-body">
-            <div class="number">{{ statistics.todayOutbound }}</div>
+            <div class="number">{{ dashboardData.todayOutbound || 0 }}</div>
             <div class="text">件</div>
           </div>
         </el-card>
@@ -39,7 +39,7 @@
             </div>
           </template>
           <div class="card-body">
-            <div class="number">{{ statistics.stockWarning }}</div>
+            <div class="number">{{ dashboardData.stockWarning || 0 }}</div>
             <div class="text">个商品</div>
           </div>
         </el-card>
@@ -53,8 +53,54 @@
             </div>
           </template>
           <div class="card-body">
-            <div class="number">{{ statistics.stocktakingAccuracy }}%</div>
+            <div class="number">{{ dashboardData.stocktakingAccuracy || 100 }}%</div>
             <div class="text">准确率</div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 第二行统计卡片 -->
+    <el-row :gutter="20" style="margin-top: 20px;">
+      <el-col :span="8">
+        <el-card shadow="hover" class="data-card">
+          <template #header>
+            <div class="card-header">
+              <span>库存总量</span>
+              <el-tag type="primary">实时</el-tag>
+            </div>
+          </template>
+          <div class="card-body">
+            <div class="number">{{ dashboardData.totalInventory || 0 }}</div>
+            <div class="text">件</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="8">
+        <el-card shadow="hover" class="data-card">
+          <template #header>
+            <div class="card-header">
+              <span>商品种类</span>
+              <el-tag type="primary">实时</el-tag>
+            </div>
+          </template>
+          <div class="card-body">
+            <div class="number">{{ dashboardData.productCount || 0 }}</div>
+            <div class="text">种</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="8">
+        <el-card shadow="hover" class="data-card">
+          <template #header>
+            <div class="card-header">
+              <span>库存价值</span>
+              <el-tag type="primary">实时</el-tag>
+            </div>
+          </template>
+          <div class="card-body">
+            <div class="number">¥{{ formatNumber(dashboardData.inventoryValue || 0) }}</div>
+            <div class="text">总价值</div>
           </div>
         </el-card>
       </el-col>
@@ -67,11 +113,11 @@
           <template #header>
             <div class="card-header">
               <span>近7天出入库趋势</span>
+              <el-button type="primary" link @click="refreshTrendChart">刷新</el-button>
             </div>
           </template>
           <div class="chart-container">
-            <!-- 这里需要集成图表库，如ECharts -->
-            <div class="chart-placeholder">出入库趋势图表</div>
+            <div ref="trendChart" class="chart"></div>
           </div>
         </el-card>
       </el-col>
@@ -79,12 +125,12 @@
         <el-card class="chart-card">
           <template #header>
             <div class="card-header">
-              <span>畅销商品TOP10</span>
+              <span>热门商品TOP10</span>
+              <el-button type="primary" link @click="refreshHotProducts">刷新</el-button>
             </div>
           </template>
           <div class="chart-container">
-            <!-- 这里需要集成图表库，如ECharts -->
-            <div class="chart-placeholder">畅销商品图表</div>
+            <div ref="hotProductsChart" class="chart"></div>
           </div>
         </el-card>
       </el-col>
@@ -95,11 +141,17 @@
       <template #header>
         <div class="card-header">
           <span>库存预警商品</span>
-          <el-button type="primary" link>查看全部</el-button>
+          <el-button type="primary" link @click="handleViewAllWarnings">查看全部</el-button>
         </div>
       </template>
-      <el-table :data="warningProducts" style="width: 100%">
+      <el-table 
+        :data="warningProducts" 
+        style="width: 100%"
+        v-loading="warningLoading"
+        empty-text="暂无预警商品"
+      >
         <el-table-column prop="name" label="商品名称" />
+        <el-table-column prop="code" label="商品编码" />
         <el-table-column prop="specification" label="规格" />
         <el-table-column prop="currentStock" label="当前库存" />
         <el-table-column prop="warningStock" label="预警库存" />
@@ -124,66 +176,217 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import * as echarts from 'echarts'
+import { 
+  getDashboardData, 
+  getWeeklyTrend, 
+  getHotProducts, 
+  getWarningProducts 
+} from '@/api/dashboard'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
-// 统计数据
-const statistics = reactive({
+// 数据状态
+const dashboardData = reactive({
   todayInbound: 0,
   todayOutbound: 0,
   stockWarning: 0,
-  stocktakingAccuracy: 0
+  stocktakingAccuracy: 100,
+  totalInventory: 0,
+  productCount: 0,
+  inventoryValue: 0
 })
 
 // 预警商品列表
 const warningProducts = ref([])
+const warningLoading = ref(false)
 
-// 获取统计数据
-const getStatistics = async () => {
+// 图表引用
+const trendChart = ref(null)
+const hotProductsChart = ref(null)
+let trendChartInstance = null
+let hotProductsChartInstance = null
+
+// 格式化数字
+const formatNumber = (num) => {
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + '万'
+  }
+  return num.toLocaleString()
+}
+
+// 获取dashboard数据
+const getDashboard = async () => {
   try {
-    // TODO: 调用后端API获取统计数据
-    // 模拟数据
-    statistics.todayInbound = 156
-    statistics.todayOutbound = 89
-    statistics.stockWarning = 12
-    statistics.stocktakingAccuracy = 99.8
+    const response = await getDashboardData()
+    if (response.data.status === 'success') {
+      Object.assign(dashboardData, response.data.data)
+    }
   } catch (error) {
-    console.error('获取统计数据失败:', error)
+    console.error('获取dashboard数据失败:', error)
+    ElMessage.error('获取dashboard数据失败')
   }
 }
 
 // 获取预警商品
-const getWarningProducts = async () => {
+const getWarningProductsList = async () => {
   try {
-    // TODO: 调用后端API获取预警商品
-    // 模拟数据
-    warningProducts.value = [
-      {
-        id: 1,
-        name: '商品A',
-        specification: '500ml/瓶',
-        currentStock: 5,
-        warningStock: 10
-      },
-      {
-        id: 2,
-        name: '商品B',
-        specification: '1kg/袋',
-        currentStock: 3,
-        warningStock: 8
-      }
-    ]
+    warningLoading.value = true
+    const response = await getWarningProducts()
+    if (response.data.status === 'success') {
+      warningProducts.value = response.data.data
+    }
   } catch (error) {
     console.error('获取预警商品失败:', error)
+    ElMessage.error('获取预警商品失败')
+  } finally {
+    warningLoading.value = false
   }
+}
+
+// 初始化趋势图表
+const initTrendChart = async () => {
+  try {
+    const response = await getWeeklyTrend()
+    if (response.data.status === 'success') {
+      const data = response.data.data
+      
+      if (trendChartInstance) {
+        trendChartInstance.dispose()
+      }
+      
+      trendChartInstance = echarts.init(trendChart.value)
+      
+      const option = {
+        title: {
+          text: '出入库趋势',
+          left: 'center',
+          textStyle: {
+            fontSize: 14
+          }
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        legend: {
+          data: ['入库', '出库'],
+          bottom: 10
+        },
+        xAxis: {
+          type: 'category',
+          data: data.map(item => {
+            const date = new Date(item.date)
+            return `${date.getMonth() + 1}/${date.getDate()}`
+          })
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            name: '入库',
+            type: 'line',
+            data: data.map(item => item.inbound),
+            smooth: true,
+            itemStyle: {
+              color: '#67C23A'
+            }
+          },
+          {
+            name: '出库',
+            type: 'line',
+            data: data.map(item => item.outbound),
+            smooth: true,
+            itemStyle: {
+              color: '#E6A23C'
+            }
+          }
+        ]
+      }
+      
+      trendChartInstance.setOption(option)
+    }
+  } catch (error) {
+    console.error('获取趋势数据失败:', error)
+  }
+}
+
+// 初始化热门商品图表
+const initHotProductsChart = async () => {
+  try {
+    const response = await getHotProducts()
+    if (response.data.status === 'success') {
+      const data = response.data.data
+      
+      if (hotProductsChartInstance) {
+        hotProductsChartInstance.dispose()
+      }
+      
+      hotProductsChartInstance = echarts.init(hotProductsChart.value)
+      
+      const option = {
+        title: {
+          text: '热门商品',
+          left: 'center',
+          textStyle: {
+            fontSize: 14
+          }
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
+          }
+        },
+        xAxis: {
+          type: 'value'
+        },
+        yAxis: {
+          type: 'category',
+          data: data.map(item => item.product.name).reverse(),
+          axisLabel: {
+            interval: 0,
+            formatter: function(value) {
+              return value.length > 6 ? value.substring(0, 6) + '...' : value
+            }
+          }
+        },
+        series: [
+          {
+            name: '库存量',
+            type: 'bar',
+            data: data.map(item => item.quantity).reverse(),
+            itemStyle: {
+              color: '#409EFF'
+            }
+          }
+        ]
+      }
+      
+      hotProductsChartInstance.setOption(option)
+    }
+  } catch (error) {
+    console.error('获取热门商品数据失败:', error)
+  }
+}
+
+// 刷新趋势图表
+const refreshTrendChart = () => {
+  initTrendChart()
+}
+
+// 刷新热门商品
+const refreshHotProducts = () => {
+  initHotProductsChart()
 }
 
 // 处理入库
 const handleInbound = (row) => {
   router.push({
-    path: '/inbound',
+    path: '/warehouse/inbound',
     query: { productId: row.id }
   })
 }
@@ -191,14 +394,53 @@ const handleInbound = (row) => {
 // 查看详情
 const handleDetail = (row) => {
   router.push({
-    path: '/products',
+    path: '/product/list',
     query: { id: row.id }
   })
 }
 
-onMounted(() => {
-  getStatistics()
-  getWarningProducts()
+// 查看所有预警
+const handleViewAllWarnings = () => {
+  router.push({
+    path: '/inventory/list',
+    query: { warning: true }
+  })
+}
+
+// 窗口大小变化时重新调整图表
+const handleResize = () => {
+  if (trendChartInstance) {
+    trendChartInstance.resize()
+  }
+  if (hotProductsChartInstance) {
+    hotProductsChartInstance.resize()
+  }
+}
+
+onMounted(async () => {
+  await getDashboard()
+  await getWarningProductsList()
+  
+  await nextTick()
+  
+  // 初始化图表
+  initTrendChart()
+  initHotProductsChart()
+  
+  // 监听窗口大小变化
+  window.addEventListener('resize', handleResize)
+})
+
+// 组件卸载时清理
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  if (trendChartInstance) {
+    trendChartInstance.dispose()
+  }
+  if (hotProductsChartInstance) {
+    hotProductsChartInstance.dispose()
+  }
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -235,7 +477,7 @@ onMounted(() => {
 }
 
 .chart-row {
-  margin-bottom: 20px;
+  margin: 20px 0;
 }
 
 .chart-card {
@@ -249,9 +491,9 @@ onMounted(() => {
   align-items: center;
 }
 
-.chart-placeholder {
-  color: #909399;
-  font-size: 14px;
+.chart {
+  width: 100%;
+  height: 100%;
 }
 
 .warning-card {

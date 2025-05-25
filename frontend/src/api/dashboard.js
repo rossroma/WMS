@@ -1,5 +1,13 @@
 import request from '@/utils/request'
 
+// 获取综合dashboard数据
+export function getDashboardData() {
+  return request({
+    url: '/dashboard/data',
+    method: 'get'
+  })
+}
+
 // 获取今日入库数量
 export function getTodayInboundCount() {
   return request({

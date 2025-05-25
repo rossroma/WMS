@@ -26,6 +26,7 @@
     "ws": "^8.18.2"
   },
   "devDependencies": {
+    "axios": "^1.9.0",
     "nodemon": "^2.0.0"
   }
 }
