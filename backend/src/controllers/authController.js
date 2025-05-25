@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Role = require('../models/Role');
 const UserRole = require('../models/UserRole');
 const { AppError } = require('../middleware/errorHandler');
+const { createLog } = require('../services/logService');
 
 // 生成 JWT token
 const generateToken = (user) => {
@@ -52,6 +53,16 @@ exports.login = async (req, res, next) => {
     // 生成 token
     const token = generateToken(user);
 
+    // 记录登录日志
+    await createLog({
+      userId: user.id,
+      username: user.username,
+      actionType: 'LOGIN',
+      module: 'Auth',
+      ipAddress: req.ip,
+      details: 'User logged in successfully'
+    });
+
     res.json({
       status: 'success',
       message: '登录成功',
@@ -68,6 +79,30 @@ exports.login = async (req, res, next) => {
     });
   } catch (error) {
     next(new AppError('登录失败', 500));
+  }
+};
+
+// 登出功能 (如果需要)
+exports.logout = async (req, res, next) => {
+  try {
+    // 假设前端会清除token，后端主要是记录日志
+    // 如果有服务端session或token黑名单机制，可以在此处理
+    if (req.user) {
+      await createLog({
+        userId: req.user.id,
+        username: req.user.username,
+        actionType: 'LOGOUT',
+        module: 'Auth',
+        ipAddress: req.ip,
+        details: 'User logged out'
+      });
+    }
+    res.json({
+      status: 'success',
+      message: '登出成功'
+    });
+  } catch (error) {
+    next(new AppError('登出失败', 500));
   }
 };
 

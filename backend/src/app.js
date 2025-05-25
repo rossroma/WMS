@@ -30,7 +30,7 @@ const logRoutes = require('./routes/logRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const { initCronJobs } = require('./services/cronService');
 const userRoutes = require('./routes/userRoutes');
-const { scheduleOrderCleanup, scheduleInventoryCheck } = require('./config/cron');
+const { scheduleOrderCleanup, scheduleInventoryCheck, scheduleLogCleanup } = require('./config/cron');
 
 // 创建Express应用
 const app = express();
@@ -70,6 +70,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
 // 初始化定时任务
 try {
   scheduleOrderCleanup();
+  scheduleLogCleanup();
 } catch (error) {
   console.error('定时任务初始化失败:', error);
 }

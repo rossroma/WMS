@@ -87,7 +87,7 @@ const handleLogin = async () => {
           userStore.setToken(data.token)
           userStore.setUserInfo(data.user)
           ElMessage.success('登录成功')
-          router.push('/organization/users')
+          router.push('/')
         } else {
           ElMessage.error('登录响应格式错误')
         }

@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Role = require('../models/Role');
 const UserRole = require('../models/UserRole');
 const { AppError } = require('../middleware/errorHandler');
+const { createLog } = require('../services/logService');
 
 // 获取用户列表
 exports.getUserList = async (req, res, next) => {
@@ -58,6 +59,16 @@ exports.createUser = async (req, res, next) => {
       // 不抛出错误，因为用户创建已经成功，角色分配失败不应该影响用户创建
     }
 
+    // 记录创建用户日志
+    await createLog({
+      userId: req.user ? req.user.id : null,
+      username: req.user ? req.user.username : 'System',
+      actionType: 'CREATE_USER',
+      module: 'UserManagement',
+      ipAddress: req.ip,
+      details: `Created user ${user.username} (ID: ${user.id})`
+    });
+
     res.status(201).json({
       message: '用户创建成功',
       data: {
@@ -101,6 +112,16 @@ exports.updateUser = async (req, res, next) => {
       status
     });
 
+    // 记录更新用户日志
+    await createLog({
+      userId: req.user.id,
+      username: req.user.username,
+      actionType: 'UPDATE_USER',
+      module: 'UserManagement',
+      ipAddress: req.ip,
+      details: `Updated user ${user.username} (ID: ${user.id})`
+    });
+
     res.json({
       message: '用户更新成功',
       data: {
@@ -137,6 +158,16 @@ exports.deleteUser = async (req, res, next) => {
     
     // 删除用户
     await user.destroy();
+
+    // 记录删除用户日志
+    await createLog({
+      userId: req.user.id,
+      username: req.user.username,
+      actionType: 'DELETE_USER',
+      module: 'UserManagement',
+      ipAddress: req.ip,
+      details: `Deleted user ${user.username} (ID: ${id})`
+    });
 
     res.status(204).send();
   } catch (error) {

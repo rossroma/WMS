@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 // 获取操作日志列表
-export function getLogList(params) {
+export function getLogs(params) {
   return request({
     url: '/logs',
     method: 'get',
@@ -36,4 +36,11 @@ export function exportLoginLogs(params) {
     params,
     responseType: 'blob'
   })
+}
+
+export function getLogFilterOptions() {
+  return request({
+    url: '/logs/filter-options',
+    method: 'get',
+  });
 } 

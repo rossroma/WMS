@@ -28,29 +28,6 @@ const router = createRouter({
       ]
     },
     {
-      path: '/organization',
-      component: () => import('@/layout/Index.vue'),
-      redirect: '/organization/users',
-      meta: {
-        title: '组织架构',
-        icon: 'Connection'
-      },
-      children: [
-        {
-          path: 'users',
-          name: 'Users',
-          component: () => import('@/views/organization/users/Index.vue'),
-          meta: { title: '用户管理', icon: 'User', requiresAuth: true }
-        },
-        // {
-        //   path: 'password',
-        //   name: 'ChangePassword',
-        //   component: () => import('@/views/profile/ChangePassword.vue'),
-        //   meta: { title: '修改密码', requiresAuth: true }
-        // }
-      ]
-    },
-    {
       path: '/product',
       component: () => import('@/layout/Index.vue'),
       redirect: '/product/list',
@@ -182,7 +159,30 @@ const router = createRouter({
           }
         }
       ]
-    }
+    },
+    {
+      path: '/system',
+      component: () => import('@/layout/Index.vue'),
+      redirect: '/system/users',
+      meta: {
+        title: '系统管理',
+        icon: 'Connection'
+      },
+      children: [
+        {
+          path: 'users',
+          name: 'Users',
+          component: () => import('@/views/organization/users/Index.vue'),
+          meta: { title: '用户管理', icon: 'User', requiresAuth: true }
+        },
+        {
+          path: 'logs',
+          name: 'LogManagement',
+          component: () => import('@/views/system/LogManagement.vue'),
+          meta: { title: '日志管理', icon: 'Memo', requiresAuth: true }
+        }
+      ]
+    },
   ]
 })
 
