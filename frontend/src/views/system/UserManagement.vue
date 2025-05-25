@@ -3,16 +3,16 @@
     <template #filter>
       <el-form :model="queryParams" ref="queryFormRef" :inline="true" label-width="68px" class="filter-form">
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="queryParams.username" placeholder="请输入用户名" clearable @keyup.enter="handleQuery" />
+          <el-input v-model="queryParams.username" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="queryParams.email" placeholder="请输入邮箱" clearable @keyup.enter="handleQuery" />
+          <el-input v-model="queryParams.email" placeholder="请输入邮箱" />
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
-          <el-input v-model="queryParams.phone" placeholder="请输入手机号" clearable @keyup.enter="handleQuery" />
+          <el-input v-model="queryParams.phone" placeholder="请输入手机号" />
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select v-model="queryParams.status" placeholder="用户状态" clearable>
+          <el-select v-model="queryParams.status" placeholder="用户状态" clearable style="width: 100px;">
             <el-option label="启用" value="active" />
             <el-option label="禁用" value="inactive" />
           </el-select>

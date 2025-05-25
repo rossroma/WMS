@@ -7,10 +7,13 @@ const Product = require('../models/Product');
 const Inventory = require('../models/Inventory');
 const InventoryLog = require('../models/InventoryLog');
 const MessageService = require('../services/messageService');
+const User = require('../models/User');
 const { AppError } = require('../middleware/errorHandler');
 const sequelize = require('../config/database');
 const { Op } = require('sequelize');
 const { generateStocktakingOrderNo, generateInboundOrderNo, generateOutboundOrderNo } = require('../utils/orderUtils');
+const { createLog } = require('../services/logService');
+const { LOG_MODULE, LOG_ACTION_TYPE } = require('../constants/logConstants');
 
 // 更新库存数量并生成库存日志
 const updateInventoryAndLog = async (productId, quantityChange, type, relatedDocument, operator, transaction) => {
@@ -264,6 +267,19 @@ exports.createStocktakingOrder = async (req, res, next) => {
             transaction
           );
         }
+        // Log for auto-created Inbound Order
+        try {
+          await createLog({
+            userId: null,
+            username: '系统',
+            actionType: LOG_ACTION_TYPE.CREATE,
+            module: LOG_MODULE.STOCK_IN,
+            ipAddress: req.ip,
+            details: `系统自动创建盘盈入库单 ${inboundOrderNo} (关联盘点单: ${orderNo})`
+          });
+        } catch (logError) {
+          console.error('记录盘盈入库单创建日志失败:', logError);
+        }
       }
       
       // 创建盘亏出库单
@@ -306,10 +322,54 @@ exports.createStocktakingOrder = async (req, res, next) => {
             transaction
           );
         }
+        // Log for auto-created Outbound Order
+        try {
+          await createLog({
+            userId: null,
+            username: '系统',
+            actionType: LOG_ACTION_TYPE.CREATE,
+            module: LOG_MODULE.STOCK_OUT,
+            ipAddress: req.ip,
+            details: `系统自动创建盘亏出库单 ${outboundOrderNo} (关联盘点单: ${orderNo})`
+          });
+        } catch (logError) {
+          console.error('记录盘亏出库单创建日志失败:', logError);
+        }
       }
     }
 
     await transaction.commit();
+
+    // 记录创建盘点单日志
+    try {
+      let logUserId = null;
+      let logUsername = '系统'; // Default to system
+
+      if (req.user && req.user.id) {
+        logUserId = req.user.id;
+        logUsername = req.user.username;
+      } else if (operator) {
+        // operator is userId, try to find username
+        const userPerformingAction = await User.findByPk(operator);
+        if (userPerformingAction) {
+          logUserId = userPerformingAction.id;
+          logUsername = userPerformingAction.username;
+        }
+        // If operator ID is provided but user not found, it remains '系统' which is acceptable
+      }
+
+      await createLog({
+        userId: logUserId,
+        username: logUsername,
+        actionType: LOG_ACTION_TYPE.CREATE,
+        module: LOG_MODULE.INVENTORY,
+        ipAddress: req.ip,
+        details: `创建盘点单 ${orderNo} 成功，包含 ${items.length} 个品项。`
+      });
+    } catch (logError) {
+      console.error('记录盘点单创建日志失败:', logError);
+      // 日志记录失败不应影响主流程响应
+    }
 
     // 创建消息通知（在事务提交后）
     try {

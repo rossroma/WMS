@@ -3,6 +3,7 @@ const Role = require('../models/Role');
 const UserRole = require('../models/UserRole');
 const { AppError } = require('../middleware/errorHandler');
 const { createLog } = require('../services/logService');
+const { LOG_MODULE, LOG_ACTION_TYPE } = require('../constants/logConstants');
 
 // 获取用户列表
 exports.getUserList = async (req, res, next) => {
@@ -63,10 +64,10 @@ exports.createUser = async (req, res, next) => {
     await createLog({
       userId: req.user ? req.user.id : null,
       username: req.user ? req.user.username : 'System',
-      actionType: 'CREATE_USER',
-      module: 'UserManagement',
+      actionType: LOG_ACTION_TYPE.CREATE,
+      module: LOG_MODULE.USER,
       ipAddress: req.ip,
-      details: `Created user ${user.username} (ID: ${user.id})`
+      details: `创建用户 ${user.username} (ID: ${user.id}) 成功`
     });
 
     res.status(201).json({
@@ -116,10 +117,10 @@ exports.updateUser = async (req, res, next) => {
     await createLog({
       userId: req.user.id,
       username: req.user.username,
-      actionType: 'UPDATE_USER',
-      module: 'UserManagement',
+      actionType: LOG_ACTION_TYPE.UPDATE,
+      module: LOG_MODULE.USER,
       ipAddress: req.ip,
-      details: `Updated user ${user.username} (ID: ${user.id})`
+      details: `更新用户 ${user.username} (ID: ${user.id}) 成功`
     });
 
     res.json({
@@ -163,10 +164,10 @@ exports.deleteUser = async (req, res, next) => {
     await createLog({
       userId: req.user.id,
       username: req.user.username,
-      actionType: 'DELETE_USER',
-      module: 'UserManagement',
+      actionType: LOG_ACTION_TYPE.DELETE,
+      module: LOG_MODULE.USER,
       ipAddress: req.ip,
-      details: `Deleted user ${user.username} (ID: ${id})`
+      details: `删除用户 ${user.username} (ID: ${id}) 成功`
     });
 
     res.status(204).send();
@@ -188,6 +189,16 @@ exports.changeUserPassword = async (req, res, next) => {
 
     // 更新密码
     await user.update({ password: newPassword });
+
+    // 记录修改密码日志
+    await createLog({
+      userId: req.user.id,
+      username: req.user.username,
+      actionType: LOG_ACTION_TYPE.CHANGE_PASSWORD,
+      module: LOG_MODULE.USER,
+      ipAddress: req.ip,
+      details: `用户 ${user.username} (ID: ${user.id}) 的密码已修改`
+    });
 
     res.json({
       message: '密码修改成功'

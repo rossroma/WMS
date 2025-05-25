@@ -4,6 +4,7 @@ const Role = require('../models/Role');
 const UserRole = require('../models/UserRole');
 const { AppError } = require('../middleware/errorHandler');
 const { createLog } = require('../services/logService');
+const { LOG_MODULE, LOG_ACTION_TYPE, LOG_DETAILS } = require('../constants/logConstants');
 
 // 生成 JWT token
 const generateToken = (user) => {
@@ -57,10 +58,10 @@ exports.login = async (req, res, next) => {
     await createLog({
       userId: user.id,
       username: user.username,
-      actionType: 'LOGIN',
-      module: 'Auth',
+      actionType: LOG_ACTION_TYPE.LOGIN,
+      module: LOG_MODULE.AUTH,
       ipAddress: req.ip,
-      details: 'User logged in successfully'
+      details: LOG_DETAILS.LOGIN_SUCCESS
     });
 
     res.json({
@@ -91,10 +92,10 @@ exports.logout = async (req, res, next) => {
       await createLog({
         userId: req.user.id,
         username: req.user.username,
-        actionType: 'LOGOUT',
-        module: 'Auth',
+        actionType: LOG_ACTION_TYPE.LOGOUT,
+        module: LOG_MODULE.AUTH,
         ipAddress: req.ip,
-        details: 'User logged out'
+        details: '用户登出成功'
       });
     }
     res.json({

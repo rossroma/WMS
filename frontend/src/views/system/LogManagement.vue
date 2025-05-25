@@ -1,7 +1,7 @@
 <template>
   <ListPageLayout>
     <template #filter>
-      <el-form :inline="true" :model="queryParams" class="filter-form" @submit.prevent="handleQuery">
+      <el-form :inline="true" :model="queryParams" class="filter-form">
         <el-form-item label="日期范围">
           <el-date-picker
             v-model="dateRange"
@@ -16,17 +16,17 @@
           />
         </el-form-item>
         <el-form-item label="操作模块">
-          <el-select v-model="queryParams.module" placeholder="选择模块" clearable style="width: 150px" @change="handleQuery">
+          <el-select v-model="queryParams.module" placeholder="选择模块" clearable style="width: 120px">
             <el-option v-for="item in filterOptions.modules" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="操作类型">
-          <el-select v-model="queryParams.actionType" placeholder="选择类型" clearable style="width: 150px" @change="handleQuery">
+          <el-select v-model="queryParams.actionType" placeholder="选择类型" clearable style="width: 120px">
             <el-option v-for="item in filterOptions.actionTypes" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="用户名">
-          <el-input v-model="queryParams.username" placeholder="输入用户名" clearable style="width: 150px" @keyup.enter="handleQuery" />
+          <el-input v-model="queryParams.username" placeholder="输入用户名" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :icon="Search" @click="handleQuery">查询</el-button>
