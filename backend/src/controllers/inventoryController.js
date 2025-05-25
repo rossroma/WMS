@@ -1,7 +1,7 @@
 const Inventory = require('../models/Inventory');
 const InventoryLog = require('../models/InventoryLog');
 const Product = require('../models/Product');
-const { Message, MessageType } = require('../models/Message');
+const MessageService = require('../services/messageService');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 
@@ -144,21 +144,24 @@ exports.getInventoryLogs = async (req, res, next) => {
 };
 
 // 库存预警检查
-exports.checkInventoryAlerts = async () => {
+exports.checkInventoryAlerts = async (pusher = 'system') => {
   try {
     const inventories = await Inventory.findAll({
-      include: [{ model: Product }]
+      include: [{ 
+        model: Product,
+        where: {
+          stockAlertQuantity: {
+            [Op.gt]: 0
+          }
+        }
+      }]
     });
 
-    inventories.forEach(async (inventory) => {
+    for (const inventory of inventories) {
       if (inventory.quantity < inventory.Product.stockAlertQuantity) {
-        await Message.create({
-          content: `库存预警：商品${inventory.Product.name}的库存低于预警阈值。`,
-          type: MessageType.INVENTORY_ALERT,
-          relatedId: inventory.id
-        });
+        await MessageService.createInventoryAlert(inventory, inventory.Product, pusher);
       }
-    });
+    }
   } catch (error) {
     console.error('Error checking inventory alerts:', error);
   }

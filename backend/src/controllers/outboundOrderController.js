@@ -3,6 +3,7 @@ const { OrderItem, OrderItemType } = require('../models/OrderItem');
 const Product = require('../models/Product');
 const Inventory = require('../models/Inventory');
 const InventoryLog = require('../models/InventoryLog');
+const MessageService = require('../services/messageService');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
@@ -125,9 +126,10 @@ exports.createOutboundOrder = async (req, res, next) => {
     await OrderItem.bulkCreate(orderItems, { transaction });
 
     // 更新库存数量并生成库存流水
+    const updatedInventories = [];
     for (const item of items) {
       if (item.quantity > 0) {
-        await updateInventoryAndLog(
+        const updatedInventory = await updateInventoryAndLog(
           item.productId,
           -item.quantity, // 出库为负数
           '出库',
@@ -135,10 +137,27 @@ exports.createOutboundOrder = async (req, res, next) => {
           operator,
           transaction
         );
+        updatedInventories.push({
+          inventory: updatedInventory,
+          productId: item.productId
+        });
       }
     }
 
     await transaction.commit();
+
+    // 检查库存预警（在事务提交后）
+    try {
+      for (const { inventory, productId } of updatedInventories) {
+        const product = await Product.findByPk(productId);
+        if (product && product.stockAlertQuantity > 0 && inventory.quantity < product.stockAlertQuantity) {
+          await MessageService.createInventoryAlert(inventory, product, operator, orderNo);
+        }
+      }
+    } catch (alertError) {
+      console.error('创建库存预警消息失败:', alertError);
+      // 预警消息创建失败不影响主流程
+    }
 
     res.status(201).json({
       status: 'success',

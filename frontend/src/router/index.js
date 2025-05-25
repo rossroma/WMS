@@ -143,6 +143,28 @@ const router = createRouter({
           }
         }
       ]
+    },
+    {
+      path: '/messages',
+      name: 'Messages',
+      component: () => import('@/layout/Index.vue'),
+      redirect: '/messages/list',
+      meta: {
+        title: '消息管理',
+        icon: 'Bell'
+      },
+      children: [
+        {
+          path: 'list',
+          name: 'MessageList',
+          component: () => import('@/views/messages/Index.vue'),
+          meta: {
+            title: '消息列表',
+            icon: 'List',
+            requiresAuth: true
+          }
+        }
+      ]
     }
   ]
 })

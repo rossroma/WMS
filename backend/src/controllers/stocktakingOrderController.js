@@ -6,6 +6,7 @@ const { OrderItem, OrderItemType } = require('../models/OrderItem');
 const Product = require('../models/Product');
 const Inventory = require('../models/Inventory');
 const InventoryLog = require('../models/InventoryLog');
+const MessageService = require('../services/messageService');
 const { AppError } = require('../middleware/errorHandler');
 const sequelize = require('../config/database');
 const { Op } = require('sequelize');
@@ -200,7 +201,11 @@ exports.createStocktakingOrder = async (req, res, next) => {
             productId: item.productId,
             product,
             quantity: difference,
-            unitPrice: product.purchasePrice || 0
+            unitPrice: product.purchasePrice || 0,
+            stocktakingItem: {
+              actualQuantity,
+              recordedQuantity: systemQuantity
+            }
           });
         } else if (difference < 0) {
           // 盘亏
@@ -208,7 +213,11 @@ exports.createStocktakingOrder = async (req, res, next) => {
             productId: item.productId,
             product,
             quantity: Math.abs(difference),
-            unitPrice: product.retailPrice || 0
+            unitPrice: product.retailPrice || 0,
+            stocktakingItem: {
+              actualQuantity,
+              recordedQuantity: systemQuantity
+            }
           });
         }
       }
@@ -301,6 +310,22 @@ exports.createStocktakingOrder = async (req, res, next) => {
     }
 
     await transaction.commit();
+
+    // 创建消息通知（在事务提交后）
+    try {
+      // 创建盘盈入库消息
+      for (const item of profitItems) {
+        await MessageService.createStockInMessage(item.stocktakingItem, item.product, operator, inboundOrderNo);
+      }
+      
+      // 创建盘亏出库消息
+      for (const item of lossItems) {
+        await MessageService.createStockOutMessage(item.stocktakingItem, item.product, operator, outboundOrderNo);
+      }
+    } catch (messageError) {
+      console.error('创建消息通知失败:', messageError);
+      // 消息创建失败不影响主流程
+    }
 
     // 返回创建的盘点单（包含商品明细）
     const result = await StocktakingOrder.findByPk(stocktakingOrder.id, {

@@ -9,6 +9,14 @@ export function getMessageList(params) {
   })
 }
 
+// 获取未读消息列表
+export function getUnreadMessages() {
+  return request({
+    url: '/messages/unread',
+    method: 'get'
+  })
+}
+
 // 获取未读消息数量
 export function getUnreadCount() {
   return request({

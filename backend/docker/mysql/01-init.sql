@@ -149,6 +149,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 -- 创建盘点单表
 CREATE TABLE IF NOT EXISTS stocktaking_orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    order_no VARCHAR(50) NOT NULL UNIQUE COMMENT '盘点单号',
     date DATETIME DEFAULT CURRENT_TIMESTAMP,
     product_id INT NOT NULL,
     actual_quantity INT NOT NULL,
@@ -177,11 +178,19 @@ CREATE TABLE IF NOT EXISTS inventory_logs (
 -- 创建消息表
 CREATE TABLE IF NOT EXISTS messages (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    content VARCHAR(255) NOT NULL,
-    type ENUM('INVENTORY_ALERT', 'STOCK_IN', 'STOCK_OUT') NOT NULL,
-    related_id INT,
+    content VARCHAR(255) NOT NULL COMMENT '消息内容',
+    type ENUM('INVENTORY_ALERT', 'STOCK_IN', 'STOCK_OUT') NOT NULL COMMENT '消息类型',
+    is_read BOOLEAN DEFAULT FALSE COMMENT '是否已读',
+    user_id INT NOT NULL COMMENT '用户ID（消息接收人）',
+    related_id VARCHAR(50) COMMENT '关联业务编号',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    INDEX idx_messages_is_read (is_read),
+    INDEX idx_messages_type (type),
+    INDEX idx_messages_created_at (created_at),
+    INDEX idx_messages_related_id (related_id),
+    INDEX idx_messages_user_id (user_id)
 );
 
 -- 创建索引
@@ -194,6 +203,7 @@ CREATE INDEX idx_inbound_orders_date ON inbound_orders(order_date);
 CREATE INDEX idx_outbound_orders_order_no ON outbound_orders(order_no);
 CREATE INDEX idx_outbound_orders_type ON outbound_orders(type);
 CREATE INDEX idx_outbound_orders_date ON outbound_orders(order_date);
+CREATE INDEX idx_stocktaking_orders_order_no ON stocktaking_orders(order_no);
 CREATE INDEX idx_stocktaking_orders_product ON stocktaking_orders(product_id);
 CREATE INDEX idx_inventory_logs_inventory ON inventory_logs(inventory_id);
 CREATE INDEX idx_user_roles_user ON user_roles(user_id);

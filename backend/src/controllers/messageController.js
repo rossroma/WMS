@@ -1,48 +1,91 @@
-const Message = require('../models/Message');
-const { Op } = require('sequelize');
+const MessageService = require('../services/messageService');
 const { AppError } = require('../middleware/errorHandler');
 
-// 查看所有消息
-exports.getAllMessages = async (req, res, next) => {
+// 获取消息列表
+exports.getMessages = async (req, res, next) => {
   try {
-    const messages = await Message.findAll();
+    // 从认证中间件获取当前用户ID
+    const currentUserId = req.user?.id;
+    const result = await MessageService.getMessages(req.query, currentUserId);
+    
     res.status(200).json({
       status: 'success',
       message: '获取消息列表成功',
-      data: messages
+      data: result
     });
   } catch (error) {
     next(new AppError('获取消息列表失败', 500));
   }
 };
 
-// 新增消息
-exports.createMessage = async (req, res, next) => {
+// 获取未读消息列表
+exports.getUnreadMessages = async (req, res, next) => {
   try {
-    const message = await Message.create(req.body);
-    res.status(201).json({
+    // 从认证中间件获取当前用户ID
+    const currentUserId = req.user?.id;
+    const messages = await MessageService.getUnreadMessages(currentUserId);
+    
+    res.status(200).json({
       status: 'success',
-      message: '消息创建成功',
-      data: message
+      message: '获取未读消息成功',
+      data: messages
     });
   } catch (error) {
-    next(new AppError('创建消息失败', 400));
+    next(new AppError('获取未读消息失败', 500));
   }
 };
 
-// 定期删除超过3个月的消息
-exports.deleteOldMessages = async () => {
+// 获取未读消息数量
+exports.getUnreadCount = async (req, res, next) => {
   try {
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-    await Message.destroy({
-      where: {
-        createdAt: {
-          [Op.lt]: threeMonthsAgo
-        }
-      }
+    // 从认证中间件获取当前用户ID
+    const currentUserId = req.user?.id;
+    const count = await MessageService.getUnreadCount(currentUserId);
+    
+    res.status(200).json({
+      status: 'success',
+      message: '获取未读消息数量成功',
+      data: { count }
     });
   } catch (error) {
-    console.error('Error deleting old messages:', error);
+    next(new AppError('获取未读消息数量失败', 500));
+  }
+};
+
+// 标记消息为已读
+exports.markAsRead = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    // 从认证中间件获取当前用户ID
+    const currentUserId = req.user?.id;
+    
+    const success = await MessageService.markAsRead(id, currentUserId);
+    
+    if (!success) {
+      return next(new AppError('消息不存在或已读', 404));
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      message: '消息已标记为已读'
+    });
+  } catch (error) {
+    next(new AppError('标记消息已读失败', 500));
+  }
+};
+
+// 标记所有消息为已读
+exports.markAllAsRead = async (req, res, next) => {
+  try {
+    // 从认证中间件获取当前用户ID
+    const currentUserId = req.user?.id;
+    const affectedRows = await MessageService.markAllAsRead(currentUserId);
+    
+    res.status(200).json({
+      status: 'success',
+      message: `已标记 ${affectedRows} 条消息为已读`
+    });
+  } catch (error) {
+    next(new AppError('标记所有消息已读失败', 500));
   }
 }; 

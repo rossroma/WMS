@@ -56,6 +56,7 @@
           <breadcrumb />
         </div>
         <div class="right">
+          <MessageNotification />
           <el-dropdown trigger="click">
             <div class="avatar-container">
               <el-avatar :size="32" :src="userStore.userInfo.avatar">
@@ -96,6 +97,7 @@ import { useUserStore } from '@/stores/user'
 import { ElMessageBox } from 'element-plus'
 import { Key, SwitchButton } from '@element-plus/icons-vue'
 import Breadcrumb from './components/Breadcrumb.vue'
+import MessageNotification from '@/components/MessageNotification.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -199,6 +201,10 @@ const handleLogout = () => {
       }
 
       .right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
         .avatar-container {
           display: flex;
           align-items: center;
