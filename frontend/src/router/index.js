@@ -8,12 +8,13 @@ const router = createRouter({
       path: '/login',
       name: 'Login',
       component: () => import('@/views/login/Index.vue'),
-      meta: { title: '登录', requiresAuth: false }
+      meta: { title: '登录', requiresAuth: false, isMenu: false }
     },
     {
       path: '/',
       component: () => import('@/layout/Index.vue'),
       redirect: '/dashboard',
+      meta: { isMenu: false },
       children: [
         {
           path: 'dashboard',
@@ -172,7 +173,7 @@ const router = createRouter({
         {
           path: 'users',
           name: 'Users',
-          component: () => import('@/views/organization/users/Index.vue'),
+          component: () => import('@/views/users/Index.vue'),
           meta: { title: '用户管理', icon: 'User', requiresAuth: true }
         },
         {

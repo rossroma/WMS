@@ -119,7 +119,7 @@ const toggleSidebar = () => {
 // 获取路由配置
 const routes = computed(() => {
   return router.options.routes.filter(route => {
-    return route.path !== '/login' && route.children
+    return route.meta?.isMenu !== false && route.children
   })
 })
 
