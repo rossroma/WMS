@@ -87,6 +87,12 @@
         </router-view>
       </div>
     </div>
+
+    <!-- 修改密码弹窗 -->
+    <ChangePasswordDialog 
+      v-model="showChangePasswordDialog" 
+      @success="handlePasswordChangeSuccess"
+    />
   </div>
 </template>
 
@@ -94,10 +100,11 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { ElMessageBox } from 'element-plus'
-import { Key, SwitchButton } from '@element-plus/icons-vue'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import { Key, SwitchButton, Fold, Expand } from '@element-plus/icons-vue'
 import Breadcrumb from './components/Breadcrumb.vue'
 import MessageNotification from '@/components/MessageNotification.vue'
+import ChangePasswordDialog from '@/components/ChangePasswordDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -121,9 +128,15 @@ const activeMenu = computed(() => {
   return route.path
 })
 
-// 修改密码
+// 修改密码弹窗控制
+const showChangePasswordDialog = ref(false)
+
 const handleChangePassword = () => {
-  router.push('/profile/password')
+  showChangePasswordDialog.value = true
+}
+
+const handlePasswordChangeSuccess = () => {
+  userStore.logout()
 }
 
 // 退出登录
