@@ -11,22 +11,26 @@ const router = createRouter({
       meta: { title: '登录', requiresAuth: false }
     },
     {
-      path: '/',
+      path: '/organization',
       component: () => import('@/layout/Index.vue'),
       redirect: '/organization/users',
+      meta: {
+        title: '组织架构',
+        icon: 'Connection'
+      },
       children: [
         {
-          path: 'organization/users',
+          path: 'users',
           name: 'Users',
           component: () => import('@/views/organization/users/Index.vue'),
-          meta: { title: '用户管理', requiresAuth: true }
+          meta: { title: '用户管理', icon: 'User', requiresAuth: true }
         },
-        {
-          path: 'profile/password',
-          name: 'ChangePassword',
-          component: () => import('@/views/profile/ChangePassword.vue'),
-          meta: { title: '修改密码', requiresAuth: true }
-        }
+        // {
+        //   path: 'password',
+        //   name: 'ChangePassword',
+        //   component: () => import('@/views/profile/ChangePassword.vue'),
+        //   meta: { title: '修改密码', requiresAuth: true }
+        // }
       ]
     },
     {
