@@ -176,7 +176,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import { 
@@ -189,8 +189,8 @@ import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
-// 数据状态
-const dashboardData = reactive({
+// 数据状态 - 修改为使用 ref
+const dashboardData = ref({ 
   todayInbound: 0,
   todayOutbound: 0,
   stockWarning: 0,
@@ -200,11 +200,11 @@ const dashboardData = reactive({
   inventoryValue: 0
 })
 
-// 预警商品列表
+// 预警商品列表 (保持 ref)
 const warningProducts = ref([])
 const warningLoading = ref(false)
 
-// 图表引用
+// 图表引用 (保持 ref)
 const trendChart = ref(null)
 const hotProductsChart = ref(null)
 let trendChartInstance = null
@@ -218,16 +218,13 @@ const formatNumber = (num) => {
   return num.toLocaleString()
 }
 
-// 获取dashboard数据
+// 获取dashboard数据 - 修改赋值方式
 const getDashboard = async () => {
   try {
     const response = await getDashboardData()
-    if (response.data.status === 'success') {
-      Object.assign(dashboardData, response.data.data)
-    }
+    dashboardData.value = response.data
   } catch (error) {
-    console.error('获取dashboard数据失败:', error)
-    ElMessage.error('获取dashboard数据失败')
+    console.error('获取dashboard数据失败:', error);
   }
 }
 
@@ -236,12 +233,9 @@ const getWarningProductsList = async () => {
   try {
     warningLoading.value = true
     const response = await getWarningProducts()
-    if (response.data.status === 'success') {
-      warningProducts.value = response.data.data
-    }
+    warningProducts.value = response.data
   } catch (error) {
     console.error('获取预警商品失败:', error)
-    ElMessage.error('获取预警商品失败')
   } finally {
     warningLoading.value = false
   }
@@ -251,64 +245,62 @@ const getWarningProductsList = async () => {
 const initTrendChart = async () => {
   try {
     const response = await getWeeklyTrend()
-    if (response.data.status === 'success') {
-      const data = response.data.data
-      
-      if (trendChartInstance) {
-        trendChartInstance.dispose()
-      }
-      
-      trendChartInstance = echarts.init(trendChart.value)
-      
-      const option = {
-        title: {
-          text: '出入库趋势',
-          left: 'center',
-          textStyle: {
-            fontSize: 14
-          }
-        },
-        tooltip: {
-          trigger: 'axis'
-        },
-        legend: {
-          data: ['入库', '出库'],
-          bottom: 10
-        },
-        xAxis: {
-          type: 'category',
-          data: data.map(item => {
-            const date = new Date(item.date)
-            return `${date.getMonth() + 1}/${date.getDate()}`
-          })
-        },
-        yAxis: {
-          type: 'value'
-        },
-        series: [
-          {
-            name: '入库',
-            type: 'line',
-            data: data.map(item => item.inbound),
-            smooth: true,
-            itemStyle: {
-              color: '#67C23A'
-            }
-          },
-          {
-            name: '出库',
-            type: 'line',
-            data: data.map(item => item.outbound),
-            smooth: true,
-            itemStyle: {
-              color: '#E6A23C'
-            }
-          }
-        ]
-      }
-      
-      trendChartInstance.setOption(option)
+    const data = response.data
+    
+    if (trendChartInstance) {
+      trendChartInstance.dispose()
     }
+    
+    trendChartInstance = echarts.init(trendChart.value)
+    
+    const option = {
+      title: {
+        text: '出入库趋势',
+        left: 'center',
+        textStyle: {
+          fontSize: 14
+        }
+      },
+      tooltip: {
+        trigger: 'axis'
+      },
+      legend: {
+        data: ['入库', '出库'],
+        bottom: 10
+      },
+      xAxis: {
+        type: 'category',
+        data: data.map(item => {
+          const date = new Date(item.date)
+          return `${date.getMonth() + 1}/${date.getDate()}`
+        })
+      },
+      yAxis: {
+        type: 'value'
+      },
+      series: [
+        {
+          name: '入库',
+          type: 'line',
+          data: data.map(item => item.inbound),
+          smooth: true,
+          itemStyle: {
+            color: '#67C23A'
+          }
+        },
+        {
+          name: '出库',
+          type: 'line',
+          data: data.map(item => item.outbound),
+          smooth: true,
+          itemStyle: {
+            color: '#E6A23C'
+          }
+        }
+      ]
+    }
+    
+    trendChartInstance.setOption(option)
   } catch (error) {
     console.error('获取趋势数据失败:', error)
   }
@@ -318,56 +310,54 @@ const initTrendChart = async () => {
 const initHotProductsChart = async () => {
   try {
     const response = await getHotProducts()
-    if (response.data.status === 'success') {
-      const data = response.data.data
-      
-      if (hotProductsChartInstance) {
-        hotProductsChartInstance.dispose()
-      }
-      
-      hotProductsChartInstance = echarts.init(hotProductsChart.value)
-      
-      const option = {
-        title: {
-          text: '热门商品',
-          left: 'center',
-          textStyle: {
-            fontSize: 14
-          }
-        },
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          }
-        },
-        xAxis: {
-          type: 'value'
-        },
-        yAxis: {
-          type: 'category',
-          data: data.map(item => item.product.name).reverse(),
-          axisLabel: {
-            interval: 0,
-            formatter: function(value) {
-              return value.length > 6 ? value.substring(0, 6) + '...' : value
-            }
-          }
-        },
-        series: [
-          {
-            name: '库存量',
-            type: 'bar',
-            data: data.map(item => item.quantity).reverse(),
-            itemStyle: {
-              color: '#409EFF'
-            }
-          }
-        ]
-      }
-      
-      hotProductsChartInstance.setOption(option)
+    const data = response.data
+    
+    if (hotProductsChartInstance) {
+      hotProductsChartInstance.dispose()
     }
+    
+    hotProductsChartInstance = echarts.init(hotProductsChart.value)
+    
+    const option = {
+      title: {
+        text: '热门商品',
+        left: 'center',
+        textStyle: {
+          fontSize: 14
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      xAxis: {
+        type: 'value'
+      },
+      yAxis: {
+        type: 'category',
+        data: data.map(item => item.product.name).reverse(),
+        axisLabel: {
+          interval: 0,
+          formatter: function(value) {
+            return value.length > 6 ? value.substring(0, 6) + '...' : value
+          }
+        }
+      },
+      series: [
+        {
+          name: '库存量',
+          type: 'bar',
+          data: data.map(item => item.quantity).reverse(),
+          itemStyle: {
+            color: '#409EFF'
+          }
+        }
+      ]
+    }
+    
+    hotProductsChartInstance.setOption(option)
   } catch (error) {
     console.error('获取热门商品数据失败:', error)
   }

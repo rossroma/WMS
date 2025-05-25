@@ -51,8 +51,7 @@ OutboundOrder.hasMany(OrderItem, {
 });
 OrderItem.belongsTo(OutboundOrder, {
   foreignKey: 'orderId',
-  constraints: false,
-  scope: { orderType: OrderItemType.OUTBOUND }
+  constraints: false
 });
 
 // 其他现有关联关系

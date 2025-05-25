@@ -7,7 +7,8 @@ const { OutboundOrder } = require('../models/OutboundOrder');
 const { StocktakingOrder } = require('../models/StocktakingOrder');
 const Message = require('../models/Message');
 const { AppError } = require('../middleware/errorHandler');
-const Category = require('../models/Category');
+const { StocktakingItem } = require('../models/StocktakingItem');
+const { OrderItem, OrderItemType } = require('../models/OrderItem');
 
 // 获取综合dashboard数据
 exports.getDashboardData = async (req, res, next) => {
@@ -53,18 +54,36 @@ exports.getDashboardData = async (req, res, next) => {
     
     const stocktakingOrders = await StocktakingOrder.findAll({
       where: {
-        createdAt: {
+        stocktakingDate: {
           [Op.gte]: thirtyDaysAgo
         }
-      }
+      },
+      include: [{
+        model: StocktakingItem,
+        as: 'items',
+        attributes: ['systemQuantity', 'actualQuantity']
+      }]
     });
 
     let stocktakingAccuracy = 100;
     if (stocktakingOrders.length > 0) {
-      const accurateCount = stocktakingOrders.filter(order => 
-        order.actualQuantity === order.recordedQuantity
-      ).length;
-      stocktakingAccuracy = ((accurateCount / stocktakingOrders.length) * 100).toFixed(1);
+      let accurateOrderCount = 0;
+      for (const order of stocktakingOrders) {
+        if (order.items && order.items.length > 0) {
+          const allItemsAccurate = order.items.every(item => 
+            item.actualQuantity !== null && item.actualQuantity === item.systemQuantity
+          );
+          if (allItemsAccurate) {
+            accurateOrderCount++;
+          }
+        }
+      }
+      const relevantOrderCount = stocktakingOrders.filter(o => o.items && o.items.length > 0).length;
+      if (relevantOrderCount > 0) {
+         stocktakingAccuracy = ((accurateOrderCount / relevantOrderCount) * 100).toFixed(1);
+      } else {
+        stocktakingAccuracy = 100;
+      }
     }
 
     // 库存总量
@@ -98,6 +117,9 @@ exports.getDashboardData = async (req, res, next) => {
     });
   } catch (error) {
     console.error('获取dashboard数据失败:', error);
+    if (error.original) {
+        console.error('数据库原始错误:', error.original);
+    }
     next(new AppError('获取dashboard数据失败', 500));
   }
 };
@@ -241,37 +263,63 @@ exports.getWeeklyTrend = async (req, res, next) => {
   }
 };
 
-// 获取热门商品（库存量最大的商品）
+// 获取热门商品（近30天销售出库数量最多的商品）
 exports.getHotProducts = async (req, res, next) => {
   try {
     const { limit = 10 } = req.query;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const hotProducts = await Inventory.findAll({
-      include: [{
-        model: Product,
-        attributes: ['id', 'name', 'code', 'specification'],
-        required: true,
-        include: [{
-          model: Category,
-          attributes: ['name'],
-          as: 'Category'
-        }]
-      }],
-      attributes: ['quantity'],
-      order: [['quantity', 'DESC']],
-      limit: parseInt(limit)
+    const topSoldProducts = await OrderItem.findAll({
+      attributes: [
+        'productId',
+        [sequelize.fn('SUM', sequelize.col('quantity')), 'totalSoldQuantity']
+      ],
+      include: [
+        {
+          model: OutboundOrder,
+          attributes: [], // 不需要出库单的任何字段，仅用于筛选
+          where: {
+            orderDate: { // 根据出库单的日期筛选
+              [Op.gte]: thirtyDaysAgo
+            }
+          },
+          required: true // 强制内连接，只找出库日期在范围内的订单明细
+        },
+        {
+          model: Product,
+          attributes: ['id', 'name', 'code', 'specification'],
+          required: true, // 确保只包含有对应商品信息的明细
+        }
+      ],
+      where: {
+        orderType: OrderItemType.OUTBOUND
+      },
+      group: [
+        'productId', 
+        'Product.id', // 所有包含在 SELECT 非聚合列和 include 中的模型的主键/属性都需要在 GROUP BY 中
+        'Product.name',
+        'Product.code',
+        'Product.specification',
+      ],
+      order: [[sequelize.literal('totalSoldQuantity'), 'DESC']],
+      limit: parseInt(limit),
+      raw: false, // 非常重要，当使用 include 和 group 时，为了正确映射嵌套对象，通常需要 raw: false
+      subQuery: false // 在某些复杂分组和聚合的场景下可能需要调整
     });
 
-    const result = hotProducts.map(item => ({
-      product: {
-        id: item.Product.id,
-        name: item.Product.name,
-        code: item.Product.code,
-        specification: item.Product.specification,
-        category: item.Product.Category ? item.Product.Category.name : null
-      },
-      quantity: item.quantity
-    }));
+    const result = topSoldProducts.map(item => {
+      const productData = item.Product; // 或者 item.get('Product') 如果是 Sequelize 实例
+      return {
+        product: {
+          id: productData.id,
+          name: productData.name,
+          code: productData.code,
+          specification: productData.specification,
+        },
+        quantity: parseInt(item.get('totalSoldQuantity'), 10) // get() 用于获取聚合别名
+      };
+    });
 
     res.json({
       status: 'success',
@@ -488,11 +536,6 @@ exports.getTopProducts = async (req, res, next) => {
         model: Product,
         attributes: ['name', 'code'],
         required: true,
-        include: [{
-          model: Category,
-          attributes: ['name'],
-          as: 'Category'
-        }]
       }],
       attributes: ['quantity'],
       order: [['quantity', 'DESC']],
@@ -502,8 +545,7 @@ exports.getTopProducts = async (req, res, next) => {
     const result = topProducts.map(item => ({
       product: {
         name: item.Product.name,
-        code: item.Product.code,
-        category: item.Product.Category ? item.Product.Category.name : null
+        code: item.Product.code
       },
       quantity: item.quantity
     }));
