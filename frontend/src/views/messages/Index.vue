@@ -103,7 +103,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="relatedId" label="关联单据" width="150">
+        <el-table-column prop="relatedId" label="关联单据" width="180">
           <template #default="{ row }">
             <span v-if="row.relatedId" class="related-id">
               {{ row.relatedId }}

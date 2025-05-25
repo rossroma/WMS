@@ -365,7 +365,7 @@ const handleDateChange = (dates) => {
 const handleCreate = () => {
   form.value = {
     stocktakingDate: getToday(),
-    operator: userStore.userInfo?.username || null,
+    operator: userStore.userInfo?.id || null,
     remark: '',
     items: []
   }
