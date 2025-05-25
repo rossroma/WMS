@@ -173,7 +173,7 @@ const router = createRouter({
         {
           path: 'users',
           name: 'Users',
-          component: () => import('@/views/users/Index.vue'),
+          component: () => import('@/views/system/UserManagement.vue'),
           meta: { title: '用户管理', icon: 'User', requiresAuth: true }
         },
         {
