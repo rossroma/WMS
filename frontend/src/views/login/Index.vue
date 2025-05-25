@@ -81,11 +81,11 @@ const handleLogin = async () => {
     if (valid) {
       loading.value = true
       try {
-        const res = await login(loginForm)
-        console.log('登录响应:', res)
-        if (res && res.token) {
-          userStore.setToken(res.token)
-          userStore.setUserInfo(res.user)
+        const { data } = await login(loginForm)
+        console.log('登录响应:', data)
+        if (data && data.token) {
+          userStore.setToken(data.token)
+          userStore.setUserInfo(data.user)
           ElMessage.success('登录成功')
           router.push('/organization/users')
         } else {

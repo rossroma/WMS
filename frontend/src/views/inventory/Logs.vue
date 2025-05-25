@@ -130,6 +130,7 @@ import { getInventoryLogs } from '@/api/inventory'
 import { getUserList } from '@/api/user'
 import { ElMessage } from 'element-plus'
 import ListPageLayout from '@/components/ListPageLayout.vue'
+import { formatDateTime } from '@/utils/date'
 
 const router = useRouter()
 
@@ -229,7 +230,7 @@ const formatQuantity = (quantity) => {
 // 格式化日期
 const formatDate = (date) => {
   if (!date) return '-'
-  return new Date(date).toLocaleString('zh-CN')
+  return formatDateTime(date)
 }
 
 // 处理日期范围变化

@@ -155,6 +155,7 @@ import AddressSelect from '@/components/AddressSelect.vue'
 import { useUserStore } from '@/stores/user'
 import BaseDialog from '@/components/BaseDialog.vue'
 import ListPageLayout from '@/components/ListPageLayout.vue'
+import { formatDateTime } from '@/utils/date'
 
 // 用户store
 const userStore = useUserStore()
@@ -394,11 +395,7 @@ const handleCurrentChange = (val) => {
 // 格式化日期
 const formatDate = (date) => {
   if (!date) return ''
-  return new Date(date).toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
+  return formatDateTime(date)
 }
 
 // 获取用户名

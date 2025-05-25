@@ -17,6 +17,15 @@ export function getOutboundDetail(id) {
   })
 }
 
+// 获取出库单关联商品列表
+export function getOutboundItems(id, params) {
+  return request({
+    url: '/outbound-orders/' + id + '/items',
+    method: 'get',
+    params
+  })
+}
+
 // 创建出库单
 export function createOutbound(data) {
   return request({
@@ -26,11 +35,12 @@ export function createOutbound(data) {
   })
 }
 
-// 完成出库
-export function completeOutbound(id) {
+// 更新出库单（可以更新：type、orderDate、operator、remark）
+export function updateOutbound(id, data) {
   return request({
-    url: '/outbound-orders/' + id + '/complete',
-    method: 'put'
+    url: '/outbound-orders/' + id,
+    method: 'put',
+    data
   })
 }
 

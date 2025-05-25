@@ -49,7 +49,11 @@
       >
         <el-table-column type="index" width="50" />
         <el-table-column prop="code" label="盘点编号" />
-        <el-table-column prop="createTime" label="创建时间" />
+        <el-table-column prop="createTime" label="创建时间" width="160">
+          <template #default="{ row }">
+            {{ formatDateTime(row.createTime) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="operator" label="操作人" />
         <el-table-column prop="totalProducts" label="盘点商品数" />
         <el-table-column prop="accuracy" label="准确率">
@@ -160,6 +164,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, Refresh } from '@element-plus/icons-vue'
+import { formatDateTime } from '@/utils/date'
 
 // 查询参数
 const queryParams = reactive({

@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Product = require('./Product');
 
 const OutboundType = {
   STOCK_OUT: 'STOCK_OUT',         // 盘亏出库
@@ -17,39 +16,71 @@ const OutboundTypeDisplay = {
 };
 
 const OutboundOrder = sequelize.define('OutboundOrder', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  orderNo: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+    unique: true,
+    field: 'order_no',
+    comment: '出库单号'
+  },
   type: {
     type: DataTypes.ENUM(Object.values(OutboundType)),
-    allowNull: false
+    allowNull: false,
+    comment: '出库类型'
   },
-  date: {
+  totalAmount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0.00,
+    field: 'total_amount',
+    comment: '总金额'
+  },
+  totalQuantity: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 0,
+    field: 'total_quantity',
+    comment: '总数量'
+  },
+  orderDate: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  },
-  productId: {
-    type: DataTypes.INTEGER,
-    references: {
-      model: Product,
-      key: 'id'
-    }
-  },
-  quantity: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  unit: {
-    type: DataTypes.STRING
-  },
-  remark: {
-    type: DataTypes.STRING
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    field: 'order_date',
+    comment: '出库日期'
   },
   operator: {
-    type: DataTypes.STRING,
-    allowNull: false
+    type: DataTypes.STRING(100),
+    allowNull: false,
+    comment: '操作员'
   },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
+  remark: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: '备注'
   }
+}, {
+  tableName: 'outbound_orders',
+  timestamps: true,
+  indexes: [
+    {
+      fields: ['orderNo'],
+      unique: true
+    },
+    {
+      fields: ['type']
+    },
+    {
+      fields: ['orderDate']
+    }
+  ]
 });
+
+// OutboundOrder.sync({ alter: true });
 
 module.exports = { OutboundOrder, OutboundType, OutboundTypeDisplay }; 

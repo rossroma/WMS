@@ -104,6 +104,36 @@ const router = createRouter({
           }
         }
       ]
+    },
+    {
+      path: '/warehouse',
+      component: () => import('@/layout/Index.vue'),
+      redirect: '/warehouse/inbound',
+      name: 'Warehouse',
+      meta: {
+        title: '出入库管理',
+        icon: 'Box'
+      },
+      children: [
+        {
+          path: 'inbound',
+          name: 'InboundOrder',
+          component: () => import('@/views/inbound/Index.vue'),
+          meta: {
+            title: '入库管理',
+            icon: 'Download'
+          }
+        },
+        {
+          path: 'outbound',
+          name: 'OutboundOrder',
+          component: () => import('@/views/outbound/Index.vue'),
+          meta: {
+            title: '出库管理',
+            icon: 'Upload'
+          }
+        }
+      ]
     }
   ]
 })

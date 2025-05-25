@@ -103,31 +103,47 @@ CREATE TABLE IF NOT EXISTS inventories (
 -- 创建入库单表
 CREATE TABLE IF NOT EXISTS inbound_orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    type ENUM('STOCK_IN', 'PURCHASE', 'RETURN', 'TRANSFER_IN') NOT NULL,
-    date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    product_id INT NOT NULL,
-    quantity INT NOT NULL,
-    unit VARCHAR(50),
-    remark VARCHAR(255),
-    operator VARCHAR(255) NOT NULL,
+    order_no VARCHAR(50) NOT NULL UNIQUE COMMENT '入库单号',
+    type ENUM('STOCK_IN', 'PURCHASE', 'RETURN', 'TRANSFER_IN') NOT NULL COMMENT '入库类型',
+    total_amount DECIMAL(10, 2) DEFAULT 0.00 COMMENT '总金额',
+    total_quantity INT DEFAULT 0 COMMENT '总数量',
+    order_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '入库日期',
+    operator VARCHAR(100) NOT NULL COMMENT '操作员',
+    remark VARCHAR(500) COMMENT '备注',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (product_id) REFERENCES products(id)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- 创建出库单表
 CREATE TABLE IF NOT EXISTS outbound_orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    type ENUM('STOCK_OUT', 'SALE', 'TRANSFER_OUT', 'SCRAP') NOT NULL,
-    date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    product_id INT NOT NULL,
-    quantity INT NOT NULL,
-    unit VARCHAR(50),
-    remark VARCHAR(255),
-    operator VARCHAR(255) NOT NULL,
+    order_no VARCHAR(50) NOT NULL UNIQUE COMMENT '出库单号',
+    type ENUM('STOCK_OUT', 'SALE', 'TRANSFER_OUT', 'SCRAP') NOT NULL COMMENT '出库类型',
+    total_amount DECIMAL(10, 2) DEFAULT 0.00 COMMENT '总金额',
+    total_quantity INT DEFAULT 0 COMMENT '总数量',
+    order_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '出库日期',
+    operator VARCHAR(100) NOT NULL COMMENT '操作员',
+    remark VARCHAR(500) COMMENT '备注',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 创建通用订单商品明细表（支持入库单和出库单）
+CREATE TABLE IF NOT EXISTS order_items (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    order_type ENUM('INBOUND', 'OUTBOUND') NOT NULL COMMENT '订单类型：INBOUND-入库单，OUTBOUND-出库单',
+    order_id INT NOT NULL COMMENT '订单ID（入库单ID或出库单ID）',
+    product_id INT NOT NULL COMMENT '商品ID',
+    quantity INT NOT NULL COMMENT '数量',
+    unit_price DECIMAL(10, 2) DEFAULT 0.00 COMMENT '单价',
+    total_price DECIMAL(10, 2) DEFAULT 0.00 COMMENT '总价',
+    unit VARCHAR(50) COMMENT '单位',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (product_id) REFERENCES products(id)
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    INDEX idx_order_items_order (order_type, order_id),
+    INDEX idx_order_items_product (product_id),
+    INDEX idx_order_items_type (order_type)
 );
 
 -- 创建盘点单表
@@ -172,8 +188,12 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX idx_products_supplier ON products(supplier_id);
 CREATE INDEX idx_products_category ON products(category_id);
 CREATE INDEX idx_inventories_product ON inventories(product_id);
-CREATE INDEX idx_inbound_orders_product ON inbound_orders(product_id);
-CREATE INDEX idx_outbound_orders_product ON outbound_orders(product_id);
+CREATE INDEX idx_inbound_orders_order_no ON inbound_orders(order_no);
+CREATE INDEX idx_inbound_orders_type ON inbound_orders(type);
+CREATE INDEX idx_inbound_orders_date ON inbound_orders(order_date);
+CREATE INDEX idx_outbound_orders_order_no ON outbound_orders(order_no);
+CREATE INDEX idx_outbound_orders_type ON outbound_orders(type);
+CREATE INDEX idx_outbound_orders_date ON outbound_orders(order_date);
 CREATE INDEX idx_stocktaking_orders_product ON stocktaking_orders(product_id);
 CREATE INDEX idx_inventory_logs_inventory ON inventory_logs(inventory_id);
 CREATE INDEX idx_user_roles_user ON user_roles(user_id);

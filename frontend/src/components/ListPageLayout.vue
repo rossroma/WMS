@@ -9,6 +9,9 @@
     <el-card class="table-card">
       <slot name="content"></slot>
     </el-card>
+
+    <!-- 匿名插槽：用于放置弹窗等不需要嵌套在卡片内的内容 -->
+    <slot></slot>
   </div>
 </template>
 

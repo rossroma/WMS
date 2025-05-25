@@ -1,48 +1,79 @@
 const StocktakingOrder = require('../models/StocktakingOrder');
 const { InboundOrder, InboundType, InboundTypeDisplay } = require('../models/InboundOrder');
 const { OutboundOrder, OutboundType, OutboundTypeDisplay } = require('../models/OutboundOrder');
+const { OrderItem, OrderItemType } = require('../models/OrderItem');
 const Product = require('../models/Product');
 const { Message, MessageType, MessageTypeDisplay } = require('../models/Message');
 const { AppError } = require('../middleware/errorHandler');
+const sequelize = require('../config/database');
+const { generateInboundOrderNo, generateOutboundOrderNo } = require('../utils/orderUtils');
 
 // 创建盘点单
 exports.createStocktakingOrder = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+  
   try {
     const { productId, actualQuantity, recordedQuantity, operator } = req.body;
-    const stocktakingOrder = await StocktakingOrder.create(req.body);
+    const stocktakingOrder = await StocktakingOrder.create(req.body, { transaction });
 
     // 自动创建出入库单
     if (actualQuantity > recordedQuantity) {
       // 盘盈，创建入库单
+      const orderNo = generateInboundOrderNo();
       const inboundOrder = await InboundOrder.create({
+        orderNo,
         type: InboundType.STOCK_IN,
+        totalQuantity: actualQuantity - recordedQuantity,
+        totalAmount: 0,
+        operator
+      }, { transaction });
+
+      // 创建入库明细
+      await OrderItem.create({
+        orderType: OrderItemType.INBOUND,
+        orderId: inboundOrder.id,
         productId,
         quantity: actualQuantity - recordedQuantity,
-        operator
-      });
+        unitPrice: 0,
+        totalPrice: 0
+      }, { transaction });
 
       // 创建盘盈入库消息
       await Message.create({
         content: `盘盈入库：商品ID ${productId} 盘盈数量为 ${actualQuantity - recordedQuantity}。`,
         type: MessageType.STOCK_IN,
         relatedId: inboundOrder.id
-      });
+      }, { transaction });
     } else if (actualQuantity < recordedQuantity) {
       // 盘亏，创建出库单
+      const orderNo = generateOutboundOrderNo();
       const outboundOrder = await OutboundOrder.create({
+        orderNo,
         type: OutboundType.STOCK_OUT,
+        totalQuantity: recordedQuantity - actualQuantity,
+        totalAmount: 0,
+        operator
+      }, { transaction });
+
+      // 创建出库明细
+      await OrderItem.create({
+        orderType: OrderItemType.OUTBOUND,
+        orderId: outboundOrder.id,
         productId,
         quantity: recordedQuantity - actualQuantity,
-        operator
-      });
+        unitPrice: 0,
+        totalPrice: 0
+      }, { transaction });
 
       // 创建盘亏出库消息
       await Message.create({
         content: `盘亏出库：商品ID ${productId} 盘亏数量为 ${recordedQuantity - actualQuantity}。`,
         type: MessageType.STOCK_OUT,
         relatedId: outboundOrder.id
-      });
+      }, { transaction });
     }
+
+    await transaction.commit();
 
     res.status(201).json({
       status: 'success',
@@ -50,6 +81,8 @@ exports.createStocktakingOrder = async (req, res, next) => {
       data: stocktakingOrder
     });
   } catch (error) {
+    await transaction.rollback();
+    console.error('创建盘点单失败:', error);
     next(new AppError('创建盘点单失败', 400));
   }
 };

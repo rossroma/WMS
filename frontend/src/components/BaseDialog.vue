@@ -1,6 +1,7 @@
 <template>
   <el-dialog
-    v-model="visible"
+    :model-value="modelValue"
+    @update:model-value="$emit('update:modelValue', $event)"
     :title="title"
     :width="width"
     :before-close="handleClose"
@@ -18,7 +19,7 @@
     </el-form>
     
     <template #footer>
-      <span class="dialog-footer">
+      <span class="dialog-footer" v-if="showFooter">
         <el-button @click="handleCancel">{{ cancelText }}</el-button>
         <el-button 
           type="primary" 
@@ -34,7 +35,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 
 // Props 定义
 const props = defineProps({
@@ -95,6 +96,11 @@ const props = defineProps({
   resetOnClose: {
     type: Boolean,
     default: true
+  },
+  // 是否显示底部按钮
+  showFooter: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -109,24 +115,18 @@ const emit = defineEmits([
 // 内部状态
 const formRef = ref(null)
 
-// 计算属性
-const visible = computed({
-  get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
-})
-
 // 方法
 const handleClose = () => {
   if (props.resetOnClose && formRef.value) {
     formRef.value.resetFields()
   }
   emit('close')
-  visible.value = false
+  emit('update:modelValue', false)
 }
 
 const handleCancel = () => {
   emit('cancel')
-  handleClose()
+  emit('update:modelValue', false)
 }
 
 const handleConfirm = async () => {
@@ -153,7 +153,7 @@ defineExpose({
 
 <style lang="scss" scoped>
 .base-form {
-  padding: 20px 60px;
+  padding: 20px 60px 20px 30px;
 
   :deep(.el-form-item) {
     margin-bottom: 24px;

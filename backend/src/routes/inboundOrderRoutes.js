@@ -3,10 +3,11 @@ const router = express.Router();
 const inboundOrderController = require('../controllers/inboundOrderController');
 
 // 入库单路由
-router.post('/inbound-orders', inboundOrderController.createInboundOrder);
-router.get('/inbound-orders', inboundOrderController.getAllInboundOrders);
-router.get('/inbound-orders/:id', inboundOrderController.getInboundOrderById);
-router.put('/inbound-orders/:id', inboundOrderController.updateInboundOrder);
-router.delete('/inbound-orders/:id', inboundOrderController.deleteInboundOrder);
+router.post('/', inboundOrderController.createInboundOrder);
+router.get('/', inboundOrderController.getAllInboundOrders);
+router.get('/:id', inboundOrderController.getInboundOrderById);
+router.get('/:id/items', inboundOrderController.getInboundOrderItems);
+router.put('/:id', inboundOrderController.updateInboundOrder);
+router.delete('/:id', inboundOrderController.deleteInboundOrder);
 
 module.exports = router; 

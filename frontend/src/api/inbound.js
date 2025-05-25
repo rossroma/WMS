@@ -17,6 +17,15 @@ export function getInboundDetail(id) {
   })
 }
 
+// 获取入库单关联商品列表
+export function getInboundItems(id, params) {
+  return request({
+    url: '/inbound-orders/' + id + '/items',
+    method: 'get',
+    params
+  })
+}
+
 // 创建入库单
 export function createInbound(data) {
   return request({
@@ -26,11 +35,12 @@ export function createInbound(data) {
   })
 }
 
-// 完成入库
-export function completeInbound(id) {
+// 更新入库单（可以更新：type、orderDate、operator、remark）
+export function updateInbound(id, data) {
   return request({
-    url: '/inbound-orders/' + id + '/complete',
-    method: 'put'
+    url: '/inbound-orders/' + id,
+    method: 'put',
+    data
   })
 }
 

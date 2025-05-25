@@ -6,6 +6,7 @@ const sequelize = require('../config/database');
 // 获取分类树
 exports.getCategoryTree = async (req, res, next) => {
   try {
+    console.log('开始获取分类树...');
     const categories = await Category.findAll({
       order: [
         ['sort', 'ASC'],
@@ -27,12 +28,20 @@ exports.getCategoryTree = async (req, res, next) => {
     };
 
     const tree = buildTree(categories);
+    
     res.json({ 
       status: 'success',
       message: '获取分类树成功',
       data: tree 
     });
   } catch (error) {
+    console.error('getCategoryTree 详细错误:', error);
+    console.error('错误堆栈:', error.stack);
+    console.error('错误名称:', error.name);
+    console.error('错误消息:', error.message);
+    if (error.sql) {
+      console.error('SQL 错误:', error.sql);
+    }
     next(new AppError('获取分类失败', 500));
   }
 };

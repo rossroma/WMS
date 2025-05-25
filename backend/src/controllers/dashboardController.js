@@ -2,8 +2,8 @@ const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const Product = require('../models/Product');
 const Inventory = require('../models/Inventory');
-const InboundOrder = require('../models/InboundOrder');
-const OutboundOrder = require('../models/OutboundOrder');
+const { InboundOrder } = require('../models/InboundOrder');
+const { OutboundOrder } = require('../models/OutboundOrder');
 const StocktakingOrder = require('../models/StocktakingOrder');
 const Message = require('../models/Message');
 const { AppError } = require('../middleware/errorHandler');
@@ -35,10 +35,10 @@ exports.getInventoryOverview = async (req, res, next) => {
     const inventoryValue = await Inventory.findAll({
       include: [{
         model: Product,
-        attributes: ['price']
+        attributes: ['purchasePrice']
       }]
     }).then(inventories => 
-      inventories.reduce((sum, inv) => sum + (inv.quantity * inv.Product.price), 0)
+      inventories.reduce((sum, inv) => sum + (inv.quantity * inv.Product.purchasePrice), 0)
     );
 
     res.json({
@@ -73,7 +73,7 @@ exports.getInOutStatistics = async (req, res, next) => {
       where: whereClause,
       attributes: [
         'type',
-        [sequelize.fn('SUM', sequelize.col('quantity')), 'totalQuantity'],
+        [sequelize.fn('SUM', sequelize.col('totalQuantity')), 'totalQuantity'],
         [sequelize.fn('COUNT', sequelize.col('id')), 'orderCount']
       ],
       group: ['type']
@@ -84,7 +84,7 @@ exports.getInOutStatistics = async (req, res, next) => {
       where: whereClause,
       attributes: [
         'type',
-        [sequelize.fn('SUM', sequelize.col('quantity')), 'totalQuantity'],
+        [sequelize.fn('SUM', sequelize.col('totalQuantity')), 'totalQuantity'],
         [sequelize.fn('COUNT', sequelize.col('id')), 'orderCount']
       ],
       group: ['type']
@@ -204,25 +204,25 @@ exports.getTopProducts = async (req, res, next) => {
   try {
     const { limit = 10 } = req.query;
 
-    // 获取出库量最大的商品
-    const topOutboundProducts = await OutboundOrder.findAll({
-      attributes: [
-        'productId',
-        [sequelize.fn('SUM', sequelize.col('quantity')), 'totalQuantity']
-      ],
+    // 获取库存量最大的商品作为热门商品
+    const topProducts = await Inventory.findAll({
       include: [{
         model: Product,
-        attributes: ['name', 'code']
+        attributes: ['name', 'code', 'category'],
+        required: true
       }],
-      group: ['productId'],
-      order: [[sequelize.fn('SUM', sequelize.col('quantity')), 'DESC']],
+      attributes: ['quantity'],
+      order: [['quantity', 'DESC']],
       limit: parseInt(limit)
     });
 
     res.json({
       status: 'success',
       message: '获取热门商品排行成功',
-      data: topOutboundProducts
+      data: topProducts.map(item => ({
+        product: item.Product,
+        quantity: item.quantity
+      }))
     });
   } catch (error) {
     next(new AppError('获取热门商品排行失败', 500));

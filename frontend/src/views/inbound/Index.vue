@@ -1,39 +1,35 @@
 <template>
-  <div class="inbound-container">
-    <div class="header">
-      <h2>入库管理</h2>
-      <el-button type="primary" @click="handleCreate">
-        <el-icon><Plus /></el-icon>新建入库
-      </el-button>
-    </div>
-
-    <el-card class="filter-card">
+  <ListPageLayout>
+    <template #filter>
       <el-form :inline="true" :model="queryParams" class="filter-form">
         <el-form-item label="入库单号">
-          <el-input v-model="queryParams.code" placeholder="请输入入库单号" clearable />
+          <el-input v-model="queryParams.orderNo" placeholder="请输入入库单号" />
         </el-form-item>
         <el-form-item label="入库类型">
-          <el-select v-model="queryParams.type" placeholder="请选择类型" clearable>
-            <el-option label="采购入库" value="purchase" />
-            <el-option label="退货入库" value="return" />
-            <el-option label="调拨入库" value="transfer" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="入库状态">
-          <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
-            <el-option label="待入库" value="pending" />
-            <el-option label="已入库" value="completed" />
-            <el-option label="已取消" value="cancelled" />
+          <el-select 
+            v-model="queryParams.type" 
+            placeholder="请选择类型" 
+            clearable
+            style="width: 120px"
+          >
+            <el-option 
+              v-for="item in inboundTypes" 
+              :key="item.value" 
+              :label="item.label" 
+              :value="item.value" 
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="入库日期">
           <el-date-picker
-            v-model="queryParams.dateRange"
+            v-model="dateRange"
             type="daterange"
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY-MM-DD"
+            @change="handleDateChange"
+            style="width: 240px"
           />
         </el-form-item>
         <el-form-item>
@@ -43,11 +39,14 @@
           <el-button @click="resetQuery">
             <el-icon><Refresh /></el-icon>重置
           </el-button>
+          <el-button type="primary" @click="handleCreate">
+            <el-icon><Plus /></el-icon>新建入库
+          </el-button>
         </el-form-item>
       </el-form>
-    </el-card>
+    </template>
 
-    <el-card class="table-card">
+    <template #content>
       <el-table
         v-loading="loading"
         :data="inboundList"
@@ -55,47 +54,45 @@
         style="width: 100%"
       >
         <el-table-column type="index" width="50" />
-        <el-table-column prop="code" label="入库单号" />
-        <el-table-column prop="type" label="入库类型">
+        <el-table-column prop="orderNo" label="入库单号" width="180" />
+        <el-table-column prop="type" label="入库类型" width="120">
           <template #default="{ row }">
             {{ getTypeText(row.type) }}
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column prop="operator" label="操作人" />
-        <el-table-column prop="totalProducts" label="商品数量" />
-        <el-table-column prop="totalAmount" label="总金额">
+        <el-table-column prop="orderDate" label="入库日期" width="180">
           <template #default="{ row }">
-            ¥{{ row.totalAmount.toFixed(2) }}
+            {{ formatDateTime(row.orderDate) }}
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="operator" label="操作员" width="100" />
+        <el-table-column prop="totalQuantity" label="总数量" width="100" />
+        <el-table-column prop="totalAmount" label="总金额" width="120">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">
-              {{ getStatusText(row.status) }}
-            </el-tag>
+            ¥{{ Number(row.totalAmount || 0).toFixed(2) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="remark" label="备注" min-width="120" />
+        <el-table-column prop="createdAt" label="创建时间" width="160">
+          <template #default="{ row }">
+            {{ formatDateTime(row.createdAt) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="updatedAt" label="更新时间" width="160">
+          <template #default="{ row }">
+            {{ formatDateTime(row.updatedAt) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleDetail(row)">
-              详情
+              关联商品
             </el-button>
-            <el-button
-              v-if="row.status === 'pending'"
-              type="primary"
-              link
-              @click="handleComplete(row)"
-            >
-              入库
+            <el-button type="primary" link @click="handleEdit(row)">
+              编辑
             </el-button>
-            <el-button
-              v-if="row.status === 'pending'"
-              type="danger"
-              link
-              @click="handleCancel(row)"
-            >
-              取消
+            <el-button type="danger" link @click="handleDelete(row)">
+              删除
             </el-button>
           </template>
         </el-table-column>
@@ -107,179 +104,253 @@
           v-model:page-size="queryParams.pageSize"
           :total="total"
           :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next"
+          layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
       </div>
-    </el-card>
+    </template>
 
-    <!-- 新建入库对话框 -->
-    <el-dialog
-      title="新建入库"
+    <!-- 弹窗放在匿名插槽中，不会被嵌套在卡片内 -->
+    <!-- 新建/编辑入库对话框 -->
+    <BaseDialog
       v-model="dialogVisible"
-      width="800px"
-      append-to-body
+      :title="dialogTitle"
+      :form-data="form"
+      :rules="rules"
+      :loading="submitting"
+      width="1000px"
+      @confirm="handleSubmit"
+      @cancel="handleCancel"
     >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="100px"
-      >
+      <template #form="{ form: formData }">
         <el-form-item label="入库类型" prop="type">
-          <el-select v-model="form.type" placeholder="请选择入库类型">
-            <el-option label="采购入库" value="purchase" />
-            <el-option label="退货入库" value="return" />
-            <el-option label="调拨入库" value="transfer" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="供应商" prop="supplierId" v-if="form.type === 'purchase'">
-          <el-select v-model="form.supplierId" placeholder="请选择供应商">
-            <el-option
-              v-for="item in suppliers"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
+          <el-select v-model="formData.type" placeholder="请选择入库类型">
+            <el-option 
+              v-for="item in inboundTypes" 
+              :key="item.value" 
+              :label="item.label" 
+              :value="item.value" 
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input
-            v-model="form.remark"
-            type="textarea"
-            placeholder="请输入备注信息"
+        
+        <el-form-item label="入库日期" prop="orderDate">
+          <el-date-picker
+            v-model="formData.orderDate"
+            type="date"
+            placeholder="请选择入库日期"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
           />
         </el-form-item>
-        <el-form-item label="入库商品">
-          <div class="product-header">
-            <el-button type="primary" @click="handleAddProduct">
-              <el-icon><Plus /></el-icon>添加商品
-            </el-button>
-          </div>
-          <el-table :data="form.products" border style="width: 100%">
-            <el-table-column type="index" width="50" />
-            <el-table-column label="商品" min-width="200">
-              <template #default="{ row }">
-                <el-select
-                  v-model="row.productId"
-                  placeholder="请选择商品"
-                  @change="handleProductChange($event, row)"
-                >
-                  <el-option
-                    v-for="item in products"
-                    :key="item.id"
-                    :label="item.name"
-                    :value="item.id"
+        
+        <el-form-item label="操作员" prop="operator">
+          <UserSelect v-model="formData.operator" />
+        </el-form-item>
+        
+        <el-form-item label="备注" prop="remark">
+          <el-input
+            v-model="formData.remark"
+            type="textarea"
+            placeholder="请输入备注信息"
+            :rows="3"
+          />
+        </el-form-item>
+        
+        <el-form-item label="入库商品" v-if="!isEdit">
+          <div class="product-section">
+            <div class="product-header">
+              <el-button type="primary" @click="handleAddProduct">
+                <el-icon><Plus /></el-icon>选择商品
+              </el-button>
+              <span class="product-count" v-if="formData.items.length > 0">
+                已选择 {{ formData.items.length }} 个商品
+              </span>
+            </div>
+            <el-table :data="formData.items" border style="width: 100%; margin-top: 10px;" v-if="formData.items.length > 0">
+              <el-table-column type="index" label="序号" width="54" />
+              <el-table-column label="商品信息" min-width="180">
+                <template #default="{ row }">
+                  <div class="product-info">
+                    <div class="product-name">{{ row.productName }}</div>
+                    <div class="product-code">编码：{{ row.productCode }}</div>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="specification" label="规格" width="100" />
+              <el-table-column prop="unit" label="单位" width="60" />
+              <el-table-column label="数量" width="120">
+                <template #default="{ row }">
+                  <el-input-number
+                    v-model="row.quantity"
+                    :min="1"
+                    :precision="0"
+                    @change="calculateTotal"
+                    size="small"
                   />
-                </el-select>
-              </template>
-            </el-table-column>
-            <el-table-column prop="specification" label="规格" />
-            <el-table-column prop="unit" label="单位" />
-            <el-table-column label="数量" width="150">
-              <template #default="{ row }">
-                <el-input-number
-                  v-model="row.quantity"
-                  :min="1"
-                  :precision="0"
-                  @change="calculateTotal"
-                />
-              </template>
-            </el-table-column>
-            <el-table-column label="单价" width="150">
-              <template #default="{ row }">
-                <el-input-number
-                  v-model="row.price"
-                  :min="0"
-                  :precision="2"
-                  :step="0.01"
-                  @change="calculateTotal"
-                />
-              </template>
-            </el-table-column>
-            <el-table-column label="金额" width="150">
-              <template #default="{ row }">
-                ¥{{ (row.quantity * row.price).toFixed(2) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="80">
-              <template #default="{ $index }">
-                <el-button
-                  type="danger"
-                  link
-                  @click="handleRemoveProduct($index)"
-                >
-                  删除
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-          <div class="total-amount">
-            总金额：¥{{ totalAmount.toFixed(2) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="单价" width="120">
+                <template #default="{ row }">
+                  <el-input-number
+                    v-model="row.unitPrice"
+                    :min="0"
+                    :precision="2"
+                    :step="0.01"
+                    @change="calculateTotal"
+                    size="small"
+                  />
+                </template>
+              </el-table-column>
+              <el-table-column label="金额" width="80">
+                <template #default="{ row }">
+                  <span class="amount">¥{{ ((row.quantity || 0) * (row.unitPrice || 0)).toFixed(2) }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="60">
+                <template #default="{ $index }">
+                  <el-button
+                    type="danger"
+                    link
+                    @click="handleRemoveProduct($index)"
+                    size="small"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="empty-state" v-else>
+              <el-empty description="暂无商品，请点击上方按钮选择商品" :image-size="80" />
+            </div>
+            <div class="total-amount" v-if="formData.items.length > 0">
+              <div class="total-info">
+                <span>商品总数：{{ formData.items.reduce((sum, item) => sum + (item.quantity || 0), 0) }}</span>
+                <span class="total-price">总金额：¥{{ totalAmount.toFixed(2) }}</span>
+              </div>
+            </div>
           </div>
         </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-        </div>
       </template>
-    </el-dialog>
-  </div>
+    </BaseDialog>
+
+    <!-- 商品选择弹窗 -->
+    <ProductSelectDialog
+      v-model="productSelectVisible"
+      :selected-product-ids="selectedProductIds"
+      @confirm="handleProductSelectConfirm"
+    />
+
+    <!-- 关联商品弹窗 -->
+    <OrderItemsDialog
+      v-model="orderItemsVisible"
+      order-type="inbound"
+      :order-id="selectedOrderId"
+      :get-items-api="getInboundItems"
+      :type-map="inboundTypeMap"
+    />
+  </ListPageLayout>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, Refresh } from '@element-plus/icons-vue'
-import { getInboundList, createInbound, completeInbound, cancelInbound } from '@/api/inbound'
-import { getSuppliers } from '@/api/product'
+import { getInboundList, createInbound, updateInbound, deleteInbound, getInboundItems } from '@/api/inbound'
+import ListPageLayout from '@/components/ListPageLayout.vue'
+import BaseDialog from '@/components/BaseDialog.vue'
+import UserSelect from '@/components/UserSelect.vue'
+import ProductSelectDialog from '@/components/ProductSelectDialog.vue'
+import OrderItemsDialog from '@/components/OrderItemsDialog.vue'
+import { useUserStore } from '@/stores/user'
+import { formatDateTime, getToday } from '@/utils/date'
+
+const userStore = useUserStore()
+
+// 入库类型常量定义（与后端保持一致）
+const INBOUND_TYPES = {
+  STOCK_IN: 'STOCK_IN',           // 盘盈入库
+  PURCHASE: 'PURCHASE',           // 采购入库
+  RETURN: 'RETURN',              // 退货入库
+}
+
+// 入库类型选项（与后端保持一致）
+const inboundTypes = [
+  { label: '盘盈入库', value: INBOUND_TYPES.STOCK_IN },
+  { label: '采购入库', value: INBOUND_TYPES.PURCHASE },
+  { label: '退货入库', value: INBOUND_TYPES.RETURN }
+]
+
+// 入库类型映射（与后端保持一致）
+const inboundTypeMap = {
+  [INBOUND_TYPES.STOCK_IN]: '盘盈入库',
+  [INBOUND_TYPES.PURCHASE]: '采购入库',
+  [INBOUND_TYPES.RETURN]: '退货入库'
+}
 
 // 查询参数
 const queryParams = reactive({
   page: 1,
   pageSize: 10,
-  code: '',
-  type: undefined,
-  status: undefined,
-  dateRange: []
+  orderNo: '',
+  type: '',
+  startDate: '',
+  endDate: ''
 })
 
 // 数据列表
 const loading = ref(false)
 const inboundList = ref([])
 const total = ref(0)
+const dateRange = ref([]) // 日期范围选择器
 
 // 表单相关
 const dialogVisible = ref(false)
-const formRef = ref()
-const form = reactive({
+const isEdit = ref(false)
+const editId = ref(null)
+const submitting = ref(false)
+const form = ref({
   type: '',
-  supplierId: undefined,
+  orderDate: '',
+  operator: null,
   remark: '',
-  products: []
+  items: []
 })
 
 const rules = {
   type: [
     { required: true, message: '请选择入库类型', trigger: 'change' }
   ],
-  supplierId: [
-    { required: true, message: '请选择供应商', trigger: 'change' }
+  orderDate: [
+    { required: true, message: '请选择入库日期', trigger: 'change' }
+  ],
+  operator: [
+    { required: true, message: '请选择操作员', trigger: 'change' }
   ]
 }
 
-// 供应商和商品列表
-const suppliers = ref([])
-const products = ref([])
+// 商品选择弹窗
+const productSelectVisible = ref(false)
 
-// 计算总金额
+// 关联商品弹窗
+const orderItemsVisible = ref(false)
+const selectedOrderId = ref(null)
+
+// 计算属性
+const dialogTitle = computed(() => {
+  return isEdit.value ? '编辑入库单' : '新建入库单'
+})
+
 const totalAmount = computed(() => {
-  return form.products.reduce((sum, item) => {
-    return sum + item.quantity * item.price
+  return form.value.items.reduce((sum, item) => {
+    return sum + (item.quantity || 0) * (item.unitPrice || 0)
   }, 0)
+})
+
+// 获取已选择的商品ID列表
+const selectedProductIds = computed(() => {
+  return form.value.items.map(item => item.productId).filter(id => id)
 })
 
 // 获取入库列表
@@ -296,68 +367,9 @@ const getList = async () => {
   loading.value = false
 }
 
-// 获取供应商列表
-const getSupplierList = async () => {
-  try {
-    const res = await getSuppliers()
-    suppliers.value = res.data
-  } catch (error) {
-    console.error('获取供应商列表失败:', error)
-    ElMessage.error('获取供应商列表失败')
-  }
-}
-
-// 获取商品列表
-const getProductList = async () => {
-  try {
-    // TODO: 调用后端API获取商品列表
-    products.value = [
-      {
-        id: 1,
-        name: '商品A',
-        specification: '500ml/瓶',
-        unit: '瓶'
-      },
-      {
-        id: 2,
-        name: '商品B',
-        specification: '1kg/袋',
-        unit: '袋'
-      }
-    ]
-  } catch (error) {
-    console.error('获取商品列表失败:', error)
-  }
-}
-
 // 获取入库类型文本
 const getTypeText = (type) => {
-  const map = {
-    purchase: '采购入库',
-    return: '退货入库',
-    transfer: '调拨入库'
-  }
-  return map[type]
-}
-
-// 获取状态类型
-const getStatusType = (status) => {
-  const map = {
-    pending: 'warning',
-    completed: 'success',
-    cancelled: 'info'
-  }
-  return map[status]
-}
-
-// 获取状态文本
-const getStatusText = (status) => {
-  const map = {
-    pending: '待入库',
-    completed: '已入库',
-    cancelled: '已取消'
-  }
-  return map[status]
+  return inboundTypeMap[type] || type
 }
 
 // 查询按钮
@@ -368,107 +380,177 @@ const handleQuery = () => {
 
 // 重置按钮
 const resetQuery = () => {
-  queryParams.code = ''
-  queryParams.type = undefined
-  queryParams.status = undefined
-  queryParams.dateRange = []
+  queryParams.orderNo = ''
+  queryParams.type = ''
+  queryParams.startDate = ''
+  queryParams.endDate = ''
+  dateRange.value = []
   handleQuery()
+}
+
+// 处理日期范围变化
+const handleDateChange = (dates) => {
+  if (dates && dates.length === 2) {
+    queryParams.startDate = dates[0]
+    queryParams.endDate = dates[1]
+  } else {
+    queryParams.startDate = ''
+    queryParams.endDate = ''
+  }
 }
 
 // 新建入库
 const handleCreate = () => {
-  form.type = ''
-  form.supplierId = undefined
-  form.remark = ''
-  form.products = []
+  console.log('点击新建入库按钮')
+  isEdit.value = false
+  editId.value = null
+  
+  // 获取当前登录用户ID作为默认操作员
+  const currentUserId = userStore.userInfo?.id || null
+  console.log('当前登录用户ID:', currentUserId, '用户信息:', userStore.userInfo)
+  
+  // 获取今天的日期作为默认入库日期
+  const today = getToday()
+  
+  // 重置表单数据
+  form.value = {
+    type: '',
+    orderDate: today, // 设置默认入库日期为今天
+    operator: currentUserId, // 设置当前用户为默认操作员
+    remark: '',
+    items: []
+  }
+  
+  // 显示弹窗
   dialogVisible.value = true
+}
+
+// 编辑入库
+const handleEdit = async (row) => {
+  try {
+    isEdit.value = true
+    editId.value = row.id
+    
+    // 确保operator字段为数字类型
+    const operatorId = row.operator ? parseInt(row.operator) : null
+    
+    form.value = {
+      type: row.type,
+      orderDate: row.orderDate,
+      operator: operatorId, // 确保为数字类型
+      remark: row.remark,
+      items: [] // 编辑时不显示商品列表
+    }
+    dialogVisible.value = true
+  } catch (error) {
+    console.error('编辑入库单失败:', error)
+    ElMessage.error('编辑入库单失败')
+  }
+}
+
+// 删除入库
+const handleDelete = (row) => {
+  ElMessageBox.confirm('确认要删除该入库单吗？删除后将撤销相关库存变更！', '警告', {
+    type: 'warning'
+  }).then(async () => {
+    try {
+      await deleteInbound(row.id)
+      ElMessage.success('删除成功')
+      getList()
+    } catch (error) {
+      console.error('删除入库单失败:', error)
+      ElMessage.error('删除入库单失败')
+    }
+  })
+}
+
+// 查看详情
+const handleDetail = async (row) => {
+  selectedOrderId.value = row.id
+  orderItemsVisible.value = true
 }
 
 // 添加商品
 const handleAddProduct = () => {
-  form.products.push({
-    productId: undefined,
-    specification: '',
-    unit: '',
-    quantity: 1,
-    price: 0
+  productSelectVisible.value = true
+}
+
+// 商品选择确认
+const handleProductSelectConfirm = (selectedProducts) => {
+  // 将选中的商品添加到入库商品列表中
+  selectedProducts.forEach(product => {
+    // 检查是否已经存在该商品
+    const existingIndex = form.value.items.findIndex(item => item.productId === product.id)
+    
+    if (existingIndex === -1) {
+      // 不存在则添加新商品
+      form.value.items.push({
+        productId: product.id,
+        productName: product.name,
+        productCode: product.code,
+        specification: product.specification || '',
+        unit: product.unit || '',
+        quantity: 1,
+        unitPrice: product.purchasePrice || 0
+      })
+    } else {
+      // 已存在则更新数量（可选择是否累加）
+      ElMessage.warning(`商品 ${product.name} 已存在，请直接修改数量`)
+    }
   })
+  
+  // 重新计算总金额
+  calculateTotal()
 }
 
 // 移除商品
 const handleRemoveProduct = (index) => {
-  form.products.splice(index, 1)
+  form.value.items.splice(index, 1)
   calculateTotal()
-}
-
-// 商品选择变化
-const handleProductChange = (productId, row) => {
-  const product = products.value.find(item => item.id === productId)
-  if (product) {
-    row.specification = product.specification
-    row.unit = product.unit
-  }
 }
 
 // 计算总金额
 const calculateTotal = () => {
-  // 已通过计算属性实现
-}
-
-// 查看详情
-const handleDetail = (row) => {
-  // TODO: 实现查看详情功能
-  console.log('查看详情:', row)
-}
-
-// 完成入库
-const handleComplete = (row) => {
-  ElMessageBox.confirm('确认要完成该入库单吗？', '提示', {
-    type: 'warning'
-  }).then(async () => {
-    try {
-      await completeInbound(row.id)
-      ElMessage.success('入库已完成')
-      getList()
-    } catch (error) {
-      console.error('完成入库失败:', error)
-      ElMessage.error('完成入库失败')
-    }
-  })
-}
-
-// 取消入库
-const handleCancel = (row) => {
-  ElMessageBox.confirm('确认要取消该入库单吗？', '提示', {
-    type: 'warning'
-  }).then(async () => {
-    try {
-      await cancelInbound(row.id)
-      ElMessage.success('入库已取消')
-      getList()
-    } catch (error) {
-      console.error('取消入库失败:', error)
-      ElMessage.error('取消入库失败')
-    }
-  })
+  // 触发响应式更新，totalAmount 计算属性会自动重新计算
 }
 
 // 提交表单
-const submitForm = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        await createInbound(form)
-        ElMessage.success('创建成功')
-        dialogVisible.value = false
-        getList()
-      } catch (error) {
-        console.error('创建入库单失败:', error)
-        ElMessage.error('创建入库单失败')
-      }
+const handleSubmit = async (formData) => {
+  submitting.value = true
+  try {
+    if (isEdit.value) {
+      // 编辑模式：只提交基本信息
+      await updateInbound(editId.value, {
+        type: formData.type,
+        orderDate: formData.orderDate,
+        operator: formData.operator,
+        remark: formData.remark
+      })
+      ElMessage.success('更新成功')
+    } else {
+      // 新建模式：提交完整信息
+      await createInbound({
+        type: formData.type,
+        orderDate: formData.orderDate,
+        operator: formData.operator,
+        remark: formData.remark,
+        items: formData.items
+      })
+      ElMessage.success('创建成功')
     }
-  })
+    dialogVisible.value = false
+    getList()
+  } catch (error) {
+    console.error('提交失败:', error)
+    ElMessage.error(isEdit.value ? '更新失败' : '创建失败')
+  } finally {
+    submitting.value = false
+  }
+}
+
+// 取消弹窗
+const handleCancel = () => {
+  dialogVisible.value = false
 }
 
 // 分页相关
@@ -484,55 +566,71 @@ const handleCurrentChange = (val) => {
 
 onMounted(() => {
   getList()
-  getSupplierList()
-  getProductList()
 })
 </script>
 
 <style scoped>
-.inbound-container {
-  padding: 20px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.filter-card {
-  margin-bottom: 20px;
-}
-
-.filter-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.table-card {
-  margin-bottom: 20px;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
+.product-section {
+  width: 100%;
 }
 
 .product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 10px;
 }
 
-.total-amount {
-  margin-top: 10px;
-  text-align: right;
-  font-size: 16px;
-  font-weight: bold;
+.product-count {
+  color: #409eff;
+  font-size: 14px;
 }
 
-.dialog-footer {
-  text-align: right;
+.product-info {
+  .product-name {
+    font-weight: 500;
+    color: #303133;
+    margin-bottom: 4px;
+  }
+  
+  .product-code {
+    font-size: 12px;
+    color: #909399;
+  }
+}
+
+.amount {
+  font-weight: 500;
+  color: #409eff;
+}
+
+.empty-state {
+  padding: 40px 0;
+  text-align: center;
+}
+
+.total-amount {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  border-left: 4px solid #409eff;
+  
+  .total-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    span {
+      font-size: 14px;
+      color: #606266;
+    }
+    
+    .total-price {
+      font-size: 16px;
+      font-weight: bold;
+      color: #409eff;
+    }
+  }
 }
 </style> 
