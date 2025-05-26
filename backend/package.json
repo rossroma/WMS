@@ -20,13 +20,9 @@
     "node-cron": "^4.0.3",
     "qiniu": "^7.14.0",
     "sequelize": "^6.0.0",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
-    "winston-daily-rotate-file": "^5.0.0",
-    "ws": "^8.18.2"
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
-    "axios": "^1.9.0",
     "nodemon": "^2.0.0"
   }
 }

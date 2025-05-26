@@ -83,12 +83,6 @@ const errorHandler = (err, req, res, next) => {
       }
     }
 
-    // WebSocket 错误
-    if (err.name === 'WebSocketError') {
-      logger.error('WebSocket错误:', err);
-      error = new AppError('WebSocket连接错误', 500);
-    }
-
     sendErrorProd(error, res);
   }
 };
