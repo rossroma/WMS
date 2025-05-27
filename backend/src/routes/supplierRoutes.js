@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const supplierController = require('../controllers/supplierController');
+const { authenticate } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permission');
-const { RESTRICTED_OPERATIONS } = require('../constants/roleConstants');
 
-// 供应商路由 - 只有admin和manager可以访问
-router.use(requirePermission(RESTRICTED_OPERATIONS.SUPPLIER_ACCESS));
+// 供应商路由 - 需要认证且只有admin和manager可以访问
+router.use(authenticate);
+router.use(requirePermission('manager')); // 需要manager或更高权限
 
 router.post('/', supplierController.createSupplier);
 router.get('/', supplierController.getAllSuppliers);

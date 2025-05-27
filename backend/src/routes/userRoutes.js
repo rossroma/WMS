@@ -3,10 +3,10 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { authenticate } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permission');
-const { RESTRICTED_OPERATIONS } = require('../constants/roleConstants');
 
+// 用户管理路由 - 需要认证且只有admin可以访问
 router.use(authenticate);
-router.use(requirePermission(RESTRICTED_OPERATIONS.SYSTEM_ADMIN));
+router.use(requirePermission('admin')); // 只有admin可以访问
 
 router.get('/', userController.getUserList);
 
