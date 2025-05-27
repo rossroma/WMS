@@ -1,6 +1,4 @@
 const User = require('../models/User');
-const Role = require('../models/Role');
-const UserRole = require('../models/UserRole');
 const { AppError } = require('../middleware/errorHandler');
 const { createLog } = require('../services/logService');
 const { LOG_MODULE, LOG_ACTION_TYPE } = require('../constants/logConstants');
@@ -9,19 +7,11 @@ const { LOG_MODULE, LOG_ACTION_TYPE } = require('../constants/logConstants');
 exports.getUserList = async (req, res, next) => {
   try {
     const users = await User.findAll({
-      attributes: ['id', 'username', 'email', 'fullname', 'status', 'createdAt', 'updatedAt'],
-      include: [{
-        model: Role,
-        through: UserRole,
-        attributes: ['id', 'name', 'description']
-      }]
+      attributes: ['id', 'username', 'email', 'fullname', 'role', 'status', 'createdAt', 'updatedAt']
     });
 
     res.json({
-      data: users.map(user => ({
-        ...user.toJSON(),
-        roles: user.Roles
-      }))
+      data: users
     });
   } catch (error) {
     next(new AppError('获取用户列表失败', 500));
@@ -31,7 +21,7 @@ exports.getUserList = async (req, res, next) => {
 // 创建用户
 exports.createUser = async (req, res, next) => {
   try {
-    const { username, password, email, fullname, status = 'active' } = req.body;
+    const { username, password, email, fullname, role = 'operator', status = 'active' } = req.body;
 
     // 检查用户名是否已存在
     const existingUser = await User.findOne({ where: { username } });
@@ -44,21 +34,10 @@ exports.createUser = async (req, res, next) => {
       username,
       password,
       email,
-      phone,
       fullname,
+      role,
       status
     });
-
-    // 分配默认角色
-    try {
-      const defaultRole = await Role.findOne({ where: { name: 'operator' } });
-      if (defaultRole) {
-        await user.setRoles([defaultRole]);
-      }
-    } catch (error) {
-      console.error('分配默认角色失败:', error);
-      // 不抛出错误，因为用户创建已经成功，角色分配失败不应该影响用户创建
-    }
 
     // 记录创建用户日志
     await createLog({
@@ -67,7 +46,7 @@ exports.createUser = async (req, res, next) => {
       actionType: LOG_ACTION_TYPE.CREATE,
       module: LOG_MODULE.USER,
       ipAddress: req.ip,
-      details: `创建用户 ${user.username} (ID: ${user.id}) 成功`
+      details: `创建用户 ${user.username} (ID: ${user.id}) 成功，角色：${user.role}`
     });
 
     res.status(201).json({
@@ -76,8 +55,8 @@ exports.createUser = async (req, res, next) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        phone: user.phone,
         fullname: user.fullname,
+        role: user.role,
         status: user.status
       }
     });
@@ -90,7 +69,7 @@ exports.createUser = async (req, res, next) => {
 exports.updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { email, fullname, status, phone } = req.body;
+    const { email, fullname, role, status } = req.body;
 
     const user = await User.findByPk(id);
     if (!user) {
@@ -99,9 +78,12 @@ exports.updateUser = async (req, res, next) => {
 
     // 检查是否为 admin 用户
     if (user.username === 'admin') {
-      // 如果尝试禁用 admin 账号，返回错误
+      // 如果尝试禁用 admin 账号或修改角色，返回错误
       if (status && status !== 'active') {
         return next(new AppError('不能修改 admin 账号的状态', 403));
+      }
+      if (role && role !== 'admin') {
+        return next(new AppError('不能修改 admin 账号的角色', 403));
       }
     }
 
@@ -109,7 +91,7 @@ exports.updateUser = async (req, res, next) => {
     await user.update({
       email,
       fullname,
-      phone,
+      role,
       status
     });
 
@@ -129,8 +111,8 @@ exports.updateUser = async (req, res, next) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        phone: user.phone,
         fullname: user.fullname,
+        role: user.role,
         status: user.status
       }
     });
@@ -154,9 +136,6 @@ exports.deleteUser = async (req, res, next) => {
       return next(new AppError('不能删除 admin 账号', 403));
     }
 
-    // 删除用户角色关联
-    await UserRole.destroy({ where: { userId: id } });
-    
     // 删除用户
     await user.destroy();
 

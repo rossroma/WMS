@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const Role = require('../models/Role');
-const UserRole = require('../models/UserRole');
 const { AppError } = require('../middleware/errorHandler');
 const { createLog } = require('../services/logService');
 const { LOG_MODULE, LOG_ACTION_TYPE, LOG_DETAILS } = require('../constants/logConstants');
@@ -12,7 +10,7 @@ const generateToken = (user) => {
     { 
       id: user.id,
       username: user.username,
-      roles: user.Roles.map(role => role.name)
+      role: user.role
     },
     process.env.JWT_SECRET,
     { expiresIn: '24h' }
@@ -26,11 +24,7 @@ exports.login = async (req, res, next) => {
 
     // 查找用户
     const user = await User.findOne({
-      where: { username },
-      include: [{
-        model: Role,
-        through: UserRole
-      }]
+      where: { username }
     });
 
     if (!user) {
@@ -72,9 +66,9 @@ exports.login = async (req, res, next) => {
         user: {
           id: user.id,
           username: user.username,
-          fullname: user.name,
+          fullname: user.fullname,
           email: user.email,
-          roles: user.Roles.map(role => role.name)
+          role: user.role
         }
       }
     });
@@ -110,12 +104,7 @@ exports.logout = async (req, res, next) => {
 // 获取当前用户信息
 exports.getCurrentUser = async (req, res, next) => {
   try {
-    const user = await User.findByPk(req.user.id, {
-      include: [{
-        model: Role,
-        through: UserRole
-      }]
-    });
+    const user = await User.findByPk(req.user.id);
 
     if (!user) {
       return next(new AppError('用户不存在', 404));
@@ -127,10 +116,9 @@ exports.getCurrentUser = async (req, res, next) => {
       data: {
         id: user.id,
         username: user.username,
-        fullname: user.name,
+        fullname: user.fullname,
         email: user.email,
-        phone: user.phone,
-        roles: user.Roles.map(role => role.name)
+        role: user.role
       }
     });
   } catch (error) {

@@ -1,8 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const sequelize = require('../config/database');
-const Role = require('./Role');
-const UserRole = require('./UserRole');
 
 class User extends Model {
   // 验证密码
@@ -41,6 +39,11 @@ User.init({
     type: DataTypes.STRING,
     allowNull: false
   },
+  role: {
+    type: DataTypes.ENUM('admin', 'manager', 'operator'),
+    allowNull: false,
+    defaultValue: 'operator'
+  },
   status: {
     type: DataTypes.ENUM('active', 'inactive', 'suspended'),
     defaultValue: 'active'
@@ -72,8 +75,6 @@ User.init({
   }
 });
 
-// 建立与Role的多对多关联
-User.belongsToMany(Role, { through: UserRole });
-Role.belongsToMany(User, { through: UserRole });
+// User.sync({ alter: true });
 
 module.exports = User; 
