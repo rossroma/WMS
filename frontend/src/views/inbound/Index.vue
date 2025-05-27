@@ -270,8 +270,12 @@ import OrderItemsDialog from '@/components/OrderItemsDialog.vue'
 import { useUserStore } from '@/stores/user'
 import { formatDateTime, getToday, formatDateOnly } from '@/utils/date'
 import UserDisplay from '@/components/UserDisplay.vue'
+import { useUsers } from '@/composables/useUsers'
 
 const userStore = useUserStore()
+
+// 使用用户数据composable
+const { getAllUsers } = useUsers()
 
 // 入库类型常量定义（与后端保持一致）
 const INBOUND_TYPES = {
@@ -571,6 +575,8 @@ const handleCurrentChange = (val) => {
 
 onMounted(() => {
   getList()
+  // 预加载用户数据，确保UserDisplay和UserSelect组件能正常显示
+  getAllUsers()
 })
 </script>
 

@@ -4,7 +4,7 @@
     placeholder="请选择负责人"
     filterable
     clearable
-    :loading="loading"
+    :loading="isLoading"
     :disabled="disabled"
     @change="handleChange"
     style="width: 100%"
@@ -22,8 +22,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { getUserList } from '@/api/user'
+import { ref, onMounted, watch, computed } from 'vue'
+import { useUsers } from '@/composables/useUsers'
 import { ElMessage } from 'element-plus'
 
 // Props
@@ -41,11 +41,16 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['update:modelValue', 'change'])
 
+// 使用用户数据composable
+const { userList, isLoading, isLoaded, getEnabledUsers } = useUsers()
+
 // 响应式数据
 const selectedValue = ref(null)
-const enabledUsers = ref([])
-const loading = ref(false)
-const isUserListLoaded = ref(false)
+
+// 计算启用的用户列表
+const enabledUsers = computed(() => {
+  return userList.value.filter(user => user.status === 'active')
+})
 
 // 更新选中值
 const updateSelectedValue = (value) => {
@@ -58,7 +63,7 @@ const updateSelectedValue = (value) => {
   const numValue = parseInt(value)
   
   // 如果用户列表已加载，验证用户是否存在
-  if (isUserListLoaded.value) {
+  if (isLoaded.value) {
     const user = enabledUsers.value.find(u => u.id === numValue)
     selectedValue.value = user ? numValue : null
   } else {
@@ -73,36 +78,23 @@ const handleChange = (value) => {
   emit('change', value)
 }
 
-// 获取启用的用户列表
-const fetchEnabledUsers = async () => {
-  loading.value = true
+// 加载用户数据
+const loadUsers = async () => {
   try {
-    const response = await getUserList()
-    
-    // 根据返回数据结构调整
-    const userData = response.data || response
-    const allUsers = userData.list || userData || []
-    
-    // 只显示active状态的用户
-    enabledUsers.value = allUsers.filter(user => user.status === 'active')
-    isUserListLoaded.value = true
+    await getEnabledUsers()
   } catch (error) {
     console.error('获取用户列表失败:', error)
     ElMessage.error('获取用户列表失败')
-    enabledUsers.value = []
-    isUserListLoaded.value = true
-  } finally {
-    loading.value = false
   }
 }
 
-// 监听modelValue变化，但需要等待用户列表加载完成
+// 监听modelValue变化
 watch(() => props.modelValue, (newVal) => {
   updateSelectedValue(newVal)
 }, { immediate: true })
 
 // 监听用户列表加载状态，加载完成后更新选中值
-watch(isUserListLoaded, (loaded) => {
+watch(isLoaded, (loaded) => {
   if (loaded && props.modelValue) {
     updateSelectedValue(props.modelValue)
   }
@@ -110,7 +102,7 @@ watch(isUserListLoaded, (loaded) => {
 
 // 组件挂载时获取用户列表
 onMounted(() => {
-  fetchEnabledUsers()
+  loadUsers()
 })
 </script>
 

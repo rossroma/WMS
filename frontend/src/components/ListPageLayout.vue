@@ -34,6 +34,10 @@
   flex-shrink: 0; /* 不允许压缩 */
 }
 
+.filter-card :deep(.el-card__body) {
+  padding-bottom: 5px;
+}
+
 .table-card {
   flex: 1; /* 占用剩余空间 */
   display: flex;

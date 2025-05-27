@@ -4,8 +4,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { getUserList } from '@/api/user'
+import { computed, onMounted, watch } from 'vue'
+import { useUsers } from '@/composables/useUsers'
 
 // Props
 const props = defineProps({
@@ -15,50 +15,33 @@ const props = defineProps({
   }
 })
 
-// 响应式数据
-const userList = ref([])
-const isLoaded = ref(false)
+// 使用用户数据composable
+const { getUserDisplayName, isLoaded, getAllUsers } = useUsers()
 
 // 计算显示名称
 const displayName = computed(() => {
-  if (!props.value || !isLoaded.value) return null
-  
-  // 尝试通过ID查找用户
-  let user = userList.value.find(u => u.id === parseInt(props.value))
-  
-  // 如果通过ID找不到，尝试通过用户名查找
-  if (!user) {
-    user = userList.value.find(u => u.username === props.value)
-  }
-  
-  return user ? user.fullname : null
+  return getUserDisplayName(props.value)
 })
 
-// 获取用户列表
-const fetchUsers = async () => {
-  try {
-    const response = await getUserList()
-    const userData = response.data || response
-    userList.value = userData.list || userData || []
-    isLoaded.value = true
-  } catch (error) {
-    console.error('获取用户列表失败:', error)
-    isLoaded.value = true
+// 确保用户数据已加载
+const ensureUsersLoaded = async () => {
+  if (props.value && !isLoaded.value) {
+    try {
+      await getAllUsers()
+    } catch (error) {
+      console.error('加载用户数据失败:', error)
+    }
   }
 }
 
 // 监听value变化
 watch(() => props.value, () => {
-  if (props.value && !isLoaded.value) {
-    fetchUsers()
-  }
+  ensureUsersLoaded()
 })
 
-// 组件挂载时获取用户列表
+// 组件挂载时确保用户数据已加载
 onMounted(() => {
-  if (props.value) {
-    fetchUsers()
-  }
+  ensureUsersLoaded()
 })
 </script>
 

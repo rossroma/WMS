@@ -149,16 +149,19 @@
 import { ref, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getSupplierList, createSupplier, updateSupplier, deleteSupplier } from '@/api/supplier'
-import { getUserList } from '@/api/user'
 import UserSelect from '@/components/UserSelect.vue'
 import AddressSelect from '@/components/AddressSelect.vue'
 import { useUserStore } from '@/stores/user'
 import BaseDialog from '@/components/BaseDialog.vue'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import { formatDateTime } from '@/utils/date'
+import { useUsers } from '@/composables/useUsers'
 
 // 用户store
 const userStore = useUserStore()
+
+// 使用用户数据composable
+const { userList, getAllUsers } = useUsers()
 
 // 搜索表单
 const searchForm = ref({
@@ -175,9 +178,6 @@ const supplierList = ref([])
 const currentPage = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
-
-// 用户列表数据
-const userList = ref([])
 
 // 信用评级选项
 const creditRatingOptions = [
@@ -286,7 +286,7 @@ const handleAdd = async () => {
     // 确保用户列表已加载
     if (userList.value.length === 0) {
       const loading = ElMessage.loading('加载用户数据中...')
-      await fetchUserList()
+      await getAllUsers()
       loading.close()
     }
     
@@ -319,7 +319,7 @@ const handleEdit = async (row) => {
     // 确保用户列表已加载
     if (userList.value.length === 0) {
       const loading = ElMessage.loading('加载用户数据中...')
-      await fetchUserList()
+      await getAllUsers()
       loading.close()
     }
     
@@ -405,24 +405,10 @@ const getUserNameById = (userId) => {
   return user ? user.fullname : '未知用户'
 }
 
-// 获取用户列表
-const fetchUserList = async () => {
-  try {
-    const response = await getUserList()
-    const userData = response.data || response
-    const allUsers = userData.list || userData || []
-    // 只保存active状态的用户
-    userList.value = allUsers.filter(user => user.status === 'active')
-  } catch (error) {
-    console.error('获取用户列表失败:', error)
-    userList.value = []
-  }
-}
-
 onMounted(async () => {
   // 获取供应商列表和用户列表
   fetchSupplierList()
-  fetchUserList()
+  getAllUsers()
   
   // 确保当前用户信息已加载
   if (!userStore.userInfo?.id) {

@@ -127,11 +127,14 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import { getInventoryLogs } from '@/api/inventory'
-import { getUserList } from '@/api/user'
 import { ElMessage } from 'element-plus'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import { formatDateTime } from '@/utils/date'
 import UserDisplay from '@/components/UserDisplay.vue'
+import { useUsers } from '@/composables/useUsers'
+
+// 使用用户数据composable
+const { userList, getAllUsers } = useUsers()
 
 // 查询参数
 const queryParams = reactive({
@@ -149,7 +152,6 @@ const loading = ref(false)
 const logsList = ref([])
 const total = ref(0)
 const dateRange = ref([])
-const userList = ref([]) // 用户列表
 
 // 获取库存流水列表
 const getList = async () => {
@@ -178,17 +180,6 @@ const getList = async () => {
     ElMessage.error('获取库存流水失败')
   }
   loading.value = false
-}
-
-// 获取用户列表
-const getUsersList = async () => {
-  try {
-    const response = await getUserList({ pageSize: 1000 }) // 获取所有用户
-    // 直接处理响应数据
-    userList.value = response.data || []
-  } catch (error) {
-    console.error('获取用户列表失败:', error)
-  }
 }
 
 // 获取操作类型标签样式
@@ -277,7 +268,8 @@ const handleCurrentChange = (val) => {
 
 onMounted(() => {
   getList()
-  getUsersList()
+  // 预加载用户数据，确保下拉框和UserDisplay组件能正常显示
+  getAllUsers()
 })
 </script>
 

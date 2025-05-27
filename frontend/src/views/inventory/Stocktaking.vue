@@ -233,7 +233,6 @@ import {
   createStocktaking, 
   deleteStocktaking 
 } from '@/api/stocktaking'
-import { getUserList } from '@/api/user'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import UserSelect from '@/components/UserSelect.vue'
@@ -242,8 +241,12 @@ import StocktakingItemsDialog from '@/components/StocktakingItemsDialog.vue'
 import { useUserStore } from '@/stores/user'
 import { formatDateTime, getToday, formatDateOnly } from '@/utils/date'
 import UserDisplay from '@/components/UserDisplay.vue'
+import { useUsers } from '@/composables/useUsers'
 
 const userStore = useUserStore()
+
+// 使用用户数据composable
+const { userList, getAllUsers } = useUsers()
 
 // 查询参数
 const queryParams = reactive({
@@ -260,7 +263,6 @@ const loading = ref(false)
 const stocktakingList = ref([])
 const total = ref(0)
 const dateRange = ref([]) // 日期范围选择器
-const userList = ref([]) // 用户列表
 
 // 表单相关
 const dialogVisible = ref(false)
@@ -322,16 +324,6 @@ const getList = async () => {
     ElMessage.error('获取盘点列表失败')
   }
   loading.value = false
-}
-
-// 获取用户列表
-const getUsersList = async () => {
-  try {
-    const response = await getUserList({ pageSize: 1000 }) // 获取所有用户
-    userList.value = response.data || []
-  } catch (error) {
-    console.error('获取用户列表失败:', error)
-  }
 }
 
 // 查询按钮
@@ -503,7 +495,8 @@ const handleCurrentChange = (val) => {
 
 onMounted(() => {
   getList()
-  getUsersList()
+  // 预加载用户数据，确保UserDisplay组件能正常显示
+  getAllUsers()
 })
 </script>
 
