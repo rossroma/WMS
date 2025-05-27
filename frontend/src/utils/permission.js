@@ -33,8 +33,3 @@ export const hasRolePermission = (requiredRole) => {
   
   return currentLevel >= requiredLevel
 }
-
-// 检查是否可以修改商品
-export const canEditProduct = () => {
-  return hasRolePermission('manager')
-}

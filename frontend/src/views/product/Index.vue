@@ -246,9 +246,11 @@ import BaseDialog from '@/components/BaseDialog.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import { getListThumbnail } from '@/utils/image'
 import ListPageLayout from '@/components/ListPageLayout.vue'
-import { canEditProduct } from '@/utils/permission'
+import { hasRolePermission } from '@/utils/permission'
 
 const userStore = useUserStore()
+
+const canEditProduct = hasRolePermission('manager')
 
 // 搜索表单
 const searchForm = ref({

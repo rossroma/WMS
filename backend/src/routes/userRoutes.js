@@ -6,15 +6,14 @@ const { requirePermission } = require('../middleware/permission');
 
 // 用户管理路由 - 需要认证且只有admin可以访问
 router.use(authenticate);
-router.use(requirePermission('admin')); // 只有admin可以访问
 
 router.get('/', userController.getUserList);
 
-router.post('/', userController.createUser);
+router.post('/', requirePermission('admin'), userController.createUser);
 
-router.put('/:id', userController.updateUser);
+router.put('/:id', requirePermission('admin'), userController.updateUser);
 
-router.delete('/:id', userController.deleteUser);
+router.delete('/:id', requirePermission('admin'), userController.deleteUser);
 
 router.put('/:id/password', userController.changeUserPassword);
 
