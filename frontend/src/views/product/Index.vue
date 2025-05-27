@@ -38,8 +38,8 @@
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button @click="resetSearch">重置</el-button>
-          <el-button type="primary" @click="handleAdd">新增商品</el-button>
-          <el-button @click="handleCategoryManage">分类管理</el-button>
+          <el-button v-if="canEditProduct" type="primary" @click="handleAdd">新增商品</el-button>
+          <el-button v-if="canEditProduct" @click="handleCategoryManage">分类管理</el-button>
         </el-form-item>
       </el-form>
     </template>
@@ -97,9 +97,9 @@
         <el-table-column prop="stockAlertQuantity" label="预警库存" width="100" />
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-            <el-button link type="success" @click="handleCopy(row)">复制</el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-if="canEditProduct" link type="primary" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-if="canEditProduct" link type="success" @click="handleCopy(row)">复制</el-button>
+            <el-button v-if="canEditProduct" link type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -246,6 +246,7 @@ import BaseDialog from '@/components/BaseDialog.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import { getListThumbnail } from '@/utils/image'
 import ListPageLayout from '@/components/ListPageLayout.vue'
+import { canEditProduct } from '@/utils/permission'
 
 const userStore = useUserStore()
 
@@ -556,5 +557,12 @@ onMounted(() => {
     font-size: 12px;
     text-align: center;
   }
+}
+
+// 无权限提示文本样式
+.no-permission-text {
+  color: #909399;
+  font-size: 12px;
+  font-style: italic;
 }
 </style> 

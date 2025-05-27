@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { hasRolePermission } from '@/utils/permission'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -56,7 +57,8 @@ const router = createRouter({
       name: 'Supplier',
       meta: {
         title: '供应商管理',
-        icon: 'OfficeBuilding'
+        icon: 'OfficeBuilding',
+        needPermission: 'manager'
       },
       children: [
         {
@@ -167,7 +169,8 @@ const router = createRouter({
       redirect: '/system/users',
       meta: {
         title: '系统管理',
-        icon: 'Connection'
+        icon: 'Connection',
+        needPermission: 'admin'
       },
       children: [
         {
@@ -193,7 +196,6 @@ router.beforeEach(async (to, from, next) => {
   
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} - 仓库管理系统` : '仓库管理系统'
-  
   // 判断是否需要登录权限
   if (to.meta.requiresAuth) {
     if (!userStore.token) {
@@ -212,6 +214,19 @@ router.beforeEach(async (to, from, next) => {
         next({ name: 'Login', query: { redirect: to.fullPath } })
         return
       }
+    }
+  }
+  
+  // 检查权限限制
+  if (to.meta.needPermission) {
+    // 检查角色权限
+    const requiredRole = to.meta.needPermission
+    const hasAccess = hasRolePermission(requiredRole)
+    
+    if (!hasAccess) {
+      // 没有权限，重定向到仪表盘
+      next({ name: 'Dashboard' })
+      return
     }
   }
   

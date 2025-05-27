@@ -34,12 +34,10 @@
         <el-table-column label="角色" min-width="150" align="center">
           <template #default="{ row }">
             <el-tag
-              v-for="role in row.roles"
-              :key="role.id || role.name" 
               class="role-tag"
-              :type="getRoleTagType(role.name)"
+              :type="getRoleTagType(row.role)"
             >
-              {{ role.description || role.name }}
+              {{ getRoleDisplayName(row.role) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -53,7 +51,6 @@
         <el-table-column label="操作" width="280" align="center" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" text @click="handleEdit(row)">编辑</el-button>
-            <el-button type="primary" size="small" text @click="handleAssignRoles(row)">分配角色</el-button>
             <el-button type="primary" size="small" text @click="openChangePasswordDialog(row)">修改密码</el-button>
             <el-button type="danger" size="small" text @click="handleDelete(row)">删除</el-button>
           </template>
@@ -95,6 +92,13 @@
         </el-form-item>
         <el-form-item label="姓名" prop="fullname">
           <el-input v-model="form.fullname" />
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-select v-model="form.role">
+            <el-option label="超级管理员" value="admin" />
+            <el-option label="管理员" value="manager" />
+            <el-option label="操作员" value="operator" />
+          </el-select>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-select v-model="form.status">
@@ -138,43 +142,6 @@
       </template>
     </el-dialog>
 
-    <!-- 角色分配对话框 -->
-    <el-dialog
-      title="分配角色"
-      v-model="assignRolesDialog.visible"
-      width="500px"
-      append-to-body
-      destroy-on-close
-      draggable
-    >
-      <el-form
-        ref="roleFormRef"
-        :model="assignRolesDialog.form"
-        label-width="80px"
-      >
-        <el-form-item label="用户名">
-          <span>{{ assignRolesDialog.form.username }}</span>
-        </el-form-item>
-        <el-form-item label="角色">
-          <el-checkbox-group v-model="assignRolesDialog.form.selectedRoles">
-            <el-checkbox
-              v-for="role in assignRolesDialog.availableRoles"
-              :key="role.id"
-              :label="role.id"
-            >
-              {{ role.description || role.name }}
-            </el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="assignRolesDialog.visible = false">取消</el-button>
-        <el-button type="primary" @click="submitAssignRoles" :loading="assignRolesDialog.submitting">
-          确定
-        </el-button>
-      </template>
-    </el-dialog>
-
   </ListPageLayout>
 </template>
 
@@ -185,7 +152,6 @@ import { Search, Refresh, CirclePlus } from '@element-plus/icons-vue'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import { getUserList, createUser, updateUser, deleteUser, changeUserPassword } from '@/api/user'
-import { getRoleList, assignRoles } from '@/api/role'
 
 const loading = ref(false)
 const userList = ref([])
@@ -213,6 +179,7 @@ const userFormDialog = reactive({
     email: '',
     phone: '',
     fullname: '',
+    role: 'operator',
     status: 'active',
     password: ''
   },
@@ -230,6 +197,9 @@ const userFormDialog = reactive({
     ],
     fullname: [
       { required: true, message: '请输入姓名', trigger: 'blur' }
+    ],
+    role: [
+      { required: true, message: '请选择角色', trigger: 'change' }
     ],
     password: [
       { 
@@ -257,6 +227,7 @@ const handleAdd = () => {
     email: '',
     phone: '',
     fullname: '',
+    role: 'operator',
     status: 'active',
     password: ''
   }
@@ -360,51 +331,6 @@ const submitChangePassword = async () => {
   })
 }
 
-// --- 分配角色弹窗 ---
-const roleFormRef = ref()
-const assignRolesDialog = reactive({
-  visible: false,
-  submitting: false,
-  form: {
-    userId: null,
-    username: '',
-    selectedRoles: []
-  },
-  availableRoles: []
-})
-
-const handleAssignRoles = async (row) => {
-  assignRolesDialog.form.userId = row.id
-  assignRolesDialog.form.username = row.username
-  assignRolesDialog.form.selectedRoles = row.roles ? row.roles.map(role => role.id) : []
-  
-  try {
-    const res = await getRoleList()
-    assignRolesDialog.availableRoles = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
-  } catch (error) {
-    console.error('获取角色列表失败:', error)
-    ElMessage.error('获取角色列表失败')
-    assignRolesDialog.availableRoles = []
-  }
-  assignRolesDialog.visible = true
-}
-
-const submitAssignRoles = async () => {
-  if (!assignRolesDialog.form.userId) return
-  assignRolesDialog.submitting = true
-  try {
-    await assignRoles(assignRolesDialog.form.userId, assignRolesDialog.form.selectedRoles)
-    ElMessage.success('角色分配成功')
-    assignRolesDialog.visible = false
-    fetchUserList()
-  } catch (error) {
-    console.error('角色分配失败:', error)
-    ElMessage.error(error.response?.data?.message || error.message || '角色分配失败')
-  } finally {
-    assignRolesDialog.submitting = false
-  }
-}
-
 // --- 通用逻辑 ---
 const fetchUserList = async () => {
   loading.value = true
@@ -472,6 +398,15 @@ const getRoleTagType = (roleName) => {
   if (nameLower.includes('admin') || nameLower.includes('超级')) return 'danger'
   if (nameLower.includes('manager') || nameLower.includes('管理')) return 'warning'
   return 'primary'
+}
+
+const getRoleDisplayName = (roleName) => {
+  if (!roleName) return '未知角色';
+  const nameLower = roleName.toLowerCase();
+  if (nameLower.includes('admin') || nameLower.includes('超级')) return '超级管理员'
+  if (nameLower.includes('manager') || nameLower.includes('管理')) return '管理员'
+  if (nameLower.includes('operator') || nameLower.includes('操作')) return '操作员'
+  return roleName;
 }
 
 onMounted(() => {

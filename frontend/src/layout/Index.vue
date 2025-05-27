@@ -105,6 +105,7 @@ import { Key, SwitchButton, Fold, Expand } from '@element-plus/icons-vue'
 import Breadcrumb from './components/Breadcrumb.vue'
 import MessageNotification from '@/components/MessageNotification.vue'
 import ChangePasswordDialog from '@/components/ChangePasswordDialog.vue'
+import { hasRolePermission } from '@/utils/permission'
 
 const router = useRouter()
 const route = useRoute()
@@ -116,10 +117,21 @@ const toggleSidebar = () => {
   isCollapse.value = !isCollapse.value
 }
 
-// 获取路由配置
+// 获取路由配置 - 根据权限过滤菜单
 const routes = computed(() => {
   return router.options.routes.filter(route => {
-    return route.meta?.isMenu !== false && route.children
+    // 过滤掉不显示在菜单中的路由
+    if (route.meta?.isMenu === false || !route.children) {
+      return false
+    }
+    
+    // 检查角色权限限制
+    if (route.meta?.needPermission) {
+      const requiredRole = route.meta.needPermission
+      return hasRolePermission(requiredRole)
+    }
+    
+    return true
   })
 })
 
