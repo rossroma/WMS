@@ -69,7 +69,7 @@
         <el-pagination
           v-model:current-page="queryParams.page" 
           v-model:page-size="queryParams.limit"
-          :page-sizes="[15, 30, 50, 100]"
+          :page-sizes="[20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
           @size-change="handleSizeChange"
@@ -96,7 +96,7 @@ const dateRange = ref([]);
 
 const queryParams = reactive({
   page: 1,
-  limit: 15,
+  limit: 20,
   startDate: null,
   endDate: null,
   module: null,

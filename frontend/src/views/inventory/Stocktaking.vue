@@ -90,7 +90,7 @@
           v-model:current-page="queryParams.page"
           v-model:page-size="queryParams.pageSize"
           :total="total"
-          :page-sizes="[10, 20, 50, 100]"
+          :page-sizes="[20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
@@ -248,7 +248,7 @@ const userStore = useUserStore()
 // 查询参数
 const queryParams = reactive({
   page: 1,
-  pageSize: 10,
+  pageSize: 20,
   orderNo: '',
   operator: '',
   startDate: '',

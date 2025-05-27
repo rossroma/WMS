@@ -60,7 +60,7 @@
             v-model:current-page="queryParams.page"
             v-model:page-size="queryParams.pageSize"
             :total="total"
-            :page-sizes="[10, 20, 50, 100]"
+            :page-sizes="[20, 50, 100]"
             layout="total, sizes, prev, pager, next, jumper"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
@@ -117,7 +117,7 @@ const total = ref(0)
 // 查询参数
 const queryParams = reactive({
   page: 1,
-  pageSize: 10
+  pageSize: 20
 })
 
 // 计算属性
@@ -165,7 +165,7 @@ watch(() => props.modelValue, (newVal) => {
   if (newVal && props.orderId) {
     // 重置分页参数
     queryParams.page = 1
-    queryParams.pageSize = 10
+    queryParams.pageSize = 20
     getItemsList()
   }
 })

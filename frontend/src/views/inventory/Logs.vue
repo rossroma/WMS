@@ -112,7 +112,7 @@
           v-model:current-page="queryParams.page"
           v-model:page-size="queryParams.pageSize"
           :total="total"
-          :page-sizes="[10, 20, 50, 100]"
+          :page-sizes="[20, 50, 100]"
           layout="total, sizes, prev, pager, next"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
@@ -136,7 +136,7 @@ import UserDisplay from '@/components/UserDisplay.vue'
 // 查询参数
 const queryParams = reactive({
   page: 1,
-  pageSize: 10,
+  pageSize: 20,
   productName: '',
   type: '',
   operator: '',
