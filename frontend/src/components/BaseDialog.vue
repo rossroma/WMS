@@ -52,7 +52,7 @@ const props = defineProps({
   // 弹窗宽度
   width: {
     type: String,
-    default: '600px'
+    default: '800px'
   },
   // 表单数据
   formData: {
