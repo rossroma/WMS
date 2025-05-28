@@ -14,7 +14,4 @@ router.get('/', logController.getLogs);
 // 获取日志筛选选项
 router.get('/filter-options', logController.getLogFilterOptions);
 
-// 导出日志
-router.get('/export', logController.exportLogs);
-
 module.exports = router; 
