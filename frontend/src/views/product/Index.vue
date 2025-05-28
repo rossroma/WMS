@@ -396,14 +396,50 @@ const handleAdd = () => {
 const handleEdit = (row) => {
   dialogType.value = 'edit'
   isCopy.value = false
+  
+  // 处理 categoryId 数据格式 - 需要构建级联路径
+  let categoryPath = null
+  if (row.categoryId) {
+    // 如果有分类ID，需要构建完整的级联路径
+    categoryPath = buildCategoryPath(row.categoryId)
+  }
+  
   form.value = { 
     ...row,
     // 确保关联字段的数据类型正确
     supplierId: row.supplierId ? Number(row.supplierId) : null,
-    categoryId: row.categoryId ? Number(row.categoryId) : null
+    categoryId: categoryPath
   }
   console.log('编辑商品数据:', form.value)
   dialogVisible.value = true
+}
+
+// 构建分类路径（用于级联选择器）
+const buildCategoryPath = (categoryId) => {
+  if (!categoryId || !categoryOptions.value.length) {
+    return null
+  }
+  
+  // 递归查找分类路径
+  const findPath = (categories, targetId, currentPath = []) => {
+    for (const category of categories) {
+      const newPath = [...currentPath, category.id]
+      
+      if (category.id === categoryId) {
+        return newPath
+      }
+      
+      if (category.children && category.children.length > 0) {
+        const result = findPath(category.children, targetId, newPath)
+        if (result) {
+          return result
+        }
+      }
+    }
+    return null
+  }
+  
+  return findPath(categoryOptions.value, Number(categoryId))
 }
 
 // 复制商品
@@ -418,6 +454,12 @@ const handleCopy = async(row) => {
     }
     if (categoryOptions.value.length === 0) {
       await fetchCategoryTree()
+    }
+    
+    // 处理 categoryId 数据格式 - 需要构建级联路径
+    let categoryPath = null
+    if (row.categoryId) {
+      categoryPath = buildCategoryPath(row.categoryId)
     }
     
     // 复制商品数据但清空某些字段
@@ -435,7 +477,7 @@ const handleCopy = async(row) => {
       description: row.description || '',
       // 复制关联信息
       supplierId: row.supplierId ? Number(row.supplierId) : null,
-      categoryId: row.categoryId ? Number(row.categoryId) : null,
+      categoryId: categoryPath,
       // 清空需要重新填写的字段
       code: '', // 商品编码需要重新填写
       createdBy: userStore.user?.username || ''
@@ -472,15 +514,33 @@ const handleDelete = (row) => {
 const handleSubmit = async(formData) => {
   submitting.value = true
   try {
+    // 处理 categoryId 数据格式
+    const submitData = { ...formData }
+    
+    // 如果 categoryId 是数组（级联选择器返回的格式），取最后一个值
+    if (Array.isArray(submitData.categoryId)) {
+      submitData.categoryId = submitData.categoryId[submitData.categoryId.length - 1] || null
+    }
+    
+    // 确保数值类型字段的正确性
+    if (submitData.categoryId) {
+      submitData.categoryId = Number(submitData.categoryId)
+    }
+    if (submitData.supplierId) {
+      submitData.supplierId = Number(submitData.supplierId)
+    }
+    
+    console.log('提交的商品数据:', submitData)
+    
     if (dialogType.value === 'add') {
-      await createProduct(formData)
+      await createProduct(submitData)
       if (isCopy.value) {
         ElMessage.success('复制商品成功')
       } else {
         ElMessage.success('新增商品成功')
       }
     } else {
-      await updateProduct(formData.id, formData)
+      await updateProduct(submitData.id, submitData)
       ElMessage.success('更新商品成功')
     }
     dialogVisible.value = false
