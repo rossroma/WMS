@@ -48,10 +48,6 @@ const Message = sequelize.define('Message', {
     field: 'created_at'
   }
 }, {
-  tableName: 'messages',
-  timestamps: true,
-  updatedAt: 'updated_at',
-  createdAt: 'created_at',
   indexes: [
     { fields: ['is_read'] },
     { fields: ['type'] },

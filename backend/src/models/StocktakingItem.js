@@ -63,8 +63,6 @@ const StocktakingItem = sequelize.define('StocktakingItem', {
     comment: '实际盘点数量'
   }
 }, {
-  tableName: 'stocktaking_items',
-  timestamps: true,
   indexes: [
     {
       fields: ['stocktakingOrderId']

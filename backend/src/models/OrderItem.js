@@ -53,8 +53,6 @@ const OrderItem = sequelize.define('OrderItem', {
     comment: '单位'
   }
 }, {
-  tableName: 'order_items',
-  timestamps: true,
   indexes: [
     {
       fields: ['orderType', 'orderId'],

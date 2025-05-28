@@ -35,8 +35,6 @@ const Category = sequelize.define('Category', {
     defaultValue: 0
   }
 }, {
-  tableName: 'categories',
-  timestamps: true,
   hooks: {
     beforeCreate: async (category) => {
       if (category.parentId) {

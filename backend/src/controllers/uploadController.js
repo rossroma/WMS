@@ -1,5 +1,5 @@
 const qiniuService = require('../services/qiniuService');
-const logger = require('../config/logger');
+const logger = require('../services/loggerService');
 const { generateRandomString } = require('../utils/helpers');
 
 // 获取上传凭证

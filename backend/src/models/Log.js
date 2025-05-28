@@ -1,9 +1,7 @@
-const { DataTypes, Model } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-class Log extends Model {}
-
-Log.init({
+const Log = sequelize.define('Log', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -33,13 +31,8 @@ Log.init({
     type: DataTypes.STRING,
     allowNull: true,
   },
-}, {
-  sequelize,
-  modelName: 'Log',
-  tableName: 'logs',
-  timestamps: true, // 自动管理 createdAt 和 updatedAt
 });
 
-Log.sync({ alter: true });
+// Log.sync({ alter: true });
 
 module.exports = Log; 

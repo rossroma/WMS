@@ -65,8 +65,6 @@ const OutboundOrder = sequelize.define('OutboundOrder', {
     comment: '备注'
   }
 }, {
-  tableName: 'outbound_orders',
-  timestamps: true,
   indexes: [
     {
       fields: ['orderNo'],
