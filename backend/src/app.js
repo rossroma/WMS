@@ -23,7 +23,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const logRoutes = require('./routes/logRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const userRoutes = require('./routes/userRoutes');
-const { scheduleOrderCleanup, scheduleLogCleanup } = require('./config/cron');
+const { startCronJobs, stopCronJobs } = require('./config/cron');
 
 // 创建Express应用
 const app = express();
@@ -52,10 +52,10 @@ app.use(morgan('combined', {
 
 // 初始化定时任务
 try {
-  scheduleOrderCleanup();
-  scheduleLogCleanup();
+  startCronJobs();
+  logger.info('定时任务初始化成功');
 } catch (error) {
-  console.error('定时任务初始化失败:', error);
+  logger.error('定时任务初始化失败:', error);
 }
 
 // 测试数据库连接
@@ -92,9 +92,17 @@ app.listen(PORT, () => {
   logger.info(`服务器运行在端口 ${PORT}`);
 });
 
-// 优雅关闭
 process.on('SIGTERM', () => {
   logger.info('收到SIGTERM信号，准备关闭服务器');
+  
+  // 停止定时任务
+  try {
+    stopCronJobs();
+    logger.info('定时任务已停止');
+  } catch (error) {
+    logger.error('停止定时任务失败:', error);
+  }
+  
   sequelize.close().then(() => {
     logger.info('数据库连接已关闭');
     process.exit(0);

@@ -58,13 +58,22 @@ module.exports = {
 
   // 定时任务配置
   cron: {
-    messageCleanup: {
-      schedule: process.env.CRON_MESSAGE_CLEANUP || '0 2 * * *',
-      retentionDays: process.env.MESSAGE_RETENTION_DAYS || 90
+    // 日志清理任务配置
+    logCleanup: {
+      schedule: process.env.CRON_LOG_CLEANUP_SCHEDULE || '0 1 * * *',
+      retentionDays: parseInt(process.env.LOG_RETENTION_DAYS) || 90
     },
-    inventoryCheck: {
-      schedule: process.env.CRON_INVENTORY_CHECK || '0 * * * *',
-      retryAttempts: process.env.CRON_RETRY_ATTEMPTS || 3
-    }
+    // 消息清理任务配置
+    messageCleanup: {
+      schedule: process.env.CRON_MESSAGE_CLEANUP_SCHEDULE || '0 2 * * *',
+      retentionDays: parseInt(process.env.MESSAGE_RETENTION_DAYS) || 90
+    },
+    // 库存流水清理任务配置
+    inventoryLogCleanup: {
+      schedule: process.env.CRON_INVENTORY_LOG_CLEANUP_SCHEDULE || '0 3 * * *',
+      retentionDays: parseInt(process.env.INVENTORY_LOG_RETENTION_DAYS) || 180
+    },
+    // 重试配置
+    retryAttempts: parseInt(process.env.CRON_RETRY_ATTEMPTS) || 3
   }
 }; 
