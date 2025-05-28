@@ -110,10 +110,6 @@ const handleSubmit = async() => {
         ElMessage.success('密码修改成功！')
         emit('success') 
         visible.value = false 
-        
-        // 在父组件 (layout/Index.vue) 中已经处理了登出逻辑
-        // userStore.logout(); 
-
       } catch (error) {
         console.error('密码修改失败:', error)
         ElMessage.error(error.message || '密码修改失败，请重试。')

@@ -12,14 +12,9 @@
       </div>
     </el-card>
 
-    <!-- 匿名插槽：用于放置弹窗等不需要嵌套在卡片内的内容 -->
     <slot />
   </div>
 </template>
-
-<script setup>
-// 无需额外的逻辑，纯布局组件
-</script>
 
 <style scoped>
 .list-page-container {

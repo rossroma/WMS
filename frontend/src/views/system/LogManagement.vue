@@ -86,9 +86,8 @@ import ListPageLayout from '@/components/ListPageLayout.vue' // 统一路径
 import { getLogs, getLogFilterOptions } from '@/api/log'
 import { formatDate } from '@/utils/date'
 import { Search, Refresh } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus' // 引入 ElMessage
+import { ElMessage } from 'element-plus'
 
-// State
 const loading = ref(true)
 const logList = ref([])
 const total = ref(0)
@@ -109,13 +108,12 @@ const filterOptions = reactive({
   actionTypes: []
 })
 
-// Utils
 const formatDateTime = (time) => {
   if (!time) return ''
   return formatDate(time, 'YYYY-MM-DD HH:mm:ss')
 }
 
-const truncateText = (value, length = 80) => { // Default length
+const truncateText = (value, length = 80) => {
   if (!value) return ''
   if (value.length <= length) {
     return value
@@ -127,7 +125,7 @@ const truncateText = (value, length = 80) => { // Default length
 const fetchLogList = async() => {
   loading.value = true
   try {
-    const paramsToSubmit = { ...queryParams } // Clone to avoid modifying reactive object directly
+    const paramsToSubmit = { ...queryParams }
     if (dateRange.value && dateRange.value.length === 2) {
       paramsToSubmit.startDate = dateRange.value[0]
       paramsToSubmit.endDate = dateRange.value[1]
@@ -135,15 +133,9 @@ const fetchLogList = async() => {
       paramsToSubmit.startDate = null
       paramsToSubmit.endDate = null
     }
-    // Remove page and limit if they are named differently in API, adjust as per API spec
-    // e.g. if API expects pageNum and pageSize: 
-    // paramsToSubmit.pageNum = paramsToSubmit.page;
-    // paramsToSubmit.pageSize = paramsToSubmit.limit;
-    // delete paramsToSubmit.page;
-    // delete paramsToSubmit.limit;
 
     const response = await getLogs(paramsToSubmit)
-    logList.value = response.data // Assuming API returns { data: [], total: X }
+    logList.value = response.data
     total.value = response.total
   } catch (error) {
     console.error('Failed to fetch logs:', error)
@@ -182,21 +174,19 @@ const resetQuery = () => {
 }
 
 const handleDateRangeChange = (_newRange) => {
-  // No need to manually update queryParams.startDate/endDate if fetchLogList handles dateRange.value
-  handleQuery() // Trigger query on date change
+  handleQuery()
 }
 
 const handleSizeChange = (newSize) => {
   queryParams.limit = newSize
-  fetchLogList() // limit is already part of queryParams
+  fetchLogList()
 }
 
 const handleCurrentChange = (newPage) => {
   queryParams.page = newPage
-  fetchLogList() // page is already part of queryParams
+  fetchLogList()
 }
 
-// Lifecycle Hooks
 onMounted(() => {
   fetchLogList()
   fetchFilterOpts()
@@ -205,7 +195,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-/* filter-form and pagination styles are now handled by ListPageLayout or globally */
 
 .details-popover-reference {
   cursor: pointer;

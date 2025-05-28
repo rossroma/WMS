@@ -425,6 +425,4 @@ onMounted(() => {
   margin-right: 5px;
   margin-bottom: 5px; 
 }
-
-/* Styles for filter-form and pagination are expected to be handled by ListPageLayout */
 </style> 

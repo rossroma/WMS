@@ -16,8 +16,8 @@ export function getQiniuThumbnail(imageUrl, options = {}) {
   const {
     width = 200,
     height = 200,
-    mode = 1, // 1: 限定缩略图的宽最多为<Width>，高最多为<Height>，进行等比缩放
-    quality = 85 // 图片质量，取值范围1-100
+    mode = 1, // 1: 正方形 2: 长边等比例缩放
+    quality = 85 // 图片质量
   } = options
 
   // 检查是否是七牛云URL（包含七牛云域名）
@@ -25,17 +25,9 @@ export function getQiniuThumbnail(imageUrl, options = {}) {
     '.qiniucdn.com',
     '.rossroma.com'
   ]
-  
-  // 或者包含环境变量中配置的七牛云域名
-  const configDomain = import.meta.env.VITE_QINIU_DOMAIN
-  
-  let isQiniuUrl = qiniuDomains.some(domain => imageUrl.includes(domain))
-  
-  // 如果配置了七牛云域名，也检查是否匹配
-  if (!isQiniuUrl && configDomain) {
-    isQiniuUrl = imageUrl.includes(configDomain)
-  }
-  
+
+  const isQiniuUrl = qiniuDomains.some(domain => imageUrl.includes(domain))
+
   if (!isQiniuUrl) {
     // 如果不是七牛云URL，直接返回原URL
     return imageUrl
@@ -66,7 +58,7 @@ export function getSquareThumbnail(imageUrl, size = 200, quality = 85) {
   return getQiniuThumbnail(imageUrl, {
     width: size,
     height: size,
-    mode: 1, // 限定缩略图的宽和高分别最多为Width和Height，进行等比缩放，居中裁剪
+    mode: 1,
     quality
   })
 }
@@ -82,7 +74,7 @@ export function getPreviewThumbnail(imageUrl, maxSize = 1000, quality = 85) {
   return getQiniuThumbnail(imageUrl, {
     width: maxSize,
     height: maxSize,
-    mode: 2, // 限定缩略图的宽最多为Width，高最多为Height，进行等比缩放
+    mode: 2,
     quality
   })
 }

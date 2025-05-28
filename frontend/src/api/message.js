@@ -40,11 +40,3 @@ export function markAllAsRead() {
     method: 'put'
   })
 }
-
-// 删除消息
-export function deleteMessage(id) {
-  return request({
-    url: `/messages/${  id}`,
-    method: 'delete'
-  })
-} 
