@@ -94,8 +94,7 @@ import { ElMessage } from 'element-plus'
 import { Bell, CircleCheck } from '@element-plus/icons-vue'
 import { getUnreadMessages, getUnreadCount, markAsRead, markAllAsRead } from '@/api/message'
 import { useRouter } from 'vue-router'
-import { formatDistanceToNow } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
+import { formatRelativeTime } from '@/utils/date'
 
 const router = useRouter()
 
@@ -134,15 +133,7 @@ const getMessageTypeColor = (type) => {
 
 // 格式化时间
 const formatTime = (dateString) => {
-  try {
-    const date = new Date(dateString)
-    return formatDistanceToNow(date, { 
-      addSuffix: true, 
-      locale: zhCN 
-    })
-  } catch (error) {
-    return dateString
-  }
+  return formatRelativeTime(dateString)
 }
 
 // 获取未读消息数量

@@ -1,6 +1,13 @@
 /**
- * 日期时间格式化工具
+ * 日期时间格式化工具 - 基于 day.js
  */
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
+
+// 配置 day.js
+dayjs.extend(relativeTime)
+dayjs.locale('zh-cn')
 
 /**
  * 格式化日期时间
@@ -11,23 +18,10 @@
 export function formatDate(date, format = 'YYYY-MM-DD HH:mm:ss') {
   if (!date) return ''
   
-  const d = new Date(date)
-  if (isNaN(d.getTime())) return ''
+  const d = dayjs(date)
+  if (!d.isValid()) return ''
   
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const hours = String(d.getHours()).padStart(2, '0')
-  const minutes = String(d.getMinutes()).padStart(2, '0')
-  const seconds = String(d.getSeconds()).padStart(2, '0')
-  
-  return format
-    .replace('YYYY', year)
-    .replace('MM', month)
-    .replace('DD', day)
-    .replace('HH', hours)
-    .replace('mm', minutes)
-    .replace('ss', seconds)
+  return d.format(format)
 }
 
 /**
@@ -49,10 +43,24 @@ export function formatDateTime(date) {
 }
 
 /**
+ * 相对时间格式化（如：刚刚、5分钟前、1小时前等）
+ * @param {string|Date} date - 日期字符串或Date对象
+ * @returns {string} 相对时间字符串
+ */
+export function formatRelativeTime(date) {
+  if (!date) return ''
+  
+  const d = dayjs(date)
+  if (!d.isValid()) return ''
+  
+  return d.fromNow()
+}
+
+/**
  * 获取今天的日期字符串
  * @param {string} format - 格式化模板，默认 'YYYY-MM-DD'
  * @returns {string} 今天的日期字符串
  */
 export function getToday(format = 'YYYY-MM-DD') {
-  return formatDate(new Date(), format)
+  return dayjs().format(format)
 }
