@@ -85,6 +85,7 @@ exports.createCategory = async (req, res, next) => {
       data: category
     });
   } catch (error) {
+    console.error('createCategory 详细错误:', error);
     next(new AppError('创建分类失败', 500));
   }
 };
@@ -111,6 +112,7 @@ exports.updateCategory = async (req, res, next) => {
       data: category
     });
   } catch (error) {
+    console.error('updateCategory 详细错误:', error);
     next(new AppError('更新分类失败', 500));
   }
 };
@@ -140,6 +142,7 @@ exports.deleteCategory = async (req, res, next) => {
       message: '分类删除成功'
     });
   } catch (error) {
+    console.error('deleteCategory 详细错误:', error);
     next(new AppError('删除分类失败', 500));
   }
 };
@@ -173,6 +176,7 @@ exports.batchUpdateSort = async (req, res, next) => {
       message: '排序更新成功' 
     });
   } catch (error) {
+    console.error('batchUpdateSort 详细错误:', error);
     await t.rollback();
     next(new AppError('批量更新排序失败', 500));
   }
@@ -204,6 +208,7 @@ exports.getCategoryList = async (req, res, next) => {
       data: categories
     });
   } catch (error) {
+    console.error('getCategoryList 详细错误:', error);
     next(new AppError('获取分类列表失败', 500));
   }
 }; 

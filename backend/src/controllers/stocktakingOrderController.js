@@ -163,8 +163,8 @@ exports.createStocktakingOrder = async (req, res, next) => {
     // 创建盘点商品明细
     let inboundOrderNo = null;
     let outboundOrderNo = null;
-    let profitItems = [];
-    let lossItems = [];
+    const profitItems = [];
+    const lossItems = [];
     
     if (items.length > 0) {
       const stocktakingItems = [];

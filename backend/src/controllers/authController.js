@@ -73,6 +73,7 @@ exports.login = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('登录失败:', error);
     next(new AppError('登录失败', 500));
   }
 };
@@ -126,6 +127,7 @@ exports.getCurrentUser = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('获取用户信息失败:', error);
     next(new AppError('获取用户信息失败', 500));
   }
 };

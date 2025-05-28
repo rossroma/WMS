@@ -39,6 +39,7 @@ exports.getLogs = async (req, res, next) => {
       totalPages: Math.ceil(count / limit),
     });
   } catch (error) {
+    console.error('获取日志列表失败:', error);
     next(new AppError('获取日志列表失败', 500));
   }
 };
@@ -63,6 +64,7 @@ exports.getLogFilterOptions = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('获取日志筛选选项失败:', error);
     next(new AppError('获取日志筛选选项失败', 500));
   }
 }; 

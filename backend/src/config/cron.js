@@ -1,8 +1,8 @@
-const cron = require('node-cron');
-const { Op } = require('sequelize');
-const Log = require('../models/Log'); // 引入 Log 模型
+// const cron = require('node-cron'); // 暂时注释，因为当前未使用
+// const { Op } = require('sequelize'); // 暂时注释，因为当前未使用
+// const Log = require('../models/Log'); // 暂时注释，因为当前未使用
 // const { Order } = require('../models/Order');  // 暂时注释掉
-const { sequelize } = require('./database');
+// const { sequelize } = require('./database'); // 暂时注释，因为当前未使用
 
 // 暂时注释掉定时任务
 const scheduleOrderCleanup = () => {

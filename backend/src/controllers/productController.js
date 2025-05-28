@@ -14,6 +14,7 @@ exports.createProduct = async (req, res, next) => {
       data: product
     });
   } catch (error) {
+    console.error('创建商品失败:', error);
     next(new AppError('创建商品失败', 400));
   }
 };
@@ -28,8 +29,7 @@ exports.getAllProducts = async (req, res, next) => {
       brand, 
       code,
       categoryId,
-      supplierId,
-      warehouse 
+      supplierId
     } = req.query;
 
     // 构建查询条件
@@ -90,6 +90,7 @@ exports.getAllProducts = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('获取商品列表失败:', error);
     next(new AppError('获取商品列表失败', 500));
   }
 };
@@ -108,6 +109,7 @@ exports.getProductById = async (req, res, next) => {
       data: product
     });
   } catch (error) {
+    console.error('获取商品失败:', error);
     next(new AppError('获取商品失败', 500));
   }
 };
@@ -127,6 +129,7 @@ exports.updateProduct = async (req, res, next) => {
       data: product
     });
   } catch (error) {
+    console.error('更新商品失败:', error);
     next(new AppError('更新商品失败', 400));
   }
 };
@@ -145,6 +148,7 @@ exports.deleteProduct = async (req, res, next) => {
       message: '商品删除成功'
     });
   } catch (error) {
+    console.error('删除商品失败:', error);
     next(new AppError('删除商品失败', 500));
   }
 }; 

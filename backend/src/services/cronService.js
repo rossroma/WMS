@@ -46,7 +46,7 @@ const cleanOldMessages = async () => {
     retentionDate.setDate(retentionDate.getDate() - config.cron.messageCleanup.retentionDays);
 
     const result = await retry(async () => {
-      return await Message.destroy({
+      return Message.destroy({
         where: {
           createdAt: {
             [Op.lt]: retentionDate
@@ -77,7 +77,7 @@ const checkInventoryAlerts = async () => {
 
   try {
     const inventories = await retry(async () => {
-      return await Inventory.findAll({
+      return Inventory.findAll({
         include: [{
           model: Product,
           where: {

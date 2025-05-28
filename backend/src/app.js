@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
 const morgan = require('morgan');
-const path = require('path');
 const config = require('./config/config');
 const logger = require('./services/loggerService');
 const { errorHandler } = require('./middleware/errorHandler');
@@ -23,9 +22,8 @@ const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const logRoutes = require('./routes/logRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
-const { initCronJobs } = require('./services/cronService');
 const userRoutes = require('./routes/userRoutes');
-const { scheduleOrderCleanup, scheduleInventoryCheck, scheduleLogCleanup } = require('./config/cron');
+const { scheduleOrderCleanup, scheduleLogCleanup } = require('./config/cron');
 
 // 创建Express应用
 const app = express();
@@ -109,7 +107,7 @@ process.on('uncaughtException', (error) => {
   // 可以在这里添加错误日志记录
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   console.error('未处理的 Promise 拒绝:', reason);
   // 可以在这里添加错误日志记录
 });

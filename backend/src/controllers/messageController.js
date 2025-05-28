@@ -14,6 +14,7 @@ exports.getMessages = async (req, res, next) => {
       data: result
     });
   } catch (error) {
+    console.error('获取消息列表失败:', error);
     next(new AppError('获取消息列表失败', 500));
   }
 };
@@ -31,6 +32,7 @@ exports.getUnreadMessages = async (req, res, next) => {
       data: messages
     });
   } catch (error) {
+    console.error('获取未读消息失败:', error);
     next(new AppError('获取未读消息失败', 500));
   }
 };
@@ -48,6 +50,7 @@ exports.getUnreadCount = async (req, res, next) => {
       data: { count }
     });
   } catch (error) {
+    console.error('获取未读消息数量失败:', error);
     next(new AppError('获取未读消息数量失败', 500));
   }
 };
@@ -70,6 +73,7 @@ exports.markAsRead = async (req, res, next) => {
       message: '消息已标记为已读'
     });
   } catch (error) {
+    console.error('标记消息已读失败:', error);
     next(new AppError('标记消息已读失败', 500));
   }
 };
@@ -86,6 +90,7 @@ exports.markAllAsRead = async (req, res, next) => {
       message: `已标记 ${affectedRows} 条消息为已读`
     });
   } catch (error) {
+    console.error('标记所有消息已读失败:', error);
     next(new AppError('标记所有消息已读失败', 500));
   }
 }; 

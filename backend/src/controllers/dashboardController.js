@@ -145,6 +145,7 @@ exports.getTodayInboundCount = async (req, res, next) => {
       data: { count }
     });
   } catch (error) {
+    console.error('获取今日入库数量失败:', error);
     next(new AppError('获取今日入库数量失败', 500));
   }
 };
@@ -170,6 +171,7 @@ exports.getTodayOutboundCount = async (req, res, next) => {
       data: { count }
     });
   } catch (error) {
+    console.error('获取今日出库数量失败:', error);
     next(new AppError('获取今日出库数量失败', 500));
   }
 };
@@ -210,6 +212,7 @@ exports.getWarningProducts = async (req, res, next) => {
       data: filteredProducts
     });
   } catch (error) {
+    console.error('获取库存预警商品失败:', error);
     next(new AppError('获取库存预警商品失败', 500));
   }
 };
@@ -259,6 +262,7 @@ exports.getWeeklyTrend = async (req, res, next) => {
       data: trendData
     });
   } catch (error) {
+    console.error('获取近7天出入库趋势失败:', error);
     next(new AppError('获取近7天出入库趋势失败', 500));
   }
 };
@@ -379,6 +383,7 @@ exports.getInventoryOverview = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('获取库存概览失败:', error);
     next(new AppError('获取库存概览失败', 500));
   }
 };
@@ -426,6 +431,7 @@ exports.getInOutStatistics = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('获取出入库统计失败:', error);
     next(new AppError('获取出入库统计失败', 500));
   }
 };
@@ -458,6 +464,7 @@ exports.getStocktakingStatistics = async (req, res, next) => {
       data: stocktakingStats[0]
     });
   } catch (error) {
+    console.error('获取盘点统计失败:', error);
     next(new AppError('获取盘点统计失败', 500));
   }
 };
@@ -490,6 +497,7 @@ exports.getMessageStatistics = async (req, res, next) => {
       data: messageStats
     });
   } catch (error) {
+    console.error('获取消息统计失败:', error);
     next(new AppError('获取消息统计失败', 500));
   }
 };
@@ -522,6 +530,7 @@ exports.getInventoryTrend = async (req, res, next) => {
       data: dailyInventory
     });
   } catch (error) {
+    console.error('获取库存趋势失败:', error);
     next(new AppError('获取库存趋势失败', 500));
   }
 };

@@ -14,6 +14,7 @@ exports.getUserList = async (req, res, next) => {
       data: users
     });
   } catch (error) {
+    console.error('获取用户列表失败:', error);
     next(new AppError('获取用户列表失败', 500));
   }
 };
@@ -61,6 +62,7 @@ exports.createUser = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('创建用户失败:', error);
     next(new AppError('创建用户失败', 500));
   }
 };
@@ -117,6 +119,7 @@ exports.updateUser = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('更新用户失败:', error);
     next(new AppError('更新用户失败', 500));
   }
 };
@@ -151,6 +154,7 @@ exports.deleteUser = async (req, res, next) => {
 
     res.status(204).send();
   } catch (error) {
+    console.error('删除用户失败:', error);
     next(new AppError('删除用户失败', 500));
   }
 };
@@ -183,6 +187,7 @@ exports.changeUserPassword = async (req, res, next) => {
       message: '密码修改成功'
     });
   } catch (error) {
+    console.error('修改密码失败:', error);
     next(new AppError('修改密码失败', 500));
   }
 }; 

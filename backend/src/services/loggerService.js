@@ -67,7 +67,7 @@ process.on('uncaughtException', (error) => {
   }, 1000);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   logger.error('未处理的Promise拒绝:', reason);
 });
 
