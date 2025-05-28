@@ -55,7 +55,7 @@ const detailAddress = ref('')
 // 级联选择器配置
 const cascaderProps = {
   value: 'value',
-  label: 'label',
+  label: 'text',
   children: 'children',
   expandTrigger: 'hover',
   emitPath: true
