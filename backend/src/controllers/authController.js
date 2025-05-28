@@ -77,26 +77,30 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// 登出功能 (如果需要)
+// 登出功能
 exports.logout = async (req, res, next) => {
   try {
-    // 假设前端会清除token，后端主要是记录日志
-    // 如果有服务端session或token黑名单机制，可以在此处理
-    if (req.user) {
+    const user = req.user;
+
+    // 记录登出日志
+    if (user) {
       await createLog({
-        userId: req.user.id,
-        username: req.user.username,
+        userId: user.id,
+        username: user.username,
         actionType: LOG_ACTION_TYPE.LOGOUT,
         module: LOG_MODULE.AUTH,
         ipAddress: req.ip,
-        details: '用户登出成功'
+        details: LOG_DETAILS.LOGOUT_SUCCESS
       });
     }
+
     res.json({
       status: 'success',
-      message: '登出成功'
+      message: '登出成功',
+      data: null
     });
   } catch (error) {
+    console.error('登出失败:', error);
     next(new AppError('登出失败', 500));
   }
 };

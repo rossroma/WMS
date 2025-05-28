@@ -87,12 +87,16 @@ const handleLogin = async() => {
           userStore.setToken(data.token)
           userStore.setUserInfo(data.user)
           ElMessage.success('登录成功')
-          router.push('/')
+          
+          // 获取重定向路径，如果没有则跳转到首页
+          const redirect = router.currentRoute.value.query.redirect || '/'
+          router.push(redirect)
         } else {
           ElMessage.error('登录响应格式错误')
         }
       } catch (error) {
         console.error('登录失败:', error)
+        ElMessage.error(error.response?.data?.message || '登录失败')
       } finally {
         loading.value = false
       }
