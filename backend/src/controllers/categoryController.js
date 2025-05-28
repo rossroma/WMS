@@ -36,9 +36,6 @@ exports.getCategoryTree = async (req, res, next) => {
     });
   } catch (error) {
     console.error('getCategoryTree 详细错误:', error);
-    console.error('错误堆栈:', error.stack);
-    console.error('错误名称:', error.name);
-    console.error('错误消息:', error.message);
     if (error.sql) {
       console.error('SQL 错误:', error.sql);
     }

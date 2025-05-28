@@ -267,7 +267,6 @@ exports.createStocktakingOrder = async (req, res, next) => {
             transaction
           );
         }
-        // Log for auto-created Inbound Order
         try {
           await createLog({
             userId: null,
@@ -322,7 +321,6 @@ exports.createStocktakingOrder = async (req, res, next) => {
             transaction
           );
         }
-        // Log for auto-created Outbound Order
         try {
           await createLog({
             userId: null,
@@ -343,19 +341,18 @@ exports.createStocktakingOrder = async (req, res, next) => {
     // 记录创建盘点单日志
     try {
       let logUserId = null;
-      let logUsername = '系统'; // Default to system
+      let logUsername = '系统';
 
       if (req.user && req.user.id) {
         logUserId = req.user.id;
         logUsername = req.user.username;
       } else if (operator) {
-        // operator is userId, try to find username
+        // 根据operatorId查找用户
         const userPerformingAction = await User.findByPk(operator);
         if (userPerformingAction) {
           logUserId = userPerformingAction.id;
           logUsername = userPerformingAction.username;
         }
-        // If operator ID is provided but user not found, it remains '系统' which is acceptable
       }
 
       await createLog({

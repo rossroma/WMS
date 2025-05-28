@@ -70,19 +70,6 @@ const errorHandler = (err, req, res) => {
       error = new AppError('令牌已过期', 401);
     }
 
-    // 文件上传错误
-    if (err.name === 'MulterError') {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        error = new AppError('文件大小超出限制', 400);
-      } else if (err.code === 'LIMIT_FILE_COUNT') {
-        error = new AppError('文件数量超出限制', 400);
-      } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-        error = new AppError('不支持的文件类型', 400);
-      } else {
-        error = new AppError('文件上传失败', 400);
-      }
-    }
-
     sendErrorProd(error, res);
   }
 };

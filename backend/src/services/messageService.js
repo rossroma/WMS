@@ -247,33 +247,6 @@ class MessageService {
       relatedId: outboundOrderNo
     });
   }
-
-  /**
-   * 清理历史消息
-   * @param {number} retentionDays 保留天数
-   * @returns {Promise<number>} 清理的消息数量
-   */
-  async cleanOldMessages(retentionDays = 90) {
-    try {
-      const retentionDate = new Date();
-      retentionDate.setDate(retentionDate.getDate() - retentionDays);
-
-      const result = await Message.destroy({
-        where: {
-          createdAt: {
-            [Op.lt]: retentionDate
-          },
-          isRead: true
-        }
-      });
-
-      logger.info(`清理历史消息: ${result} 条`);
-      return result;
-    } catch (error) {
-      logger.error('清理历史消息失败:', error);
-      throw error;
-    }
-  }
 }
 
 module.exports = new MessageService(); 
