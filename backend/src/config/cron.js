@@ -42,7 +42,7 @@ const cleanOldLogs = async () => {
     logger.info(`开始清理 ${retentionDays} 天前的历史日志，截止日期：${retentionDate.toISOString()}`);
 
     const result = await retry(async () => {
-      return await Log.destroy({
+      return Log.destroy({
         where: {
           createdAt: {
             [Op.lt]: retentionDate
@@ -69,7 +69,7 @@ const cleanOldMessages = async () => {
     logger.info(`开始清理 ${retentionDays} 天前的历史消息，截止日期：${retentionDate.toISOString()}`);
 
     const result = await retry(async () => {
-      return await Message.destroy({
+      return Message.destroy({
         where: {
           createdAt: {
             [Op.lt]: retentionDate
@@ -96,7 +96,7 @@ const cleanOldInventoryLogs = async () => {
     logger.info(`开始清理 ${retentionDays} 天前的库存流水数据，截止日期：${retentionDate.toISOString()}`);
 
     const result = await retry(async () => {
-      return await InventoryLog.destroy({
+      return InventoryLog.destroy({
         where: {
           createdAt: {
             [Op.lt]: retentionDate

@@ -1,6 +1,5 @@
 const qiniu = require('qiniu');
 const config = require('../config/config');
-const logger = require('./loggerService');
 
 class QiniuService {
   constructor() {

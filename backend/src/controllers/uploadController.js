@@ -1,5 +1,5 @@
 const qiniuService = require('../services/qiniuService');
-const { AppError } = require('../middleware/errorHandler');
+const logger = require('../config/logger');
 const { generateRandomString } = require('../utils/helpers');
 
 // 获取上传凭证
@@ -20,6 +20,7 @@ exports.getUploadToken = (req, res) => {
       }
     });
   } catch (error) {
+    logger.error('获取上传凭证失败:', error);
     res.status(500).json({
       status: 'error',
       message: '获取上传凭证失败',
