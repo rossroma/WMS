@@ -104,7 +104,6 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { ElMessage } from 'element-plus'
 import { getStocktakingItems } from '@/api/stocktaking'
 import { formatDateTime } from '@/utils/date'
 import UserDisplay from '@/components/UserDisplay.vue'
@@ -171,11 +170,12 @@ const fetchItems = async() => {
     orderInfo.value = res.data.orderInfo
     itemsList.value = res.data.items
     total.value = res.data.total
-  } catch (error) {
-    console.error('获取盘点明细失败:', error)
-    ElMessage.error('获取盘点明细失败')
+  } catch (_error) {
+    console.error('获取盘点明细失败:', _error)
+    // 移除重复的错误提示，request.js中已经统一处理
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 // 获取差异样式类

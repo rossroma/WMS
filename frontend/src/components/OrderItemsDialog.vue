@@ -78,7 +78,6 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { ElMessage } from 'element-plus'
 import BaseDialog from '@/components/BaseDialog.vue'
 import { formatDateTime } from '@/utils/date'
 
@@ -141,11 +140,12 @@ const getItemsList = async() => {
     orderInfo.value = res.data.orderInfo
     items.value = res.data.items
     total.value = res.data.total
-  } catch (error) {
-    console.error('获取关联商品失败:', error)
-    ElMessage.error('获取关联商品失败')
+  } catch (_error) {
+    console.error('获取关联商品失败:', _error)
+    // 移除重复的错误提示，request.js中已经统一处理
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 // 分页事件

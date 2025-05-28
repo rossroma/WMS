@@ -154,7 +154,6 @@ const fetchUnreadMessages = async() => {
     messages.value = res.data || []
   } catch (error) {
     console.error('获取未读消息失败:', error)
-    ElMessage.error('获取未读消息失败')
   }
   loading.value = false
 }
@@ -175,7 +174,6 @@ const handleMarkRead = async(message) => {
     ElMessage.success('消息已标记为已读')
   } catch (error) {
     console.error('标记消息已读失败:', error)
-    ElMessage.error('标记消息已读失败')
   }
 }
 
@@ -188,7 +186,6 @@ const handleMarkAllRead = async() => {
     ElMessage.success('所有消息已标记为已读')
   } catch (error) {
     console.error('标记所有消息已读失败:', error)
-    ElMessage.error('标记所有消息已读失败')
   }
 }
 

@@ -24,7 +24,6 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useUsers } from '@/composables/useUsers'
-import { ElMessage } from 'element-plus'
 
 // Props
 const props = defineProps({
@@ -84,7 +83,6 @@ const loadUsers = async() => {
     await getEnabledUsers()
   } catch (error) {
     console.error('获取用户列表失败:', error)
-    ElMessage.error('获取用户列表失败')
   }
 }
 

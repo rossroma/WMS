@@ -371,7 +371,6 @@ const getList = async() => {
     total.value = res.data.total
   } catch (error) {
     console.error('获取入库列表失败:', error)
-    ElMessage.error('获取入库列表失败')
   }
   loading.value = false
 }
@@ -453,7 +452,6 @@ const handleEdit = async(row) => {
     dialogVisible.value = true
   } catch (error) {
     console.error('编辑入库单失败:', error)
-    ElMessage.error('编辑入库单失败')
   }
 }
 
@@ -468,7 +466,6 @@ const handleDelete = (row) => {
       getList()
     } catch (error) {
       console.error('删除入库单失败:', error)
-      ElMessage.error('删除入库单失败')
     }
   })
 }
@@ -551,7 +548,6 @@ const handleSubmit = async(formData) => {
     getList()
   } catch (error) {
     console.error('提交失败:', error)
-    ElMessage.error(isEdit.value ? '更新失败' : '创建失败')
   } finally {
     submitting.value = false
   }

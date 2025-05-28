@@ -264,7 +264,6 @@ const submitUserForm = async(formDataFromDialog) => {
     fetchUserList()
   } catch (error) {
     console.error('用户操作失败:', error)
-    ElMessage.error(error.response?.data?.message || error.message || '用户操作失败')
   } finally {
     userFormDialog.submitting = false
   }
@@ -322,7 +321,6 @@ const submitChangePassword = async() => {
         changePasswordDialog.visible = false
       } catch (error) {
         console.error('密码修改失败:', error)
-        ElMessage.error(error.response?.data?.message || error.message || '密码修改失败')
       } finally {
         changePasswordDialog.submitting = false
       }
@@ -339,7 +337,6 @@ const fetchUserList = async() => {
     total.value = res.data?.total || 0
   } catch (error) {
     console.error('获取用户列表失败:', error)
-    ElMessage.error(error.message || '获取用户列表失败')
     userList.value = []
     total.value = 0
   } finally {
@@ -386,7 +383,6 @@ const handleDelete = (row) => {
       fetchUserList()
     } catch (error) {
       console.error('删除用户失败:', error)
-      ElMessage.error(error.response?.data?.message || error.message || '删除用户失败')
     }
   }).catch(() => { /* User clicked cancel or closed dialog */ })
 }

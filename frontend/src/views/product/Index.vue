@@ -448,7 +448,6 @@ const handleCopy = async(row) => {
     ElMessage.info('已复制商品信息，请修改商品编码后保存')
   } catch (error) {
     console.error('复制商品失败:', error)
-    ElMessage.error('复制商品失败')
   }
 }
 
@@ -488,8 +487,7 @@ const handleSubmit = async(formData) => {
     isCopy.value = false // 重置复制状态
     fetchProductList()
   } catch (error) {
-    console.error('保存商品失败:', error)
-    ElMessage.error('保存失败')
+    console.error('保存失败:', error)
   } finally {
     submitting.value = false
   }

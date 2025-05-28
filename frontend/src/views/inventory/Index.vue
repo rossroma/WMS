@@ -93,7 +93,6 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Refresh, List } from '@element-plus/icons-vue'
 import { getInventoryList } from '@/api/inventory'
-import { ElMessage } from 'element-plus'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 
 const router = useRouter()
@@ -111,30 +110,18 @@ const inventoryList = ref([])
 const total = ref(0)
 
 // 获取库存列表
-const getList = async() => {
+const fetchInventoryList = async() => {
   loading.value = true
   try {
-    const params = {
-      page: queryParams.page,
-      pageSize: queryParams.pageSize
-    }
-    
-    // 如果有商品名称搜索条件，添加到参数中
-    if (queryParams.productName) {
-      params.productName = queryParams.productName
-    }
-
-    const response = await getInventoryList(params)
-    
-    // 直接处理响应数据
-    const data = response.data || {}
-    inventoryList.value = data.list || []
-    total.value = data.total || 0
+    const res = await getInventoryList(queryParams)
+    inventoryList.value = res.data.list
+    total.value = res.data.total
   } catch (error) {
     console.error('获取库存列表失败:', error)
-    ElMessage.error('获取库存列表失败')
+    // 移除重复的错误提示，request.js中已经统一处理
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 // 判断是否为预警库存
@@ -163,14 +150,14 @@ const getStockStatusText = (row) => {
 // 查询按钮
 const handleQuery = () => {
   queryParams.page = 1
-  getList()
+  fetchInventoryList()
 }
 
 // 重置按钮
 const resetQuery = () => {
   queryParams.productName = ''
   queryParams.page = 1
-  getList()
+  fetchInventoryList()
 }
 
 // 查看库存流水
@@ -182,16 +169,16 @@ const handleViewLogs = () => {
 const handleSizeChange = (val) => {
   queryParams.pageSize = val
   queryParams.page = 1
-  getList()
+  fetchInventoryList()
 }
 
 const handleCurrentChange = (val) => {
   queryParams.page = val
-  getList()
+  fetchInventoryList()
 }
 
 onMounted(() => {
-  getList()
+  fetchInventoryList()
 })
 </script>
 

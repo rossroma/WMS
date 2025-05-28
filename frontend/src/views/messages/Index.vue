@@ -215,9 +215,9 @@ const getList = async() => {
     total.value = res.data.total || 0
   } catch (error) {
     console.error('获取消息列表失败:', error)
-    ElMessage.error('获取消息列表失败')
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 // 查询按钮
@@ -255,7 +255,6 @@ const handleMarkRead = async(row) => {
     ElMessage.success('消息已标记为已读')
   } catch (error) {
     console.error('标记消息已读失败:', error)
-    ElMessage.error('标记消息已读失败')
   }
 }
 
@@ -281,10 +280,7 @@ const handleMarkAllRead = async() => {
     })
     ElMessage.success('所有消息已标记为已读')
   } catch (error) {
-    if (error !== 'cancel') {
-      console.error('标记所有消息已读失败:', error)
-      ElMessage.error('标记所有消息已读失败')
-    }
+    console.error('标记所有消息已读失败:', error)
   }
 }
 

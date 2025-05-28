@@ -86,7 +86,6 @@ import ListPageLayout from '@/components/ListPageLayout.vue' // 统一路径
 import { getLogs, getLogFilterOptions } from '@/api/log'
 import { formatDate } from '@/utils/date'
 import { Search, Refresh } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 
 const loading = ref(true)
 const logList = ref([])
@@ -138,8 +137,7 @@ const fetchLogList = async() => {
     logList.value = response.data
     total.value = response.total
   } catch (error) {
-    console.error('Failed to fetch logs:', error)
-    ElMessage.error(error.message || '获取日志列表失败')
+    console.error('获取日志列表失败:', error)
   } finally {
     loading.value = false
   }
@@ -151,8 +149,7 @@ const fetchFilterOpts = async() => {
     filterOptions.modules = response.data.modules || []
     filterOptions.actionTypes = response.data.actionTypes || []
   } catch (error) {
-    console.error('Failed to fetch filter options:', error)
-    ElMessage.error(error.message || '获取筛选选项失败')
+    console.error('获取筛选选项失败:', error)
   }
 }
 

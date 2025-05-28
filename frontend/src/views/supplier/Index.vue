@@ -254,7 +254,7 @@ const fetchSupplierList = async() => {
     supplierList.value = res.data.list || []
     total.value = res.data.total || 0
   } catch (error) {
-    console.error('获取供应商列表失败:', error)
+    console.error('加载数据失败:', error)
   } finally {
     loading.value = false
   }
@@ -307,7 +307,6 @@ const handleAdd = async() => {
     dialogVisible.value = true
   } catch (error) {
     console.error('打开新增弹窗失败:', error)
-    ElMessage.error('加载数据失败')
   }
 }
 
@@ -333,7 +332,6 @@ const handleEdit = async(row) => {
     dialogVisible.value = true
   } catch (error) {
     console.error('打开编辑弹窗失败:', error)
-    ElMessage.error('加载数据失败')
   }
 }
 
@@ -369,7 +367,6 @@ const handleSubmit = async(formData) => {
     fetchSupplierList()
   } catch (error) {
     console.error('保存供应商失败:', error)
-    ElMessage.error('保存失败')
   } finally {
     submitting.value = false
   }

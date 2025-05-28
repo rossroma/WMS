@@ -124,12 +124,10 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-// import { useRouter } from 'vue-router'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import { getInventoryLogs } from '@/api/inventory'
-import { ElMessage } from 'element-plus'
-import ListPageLayout from '@/components/ListPageLayout.vue'
 import { formatDateTime } from '@/utils/date'
+import ListPageLayout from '@/components/ListPageLayout.vue'
 import UserDisplay from '@/components/UserDisplay.vue'
 import { useUsers } from '@/composables/useUsers'
 
@@ -154,32 +152,18 @@ const total = ref(0)
 const dateRange = ref([])
 
 // 获取库存流水列表
-const getList = async() => {
+const getLogsList = async() => {
   loading.value = true
   try {
-    const params = {
-      page: queryParams.page,
-      pageSize: queryParams.pageSize
-    }
-    
-    // 添加搜索条件
-    if (queryParams.productName) params.productName = queryParams.productName
-    if (queryParams.type) params.type = queryParams.type
-    if (queryParams.operator) params.operator = queryParams.operator
-    if (queryParams.startDate) params.startDate = queryParams.startDate
-    if (queryParams.endDate) params.endDate = queryParams.endDate
-
-    const response = await getInventoryLogs(params)
-    
-    // 直接处理响应数据
-    const data = response.data || {}
-    logsList.value = data.list || []
-    total.value = data.total || 0
-  } catch (error) {
-    console.error('获取库存流水失败:', error)
-    ElMessage.error('获取库存流水失败')
+    const res = await getInventoryLogs(queryParams)
+    logsList.value = res.data.list
+    total.value = res.data.total
+  } catch (_error) {
+    console.error('获取库存流水失败:', _error)
+    // 移除重复的错误提示，request.js中已经统一处理
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 // 获取操作类型标签样式
@@ -237,7 +221,7 @@ const handleDateChange = (dates) => {
 // 查询按钮
 const handleQuery = () => {
   queryParams.page = 1
-  getList()
+  getLogsList()
 }
 
 // 重置按钮
@@ -251,23 +235,23 @@ const resetQuery = () => {
     page: 1
   })
   dateRange.value = []
-  getList()
+  getLogsList()
 }
 
 // 分页相关
 const handleSizeChange = (val) => {
   queryParams.pageSize = val
   queryParams.page = 1
-  getList()
+  getLogsList()
 }
 
 const handleCurrentChange = (val) => {
   queryParams.page = val
-  getList()
+  getLogsList()
 }
 
 onMounted(() => {
-  getList()
+  getLogsList()
   // 预加载用户数据，确保下拉框和UserDisplay组件能正常显示
   getAllUsers()
 })

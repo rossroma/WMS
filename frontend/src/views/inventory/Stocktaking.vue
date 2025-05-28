@@ -321,9 +321,9 @@ const getList = async() => {
     total.value = res.data.total
   } catch (error) {
     console.error('获取盘点列表失败:', error)
-    ElMessage.error('获取盘点列表失败')
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 // 查询按钮
@@ -381,7 +381,6 @@ const handleDelete = (row) => {
       getList()
     } catch (error) {
       console.error('删除盘点单失败:', error)
-      ElMessage.error('删除失败')
     }
   })
 }
@@ -421,7 +420,6 @@ const handleProductSelectConfirm = async(selectedProducts) => {
     ElMessage.success(`成功添加 ${newProducts.length} 个商品`)
   } catch (error) {
     console.error('添加商品失败:', error)
-    ElMessage.error('添加商品失败')
   }
 }
 

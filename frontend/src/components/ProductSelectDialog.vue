@@ -195,9 +195,9 @@ const fetchProductList = async() => {
       await nextTick()
       restoreSelection()
     }
-  } catch (error) {
-    console.error('获取商品列表失败:', error)
-    ElMessage.error('获取商品列表失败')
+  } catch (_error) {
+    console.error('获取商品列表失败:', _error)
+    // 移除重复的错误提示，request.js中已经统一处理
   } finally {
     loading.value = false
   }
