@@ -121,21 +121,8 @@ const handleFileChange = async(file) => {
   } catch (error) {
     console.error('图片上传失败:', error)
     
-    // 根据错误类型给出不同提示
-    let errorMessage = '图片上传失败，请重试'
-    if (error.response) {
-      const { status, data } = error.response
-      if (status === 413) {
-        errorMessage = '图片文件过大，请选择较小的图片'
-      } else if (status === 415) {
-        errorMessage = '不支持的图片格式'
-      } else if (data && data.message) {
-        errorMessage = data.message
-      }
-    } else if (error.code === 'ECONNABORTED') {
-      errorMessage = '上传超时，请检查网络连接'
-    }
-    
+    // 显示错误信息
+    const errorMessage = error.message || '图片上传失败，请重试'
     ElMessage.error(errorMessage)
   } finally {
     uploading.value = false
