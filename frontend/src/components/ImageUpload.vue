@@ -32,7 +32,7 @@
 
     <!-- 图片预览对话框 -->
     <el-dialog v-model="previewVisible">
-      <img w-full :src="getPreviewThumbnail(imageUrl)" alt="预览图片" style="width: 100%; height: auto;" />
+      <img w-full :src="getPreviewThumbnail(imageUrl, 800)" alt="预览图片" style="width: 100%; height: auto;" />
     </el-dialog>
   </div>
 </template>

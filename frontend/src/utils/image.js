@@ -78,7 +78,7 @@ export function getSquareThumbnail(imageUrl, size = 200, quality = 85) {
  * @param {number} quality - 图片质量，默认85
  * @returns {string} 等比例缩略图URL
  */
-export function getProportionalThumbnail(imageUrl, maxSize = 1000, quality = 85) {
+export function getPreviewThumbnail(imageUrl, maxSize = 1000, quality = 85) {
   return getQiniuThumbnail(imageUrl, {
     width: maxSize,
     height: maxSize,
@@ -86,21 +86,3 @@ export function getProportionalThumbnail(imageUrl, maxSize = 1000, quality = 85)
     quality
   })
 }
-
-/**
- * 为列表页生成小正方形缩略图
- * @param {string} imageUrl - 原始图片URL
- * @returns {string} 小正方形缩略图URL
- */
-export function getListThumbnail(imageUrl) {
-  return getSquareThumbnail(imageUrl, 40, 85)
-}
-
-/**
- * 为预览生成中等大小等比例缩略图
- * @param {string} imageUrl - 原始图片URL
- * @returns {string} 中等等比例缩略图URL
- */
-export function getPreviewThumbnail(imageUrl) {
-  return getProportionalThumbnail(imageUrl, 800, 90)
-} 

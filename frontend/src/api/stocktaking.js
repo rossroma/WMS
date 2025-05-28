@@ -18,14 +18,6 @@ export function createStocktaking(data) {
   })
 }
 
-// 获取盘点单详情
-export function getStocktakingDetail(id) {
-  return request({
-    url: `/stocktaking-orders/${id}`,
-    method: 'get'
-  })
-}
-
 // 删除盘点单
 export function deleteStocktaking(id) {
   return request({
@@ -42,12 +34,3 @@ export function getStocktakingItems(id, params) {
     params
   })
 }
-
-// 更新盘点商品
-export function updateStocktakingItem(itemId, data) {
-  return request({
-    url: `/stocktaking-orders/items/${itemId}`,
-    method: 'put',
-    data
-  })
-} 

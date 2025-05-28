@@ -58,7 +58,7 @@
             <div class="product-image-cell">
               <el-image 
                 v-if="row.image"
-                :src="getListThumbnail(row.image)"
+                :src="getSquareThumbnail(row.image, 40)"
                 :preview-src-list="[row.image]"
                 :initial-index="0"
                 fit="cover"
@@ -244,7 +244,7 @@ import CategoryManagement from '@/components/CategoryManagement/index.vue'
 import { useUserStore } from '@/stores/user'
 import BaseDialog from '@/components/BaseDialog.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
-import { getListThumbnail } from '@/utils/image'
+import { getSquareThumbnail } from '@/utils/image'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import { hasRolePermission } from '@/utils/permission'
 
