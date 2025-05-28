@@ -53,7 +53,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="paymentMethod" label="支付方式" width="120" />
-        <el-table-column prop="manager" label="负责人" width="100">
+        <el-table-column prop="manager" label="负责人" width="110">
           <template #default="{ row }">
             {{ getUserNameById(row.manager) }}
           </template>

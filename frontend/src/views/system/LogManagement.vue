@@ -44,10 +44,10 @@
         highlight-current-row
         style="width: 100%;"
       >
-        <el-table-column label="ID" prop="id" align="center" width="80" sortable />
-        <el-table-column label="用户名" prop="username" align="center" width="150" sortable />
-        <el-table-column label="操作模块" prop="module" align="center" width="180" sortable />
-        <el-table-column label="操作类型" prop="actionType" align="center" width="180" sortable />
+        <el-table-column label="ID" prop="id" width="80" sortable />
+        <el-table-column label="用户名" prop="username" width="150" sortable />
+        <el-table-column label="操作模块" prop="module" width="180" sortable />
+        <el-table-column label="操作类型" prop="actionType" width="180" sortable />
         <el-table-column label="操作详情" prop="details" align="left" min-width="250">
           <template #default="{ row }">
             <el-popover trigger="hover" placement="top" width="400" :content="row.details" :show-after="200">
@@ -57,8 +57,8 @@
             </el-popover>
           </template>
         </el-table-column>
-        <el-table-column label="IP地址" prop="ipAddress" align="center" width="150" />
-        <el-table-column label="操作时间" prop="createdAt" align="center" width="200" sortable>
+        <el-table-column label="IP地址" prop="ipAddress" width="150" />
+        <el-table-column label="操作时间" prop="createdAt" width="200" sortable>
           <template #default="{ row }">
             <span>{{ formatDateTime(row.createdAt) }}</span>
           </template>

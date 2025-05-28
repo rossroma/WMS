@@ -76,7 +76,7 @@
             ¥{{ Number(row.totalAmount || 0).toFixed(2) }}
           </template>
         </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="120" />
+        <el-table-column prop="remark" label="备注" min-width="220" />
         <el-table-column prop="createdAt" label="创建时间" width="160">
           <template #default="{ row }">
             {{ formatDateTime(row.createdAt) }}

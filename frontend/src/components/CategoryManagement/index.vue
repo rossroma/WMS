@@ -496,6 +496,8 @@ onMounted(() => {
   .content {
     flex: 1;
     overflow: auto;
+    width: 800px;
+    margin: 0 auto;
   }
 }
 
@@ -599,7 +601,7 @@ onMounted(() => {
         width: 16px;
         height: 16px;
         cursor: move;
-        color: #c0c4cc;
+        color: #909399;
         opacity: 0;
         transition: all 0.3s;
         
@@ -611,7 +613,7 @@ onMounted(() => {
     }
     
     &:hover {
-      .category-actions {
+      .category-actions, .drag-handle {
         opacity: 1;
       }
     }

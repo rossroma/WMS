@@ -61,7 +61,7 @@
             {{ formatDateOnly(row.stocktakingDate) }}
           </template>
         </el-table-column>
-        <el-table-column prop="operator" label="操作员" width="100">
+        <el-table-column prop="operator" label="操作员" width="110">
           <template #default="{ row }">
             <UserDisplay :value="row.operator" />
           </template>
