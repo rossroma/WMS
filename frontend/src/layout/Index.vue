@@ -16,17 +16,17 @@
         text-color="#bfcbd9"
         active-text-color="#409EFF"
       >
-        <template v-for="route in routes" :key="route.path">
+        <template v-for="routeItem in routes" :key="routeItem.path">
           <!-- 有子菜单的情况 -->
-          <el-sub-menu v-if="route.children && route.children.length > 0" :index="route.path">
+          <el-sub-menu v-if="routeItem.children && routeItem.children.length > 0" :index="routeItem.path">
             <template #title>
-              <el-icon><component :is="route.meta?.icon" /></el-icon>
-              <span>{{ route.meta?.title }}</span>
+              <el-icon><component :is="routeItem.meta?.icon" /></el-icon>
+              <span>{{ routeItem.meta?.title }}</span>
             </template>
             <el-menu-item
-              v-for="child in route.children"
+              v-for="child in routeItem.children"
               :key="child.path"
-              :index="route.path + '/' + child.path"
+              :index="routeItem.path + '/' + child.path"
             >
               <el-icon><component :is="child.meta?.icon" /></el-icon>
               <span>{{ child.meta?.title }}</span>
@@ -34,9 +34,9 @@
           </el-sub-menu>
           
           <!-- 没有子菜单的情况 -->
-          <el-menu-item v-else :index="route.path">
-            <el-icon><component :is="route.meta?.icon" /></el-icon>
-            <span>{{ route.meta?.title }}</span>
+          <el-menu-item v-else :index="routeItem.path">
+            <el-icon><component :is="routeItem.meta?.icon" /></el-icon>
+            <span>{{ routeItem.meta?.title }}</span>
           </el-menu-item>
         </template>
       </el-menu>
@@ -100,8 +100,8 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { ElMessageBox, ElMessage } from 'element-plus'
-import { Key, SwitchButton, Fold, Expand } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
+import { Key, SwitchButton } from '@element-plus/icons-vue'
 import Breadcrumb from './components/Breadcrumb.vue'
 import MessageNotification from '@/components/MessageNotification.vue'
 import ChangePasswordDialog from '@/components/ChangePasswordDialog.vue'
@@ -157,7 +157,7 @@ const handleLogout = () => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(async () => {
+  }).then(async() => {
     await userStore.logout()
     router.push('/login')
   })

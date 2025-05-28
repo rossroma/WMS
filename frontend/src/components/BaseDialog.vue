@@ -15,7 +15,7 @@
       :label-width="labelWidth"
       class="base-form"
     >
-      <slot name="form" :form="formData" :rules="rules"></slot>
+      <slot name="form" :form="formData" :rules="rules" />
     </el-form>
     
     <template #footer>
@@ -35,7 +35,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
 // Props 定义
 const props = defineProps({
@@ -129,7 +129,7 @@ const handleCancel = () => {
   emit('update:modelValue', false)
 }
 
-const handleConfirm = async () => {
+const handleConfirm = async() => {
   if (!formRef.value) return
   
   try {

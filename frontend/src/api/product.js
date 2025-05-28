@@ -12,7 +12,7 @@ export function getProductList(params) {
 // 获取商品详情
 export function getProductDetail(id) {
   return request({
-    url: '/products/' + id,
+    url: `/products/${  id}`,
     method: 'get'
   })
 }
@@ -29,7 +29,7 @@ export function createProduct(data) {
 // 更新商品
 export function updateProduct(id, data) {
   return request({
-    url: '/products/' + id,
+    url: `/products/${  id}`,
     method: 'put',
     data
   })
@@ -38,7 +38,7 @@ export function updateProduct(id, data) {
 // 删除商品
 export function deleteProduct(id) {
   return request({
-    url: '/products/' + id,
+    url: `/products/${  id}`,
     method: 'delete'
   })
 } 

@@ -21,7 +21,7 @@ export function getCurrentUser() {
 export function logout() {
   return request({
     url: '/auth/logout', // 确保这个URL与后端登出路由一致
-    method: 'post',    // 或者 'get'，取决于后端 authController.logout 的实现方式
+    method: 'post'    // 或者 'get'，取决于后端 authController.logout 的实现方式
     // 如果后端需要，可能需要传递一些数据或头部
-  });
+  })
 }

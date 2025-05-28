@@ -34,12 +34,13 @@ service.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response
       switch (status) {
-        case 401:
+        case 401: {
           message = '未授权，请重新登录'
           const userStore = useUserStore()
           userStore.clearUserInfo()
           window.location.href = '/login'
           break
+        }
         case 403:
           message = '拒绝访问'
           break

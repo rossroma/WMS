@@ -12,7 +12,7 @@ export function getOutboundList(params) {
 // 获取出库单详情
 export function getOutboundDetail(id) {
   return request({
-    url: '/outbound-orders/' + id,
+    url: `/outbound-orders/${  id}`,
     method: 'get'
   })
 }
@@ -20,7 +20,7 @@ export function getOutboundDetail(id) {
 // 获取出库单关联商品列表
 export function getOutboundItems(id, params) {
   return request({
-    url: '/outbound-orders/' + id + '/items',
+    url: `/outbound-orders/${  id  }/items`,
     method: 'get',
     params
   })
@@ -38,7 +38,7 @@ export function createOutbound(data) {
 // 更新出库单（可以更新：type、orderDate、operator、remark）
 export function updateOutbound(id, data) {
   return request({
-    url: '/outbound-orders/' + id,
+    url: `/outbound-orders/${  id}`,
     method: 'put',
     data
   })
@@ -47,7 +47,7 @@ export function updateOutbound(id, data) {
 // 删除出库单
 export function deleteOutbound(id) {
   return request({
-    url: '/outbound-orders/' + id,
+    url: `/outbound-orders/${  id}`,
     method: 'delete'
   })
 } 

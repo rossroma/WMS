@@ -12,7 +12,7 @@ export function getSupplierList(params) {
 // 获取供应商详情
 export function getSupplierDetail(id) {
   return request({
-    url: '/suppliers/' + id,
+    url: `/suppliers/${  id}`,
     method: 'get'
   })
 }
@@ -29,7 +29,7 @@ export function createSupplier(data) {
 // 更新供应商
 export function updateSupplier(id, data) {
   return request({
-    url: '/suppliers/' + id,
+    url: `/suppliers/${  id}`,
     method: 'put',
     data
   })
@@ -38,7 +38,7 @@ export function updateSupplier(id, data) {
 // 删除供应商
 export function deleteSupplier(id) {
   return request({
-    url: '/suppliers/' + id,
+    url: `/suppliers/${  id}`,
     method: 'delete'
   })
 } 

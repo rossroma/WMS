@@ -29,7 +29,7 @@ export function createCategory(data) {
 // 更新分类
 export function updateCategory(id, data) {
   return request({
-    url: '/categories/' + id,
+    url: `/categories/${  id}`,
     method: 'put',
     data
   })
@@ -38,7 +38,7 @@ export function updateCategory(id, data) {
 // 删除分类
 export function deleteCategory(id) {
   return request({
-    url: '/categories/' + id,
+    url: `/categories/${  id}`,
     method: 'delete'
   })
 }

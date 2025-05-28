@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { getCurrentUser, logout as apiLogout } from '@/api/auth'
+import { getCurrentUser } from '@/api/auth'
 import router from '@/router'
 
 export const useUserStore = defineStore('user', () => {
@@ -46,14 +46,14 @@ export const useUserStore = defineStore('user', () => {
       // await apiLogout(); // 确保 @/api/auth 中有 logout 方法并已导入
       // console.log('Backend logout successful');
     } catch (error) {
-      console.error('Backend logout failed:', error);
+      console.error('Backend logout failed:', error)
       // 即便后端登出失败，前端也应继续清理
     }
-    clearUserInfo();
+    clearUserInfo()
     // 跳转到登录页，可以带上 redirect 参数，方便重新登录后跳回
     // router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } });
     // 或者直接跳转到登录页
-    router.push({ name: 'Login' });
+    router.push({ name: 'Login' })
   }
 
   return {

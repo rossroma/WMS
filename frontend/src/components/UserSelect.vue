@@ -79,7 +79,7 @@ const handleChange = (value) => {
 }
 
 // 加载用户数据
-const loadUsers = async () => {
+const loadUsers = async() => {
   try {
     await getEnabledUsers()
   } catch (error) {

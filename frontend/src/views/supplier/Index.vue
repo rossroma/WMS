@@ -242,7 +242,7 @@ const getCreditRatingType = (rating) => {
 }
 
 // 获取供应商列表
-const fetchSupplierList = async () => {
+const fetchSupplierList = async() => {
   loading.value = true
   try {
     const params = {
@@ -279,7 +279,7 @@ const resetSearch = () => {
 }
 
 // 新增供应商
-const handleAdd = async () => {
+const handleAdd = async() => {
   try {
     dialogType.value = 'add'
     
@@ -312,7 +312,7 @@ const handleAdd = async () => {
 }
 
 // 编辑供应商
-const handleEdit = async (row) => {
+const handleEdit = async(row) => {
   try {
     dialogType.value = 'edit'
     
@@ -343,7 +343,7 @@ const handleDelete = (row) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(async () => {
+  }).then(async() => {
     try {
       await deleteSupplier(row.id)
       ElMessage.success('删除成功')
@@ -355,7 +355,7 @@ const handleDelete = (row) => {
 }
 
 // 提交表单
-const handleSubmit = async (formData) => {
+const handleSubmit = async(formData) => {
   submitting.value = true
   try {
     if (dialogType.value === 'add') {
@@ -405,7 +405,7 @@ const getUserNameById = (userId) => {
   return user ? user.fullname : '未知用户'
 }
 
-onMounted(async () => {
+onMounted(async() => {
   // 获取供应商列表和用户列表
   fetchSupplierList()
   getAllUsers()

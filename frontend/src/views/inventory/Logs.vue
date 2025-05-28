@@ -124,7 +124,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+// import { useRouter } from 'vue-router'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import { getInventoryLogs } from '@/api/inventory'
 import { ElMessage } from 'element-plus'
@@ -154,7 +154,7 @@ const total = ref(0)
 const dateRange = ref([])
 
 // 获取库存流水列表
-const getList = async () => {
+const getList = async() => {
   loading.value = true
   try {
     const params = {

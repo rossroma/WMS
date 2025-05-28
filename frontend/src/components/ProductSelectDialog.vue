@@ -166,7 +166,7 @@ const resetData = () => {
 }
 
 // 获取商品列表
-const fetchProductList = async () => {
+const fetchProductList = async() => {
   loading.value = true
   try {
     const params = {

@@ -81,18 +81,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-import ListPageLayout from '@/components/ListPageLayout.vue'; // 统一路径
-import { getLogs, getLogFilterOptions } from '@/api/log';
-import { formatDate } from '@/utils/date';
-import { Search, Refresh } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus'; // 引入 ElMessage
+import { ref, reactive, onMounted } from 'vue'
+import ListPageLayout from '@/components/ListPageLayout.vue' // 统一路径
+import { getLogs, getLogFilterOptions } from '@/api/log'
+import { formatDate } from '@/utils/date'
+import { Search, Refresh } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus' // 引入 ElMessage
 
 // State
-const loading = ref(true);
-const logList = ref([]);
-const total = ref(0);
-const dateRange = ref([]);
+const loading = ref(true)
+const logList = ref([])
+const total = ref(0)
+const dateRange = ref([])
 
 const queryParams = reactive({
   page: 1,
@@ -101,39 +101,39 @@ const queryParams = reactive({
   endDate: null,
   module: null,
   username: null,
-  actionType: null,
-});
+  actionType: null
+})
 
 const filterOptions = reactive({
   modules: [],
-  actionTypes: [],
-});
+  actionTypes: []
+})
 
 // Utils
 const formatDateTime = (time) => {
-  if (!time) return '';
-  return formatDate(time, 'YYYY-MM-DD HH:mm:ss');
-};
+  if (!time) return ''
+  return formatDate(time, 'YYYY-MM-DD HH:mm:ss')
+}
 
 const truncateText = (value, length = 80) => { // Default length
-  if (!value) return '';
+  if (!value) return ''
   if (value.length <= length) {
-    return value;
+    return value
   }
-  return value.substring(0, length) + '...';
-};
+  return `${value.substring(0, length)  }...`
+}
 
 // API Calls
-const fetchLogList = async () => {
-  loading.value = true;
+const fetchLogList = async() => {
+  loading.value = true
   try {
-    const paramsToSubmit = { ...queryParams }; // Clone to avoid modifying reactive object directly
+    const paramsToSubmit = { ...queryParams } // Clone to avoid modifying reactive object directly
     if (dateRange.value && dateRange.value.length === 2) {
-      paramsToSubmit.startDate = dateRange.value[0];
-      paramsToSubmit.endDate = dateRange.value[1];
+      paramsToSubmit.startDate = dateRange.value[0]
+      paramsToSubmit.endDate = dateRange.value[1]
     } else {
-      paramsToSubmit.startDate = null;
-      paramsToSubmit.endDate = null;
+      paramsToSubmit.startDate = null
+      paramsToSubmit.endDate = null
     }
     // Remove page and limit if they are named differently in API, adjust as per API spec
     // e.g. if API expects pageNum and pageSize: 
@@ -142,65 +142,65 @@ const fetchLogList = async () => {
     // delete paramsToSubmit.page;
     // delete paramsToSubmit.limit;
 
-    const response = await getLogs(paramsToSubmit);
-    logList.value = response.data; // Assuming API returns { data: [], total: X }
-    total.value = response.total;
+    const response = await getLogs(paramsToSubmit)
+    logList.value = response.data // Assuming API returns { data: [], total: X }
+    total.value = response.total
   } catch (error) {
-    console.error("Failed to fetch logs:", error);
-    ElMessage.error(error.message || '获取日志列表失败');
+    console.error('Failed to fetch logs:', error)
+    ElMessage.error(error.message || '获取日志列表失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-const fetchFilterOpts = async () => {
+const fetchFilterOpts = async() => {
   try {
-    const response = await getLogFilterOptions();
-    filterOptions.modules = response.data.modules || [];
-    filterOptions.actionTypes = response.data.actionTypes || [];
+    const response = await getLogFilterOptions()
+    filterOptions.modules = response.data.modules || []
+    filterOptions.actionTypes = response.data.actionTypes || []
   } catch (error) {
-    console.error("Failed to fetch filter options:", error);
-    ElMessage.error(error.message || '获取筛选选项失败');
+    console.error('Failed to fetch filter options:', error)
+    ElMessage.error(error.message || '获取筛选选项失败')
   }
-};
+}
 
 // Event Handlers
 const handleQuery = () => {
-  queryParams.page = 1;
-  fetchLogList();
-};
+  queryParams.page = 1
+  fetchLogList()
+}
 
 const resetQuery = () => {
-  queryParams.page = 1;
-  queryParams.module = null;
-  queryParams.username = null;
-  queryParams.actionType = null;
-  queryParams.startDate = null; 
-  queryParams.endDate = null;
-  dateRange.value = []; 
-  fetchLogList();
-};
+  queryParams.page = 1
+  queryParams.module = null
+  queryParams.username = null
+  queryParams.actionType = null
+  queryParams.startDate = null 
+  queryParams.endDate = null
+  dateRange.value = [] 
+  fetchLogList()
+}
 
-const handleDateRangeChange = (newRange) => {
+const handleDateRangeChange = (_newRange) => {
   // No need to manually update queryParams.startDate/endDate if fetchLogList handles dateRange.value
-  handleQuery(); // Trigger query on date change
-};
+  handleQuery() // Trigger query on date change
+}
 
 const handleSizeChange = (newSize) => {
-  queryParams.limit = newSize;
-  fetchLogList(); // limit is already part of queryParams
-};
+  queryParams.limit = newSize
+  fetchLogList() // limit is already part of queryParams
+}
 
 const handleCurrentChange = (newPage) => {
-  queryParams.page = newPage;
-  fetchLogList(); // page is already part of queryParams
-};
+  queryParams.page = newPage
+  fetchLogList() // page is already part of queryParams
+}
 
 // Lifecycle Hooks
 onMounted(() => {
-  fetchLogList();
-  fetchFilterOpts();
-});
+  fetchLogList()
+  fetchFilterOpts()
+})
 
 </script>
 

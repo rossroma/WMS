@@ -8,7 +8,7 @@ const isLoaded = ref(false)
 let loadPromise = null
 
 // 获取用户列表的单例方法
-const fetchUsers = async () => {
+const fetchUsers = async() => {
   // 如果已经在加载中，返回同一个Promise
   if (loadPromise) {
     return loadPromise
@@ -51,13 +51,13 @@ const resetUsers = () => {
 // 用户数据的composable
 export const useUsers = () => {
   // 获取所有用户
-  const getAllUsers = async () => {
+  const getAllUsers = async() => {
     await fetchUsers()
     return userList.value
   }
   
   // 获取启用的用户
-  const getEnabledUsers = async () => {
+  const getEnabledUsers = async() => {
     await fetchUsers()
     return userList.value.filter(user => user.status === 'active')
   }

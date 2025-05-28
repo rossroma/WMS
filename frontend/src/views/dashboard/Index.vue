@@ -117,7 +117,7 @@
             </div>
           </template>
           <div class="chart-container">
-            <div ref="trendChart" class="chart"></div>
+            <div ref="trendChart" class="chart" />
           </div>
         </el-card>
       </el-col>
@@ -130,7 +130,7 @@
             </div>
           </template>
           <div class="chart-container">
-            <div ref="hotProductsChart" class="chart"></div>
+            <div ref="hotProductsChart" class="chart" />
           </div>
         </el-card>
       </el-col>
@@ -156,7 +156,7 @@
         <el-table-column prop="currentStock" label="当前库存" />
         <el-table-column prop="warningStock" label="预警库存" />
         <el-table-column prop="status" label="状态">
-          <template #default="{ row }">
+          <template #default>
             <el-tag type="danger">库存不足</el-tag>
           </template>
         </el-table-column>
@@ -185,7 +185,7 @@ import {
   getHotProducts, 
   getWarningProducts 
 } from '@/api/dashboard'
-import { ElMessage } from 'element-plus'
+// import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
@@ -213,23 +213,23 @@ let hotProductsChartInstance = null
 // 格式化数字
 const formatNumber = (num) => {
   if (num >= 10000) {
-    return (num / 10000).toFixed(1) + '万'
+    return `${(num / 10000).toFixed(1)  }万`
   }
   return num.toLocaleString()
 }
 
 // 获取dashboard数据 - 修改赋值方式
-const getDashboard = async () => {
+const getDashboard = async() => {
   try {
     const response = await getDashboardData()
     dashboardData.value = response.data
   } catch (error) {
-    console.error('获取dashboard数据失败:', error);
+    console.error('获取dashboard数据失败:', error)
   }
 }
 
 // 获取预警商品
-const getWarningProductsList = async () => {
+const getWarningProductsList = async() => {
   try {
     warningLoading.value = true
     const response = await getWarningProducts()
@@ -242,7 +242,7 @@ const getWarningProductsList = async () => {
 }
 
 // 初始化趋势图表
-const initTrendChart = async () => {
+const initTrendChart = async() => {
   try {
     const response = await getWeeklyTrend()
     const data = response.data
@@ -307,7 +307,7 @@ const initTrendChart = async () => {
 }
 
 // 初始化热门商品图表
-const initHotProductsChart = async () => {
+const initHotProductsChart = async() => {
   try {
     const response = await getHotProducts()
     const data = response.data
@@ -340,8 +340,8 @@ const initHotProductsChart = async () => {
         data: data.map(item => item.product.name).reverse(),
         axisLabel: {
           interval: 0,
-          formatter: function(value) {
-            return value.length > 6 ? value.substring(0, 6) + '...' : value
+          formatter(value) {
+            return value.length > 6 ? `${value.substring(0, 6)  }...` : value
           }
         }
       },
@@ -407,7 +407,7 @@ const handleResize = () => {
   }
 }
 
-onMounted(async () => {
+onMounted(async() => {
   await getDashboard()
   await getWarningProductsList()
   

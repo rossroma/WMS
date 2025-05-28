@@ -5,7 +5,7 @@ const ROLE_LEVELS = {
   'operator': 1,
   'manager': 2,
   'admin': 3
-};
+}
 
 /**
  * 获取当前用户角色

@@ -207,7 +207,7 @@ const getMessageTypeColor = (type) => {
 }
 
 // 获取消息列表
-const getList = async () => {
+const getList = async() => {
   loading.value = true
   try {
     const res = await getMessageList(queryParams)
@@ -248,7 +248,7 @@ const handleDateChange = (dates) => {
 }
 
 // 标记单条消息为已读
-const handleMarkRead = async (row) => {
+const handleMarkRead = async(row) => {
   try {
     await markAsRead(row.id)
     row.isRead = true
@@ -260,7 +260,7 @@ const handleMarkRead = async (row) => {
 }
 
 // 标记所有消息为已读
-const handleMarkAllRead = async () => {
+const handleMarkAllRead = async() => {
   if (unreadCount.value === 0) {
     ElMessage.info('没有未读消息')
     return

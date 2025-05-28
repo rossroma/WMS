@@ -281,7 +281,7 @@ const { getAllUsers } = useUsers()
 const INBOUND_TYPES = {
   STOCK_IN: 'STOCK_IN',           // 盘盈入库
   PURCHASE: 'PURCHASE',           // 采购入库
-  RETURN: 'RETURN',              // 退货入库
+  RETURN: 'RETURN'              // 退货入库
 }
 
 // 入库类型选项（与后端保持一致）
@@ -363,7 +363,7 @@ const selectedProductIds = computed(() => {
 })
 
 // 获取入库列表
-const getList = async () => {
+const getList = async() => {
   loading.value = true
   try {
     const res = await getInboundList(queryParams)
@@ -435,7 +435,7 @@ const handleCreate = () => {
 }
 
 // 编辑入库
-const handleEdit = async (row) => {
+const handleEdit = async(row) => {
   try {
     isEdit.value = true
     editId.value = row.id
@@ -461,7 +461,7 @@ const handleEdit = async (row) => {
 const handleDelete = (row) => {
   ElMessageBox.confirm('确认要删除该入库单吗？删除后将撤销相关库存变更！', '警告', {
     type: 'warning'
-  }).then(async () => {
+  }).then(async() => {
     try {
       await deleteInbound(row.id)
       ElMessage.success('删除成功')
@@ -474,7 +474,7 @@ const handleDelete = (row) => {
 }
 
 // 查看详情
-const handleDetail = async (row) => {
+const handleDetail = async(row) => {
   selectedOrderId.value = row.id
   orderItemsVisible.value = true
 }
@@ -524,7 +524,7 @@ const calculateTotal = () => {
 }
 
 // 提交表单
-const handleSubmit = async (formData) => {
+const handleSubmit = async(formData) => {
   submitting.value = true
   try {
     if (isEdit.value) {

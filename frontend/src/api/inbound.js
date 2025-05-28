@@ -12,7 +12,7 @@ export function getInboundList(params) {
 // 获取入库单详情
 export function getInboundDetail(id) {
   return request({
-    url: '/inbound-orders/' + id,
+    url: `/inbound-orders/${  id}`,
     method: 'get'
   })
 }
@@ -20,7 +20,7 @@ export function getInboundDetail(id) {
 // 获取入库单关联商品列表
 export function getInboundItems(id, params) {
   return request({
-    url: '/inbound-orders/' + id + '/items',
+    url: `/inbound-orders/${  id  }/items`,
     method: 'get',
     params
   })
@@ -38,7 +38,7 @@ export function createInbound(data) {
 // 更新入库单（可以更新：type、orderDate、operator、remark）
 export function updateInbound(id, data) {
   return request({
-    url: '/inbound-orders/' + id,
+    url: `/inbound-orders/${  id}`,
     method: 'put',
     data
   })
@@ -47,7 +47,7 @@ export function updateInbound(id, data) {
 // 删除入库单
 export function deleteInbound(id) {
   return request({
-    url: '/inbound-orders/' + id,
+    url: `/inbound-orders/${  id}`,
     method: 'delete'
   })
 } 

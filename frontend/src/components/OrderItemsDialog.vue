@@ -106,7 +106,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue'])
+const _emit = defineEmits(['update:modelValue'])
 
 // 数据
 const loading = ref(false)
@@ -132,7 +132,7 @@ const getTypeText = (type) => {
 }
 
 // 获取关联商品列表
-const getItemsList = async () => {
+const getItemsList = async() => {
   if (!props.orderId) return
   
   loading.value = true

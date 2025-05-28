@@ -39,7 +39,7 @@
                     >
                       <ArrowRight />
                     </el-icon>
-                    <span v-else class="expand-placeholder"></span>
+                    <span v-else class="expand-placeholder" />
                     
                     <!-- 分类名称 -->
                     <span class="category-name">{{ element.name }}</span>
@@ -98,7 +98,7 @@
                             >
                               <ArrowRight />
                             </el-icon>
-                            <span v-else class="expand-placeholder"></span>
+                            <span v-else class="expand-placeholder" />
                             
                             <!-- 分类名称 -->
                             <span class="category-name">{{ child.name }}</span>
@@ -147,7 +147,7 @@
                             <div class="category-row level-3" :class="{ 'is-dragging': isDragging }">
                               <div class="category-content">
                                 <div class="left-section">
-                                  <span class="expand-placeholder"></span>
+                                  <span class="expand-placeholder" />
                                   <span class="category-name">{{ grandChild.name }}</span>
                                 </div>
                                 
@@ -226,7 +226,7 @@ import { Plus, Rank, ArrowRight } from '@element-plus/icons-vue'
 import draggable from 'vuedraggable'
 import { getCategoryTree, createCategory, updateCategory, deleteCategory, batchUpdateSort } from '@/api/category'
 
-const emit = defineEmits(['close'])
+const _emit = defineEmits(['close'])
 
 // 数据相关
 const loading = ref(false)
@@ -288,7 +288,7 @@ const onDragStart = () => {
 }
 
 // 获取分类树数据
-const fetchCategoryTree = async () => {
+const fetchCategoryTree = async() => {
   loading.value = true
   try {
     const res = await getCategoryTree()
@@ -327,7 +327,7 @@ const getParentCategoryName = (parentId) => {
 }
 
 // 处理一级分类拖拽结束
-const handleDragEnd = async (evt) => {
+const handleDragEnd = async(evt) => {
   isDragging.value = false
   if (evt.oldIndex === evt.newIndex) return
   
@@ -348,7 +348,7 @@ const handleDragEnd = async (evt) => {
 }
 
 // 处理子分类拖拽结束
-const handleChildDragEnd = async (evt, parentId) => {
+const handleChildDragEnd = async(evt, parentId) => {
   isDragging.value = false
   if (evt.oldIndex === evt.newIndex) return
   
@@ -417,7 +417,7 @@ const handleDelete = (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     }
-  ).then(async () => {
+  ).then(async() => {
     try {
       await deleteCategory(row.id)
       ElMessage.success('删除成功')
@@ -429,10 +429,10 @@ const handleDelete = (row) => {
 }
 
 // 提交表单
-const handleSubmit = async () => {
+const handleSubmit = async() => {
   if (!formRef.value) return
   
-  await formRef.value.validate(async (valid) => {
+  await formRef.value.validate(async(valid) => {
     if (valid) {
       submitting.value = true
       try {

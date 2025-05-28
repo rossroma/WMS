@@ -186,12 +186,12 @@ const router = createRouter({
           meta: { title: '日志管理', icon: 'Memo', requiresAuth: true }
         }
       ]
-    },
+    }
   ]
 })
 
 // 路由守卫
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async(to, from, next) => {
   const userStore = useUserStore()
   
   // 设置页面标题
@@ -208,7 +208,7 @@ router.beforeEach(async (to, from, next) => {
     if (!userStore.userInfo.id) {
       try {
         await userStore.fetchUserInfo()
-      } catch (error) {
+      } catch {
         // 获取用户信息失败，清除token并跳转到登录页
         userStore.clearUserInfo()
         next({ name: 'Login', query: { redirect: to.fullPath } })

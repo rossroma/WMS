@@ -41,6 +41,6 @@ export function exportLoginLogs(params) {
 export function getLogFilterOptions() {
   return request({
     url: '/logs/filter-options',
-    method: 'get',
-  });
+    method: 'get'
+  })
 } 

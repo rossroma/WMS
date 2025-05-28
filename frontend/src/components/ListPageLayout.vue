@@ -2,18 +2,18 @@
   <div class="list-page-container">
     <!-- 筛选区域 -->
     <el-card class="filter-card" v-if="$slots.filter">
-      <slot name="filter"></slot>
+      <slot name="filter" />
     </el-card>
 
     <!-- 数据展示区域 -->
     <el-card class="table-card">
       <div class="table-content">
-        <slot name="content"></slot>
+        <slot name="content" />
       </div>
     </el-card>
 
     <!-- 匿名插槽：用于放置弹窗等不需要嵌套在卡片内的内容 -->
-    <slot></slot>
+    <slot />
   </div>
 </template>
 

@@ -24,7 +24,7 @@ const displayName = computed(() => {
 })
 
 // 确保用户数据已加载
-const ensureUsersLoaded = async () => {
+const ensureUsersLoaded = async() => {
   if (props.value && !isLoaded.value) {
     try {
       await getAllUsers()

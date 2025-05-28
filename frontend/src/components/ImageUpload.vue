@@ -11,7 +11,7 @@
       accept="image/*"
     >
       <div class="upload-content">
-        <img v-if="imageUrl && !uploading" :src="getSquareThumbnail(imageUrl)" class="uploaded-image" />
+        <img v-if="imageUrl && !uploading" :src="getSquareThumbnail(imageUrl)" class="uploaded-image">
         <div v-else-if="uploading" class="uploading">
           <el-icon class="uploading-icon"><Loading /></el-icon>
           <div class="uploading-text">上传中...</div>
@@ -32,7 +32,7 @@
 
     <!-- 图片预览对话框 -->
     <el-dialog v-model="previewVisible">
-      <img w-full :src="getPreviewThumbnail(imageUrl, 800)" alt="预览图片" style="width: 100%; height: auto;" />
+      <img w-full :src="getPreviewThumbnail(imageUrl, 800)" alt="预览图片" style="width: 100%; height: auto;">
     </el-dialog>
   </div>
 </template>
@@ -101,7 +101,7 @@ const beforeUpload = (rawFile) => {
 }
 
 // 文件选择变化处理
-const handleFileChange = async (file) => {
+const handleFileChange = async(file) => {
   if (!beforeUpload(file.raw)) {
     return
   }

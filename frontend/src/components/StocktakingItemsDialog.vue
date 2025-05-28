@@ -103,7 +103,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getStocktakingItems } from '@/api/stocktaking'
 import { formatDateTime } from '@/utils/date'
@@ -157,7 +157,7 @@ watch(() => props.modelValue, (newVal) => {
 })
 
 // 获取盘点明细
-const fetchItems = async () => {
+const fetchItems = async() => {
   if (!props.stocktakingOrderId) return
   
   loading.value = true

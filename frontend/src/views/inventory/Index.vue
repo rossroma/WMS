@@ -111,7 +111,7 @@ const inventoryList = ref([])
 const total = ref(0)
 
 // 获取库存列表
-const getList = async () => {
+const getList = async() => {
   loading.value = true
   try {
     const params = {

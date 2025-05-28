@@ -282,7 +282,7 @@ const { getAllUsers } = useUsers()
 // 出库类型常量定义（与后端保持一致）
 const OUTBOUND_TYPES = {
   STOCK_OUT: 'STOCK_OUT',         // 盘亏出库
-  SALE: 'SALE',                   // 销售出库
+  SALE: 'SALE'                   // 销售出库
 }
 
 // 出库类型选项（与后端保持一致）
@@ -362,7 +362,7 @@ const selectedProductIds = computed(() => {
 })
 
 // 获取出库列表
-const getList = async () => {
+const getList = async() => {
   loading.value = true
   try {
     const res = await getOutboundList(queryParams)
@@ -435,7 +435,7 @@ const handleCreate = () => {
 }
 
 // 编辑出库
-const handleEdit = async (row) => {
+const handleEdit = async(row) => {
   try {
     isEdit.value = true
     editId.value = row.id
@@ -461,7 +461,7 @@ const handleEdit = async (row) => {
 const handleDelete = (row) => {
   ElMessageBox.confirm('确认要删除该出库单吗？删除后将恢复相关库存！', '警告', {
     type: 'warning'
-  }).then(async () => {
+  }).then(async() => {
     try {
       await deleteOutbound(row.id)
       ElMessage.success('删除成功')
@@ -474,7 +474,7 @@ const handleDelete = (row) => {
 }
 
 // 查看详情
-const handleDetail = async (row) => {
+const handleDetail = async(row) => {
   selectedOrderId.value = row.id
   orderItemsVisible.value = true
 }
@@ -529,7 +529,7 @@ const calculateTotal = () => {
 }
 
 // 提交表单
-const handleSubmit = async (formData) => {
+const handleSubmit = async(formData) => {
   submitting.value = true
   try {
     if (isEdit.value) {

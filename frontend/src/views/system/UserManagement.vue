@@ -80,7 +80,7 @@
       @confirm="submitUserForm"
       width="600px"
     >
-      <template #form="{ form, rules }"> 
+      <template #form="{ form }"> 
         <el-form-item label="用户名" prop="username">
           <el-input v-model="form.username" :disabled="userFormDialog.isEdit" />
         </el-form-item>
@@ -141,7 +141,6 @@
         </el-button>
       </template>
     </el-dialog>
-
   </ListPageLayout>
 </template>
 
@@ -205,11 +204,11 @@ const userFormDialog = reactive({
       { 
         validator: (rule, value, callback) => {
           if (!userFormDialog.isEdit && !value) {
-            callback(new Error('请输入密码'));
+            callback(new Error('请输入密码'))
           } else if (value && value.length < 6) {
-            callback(new Error('密码长度不能小于6位'));
+            callback(new Error('密码长度不能小于6位'))
           } else {
-            callback();
+            callback()
           }
         },
         trigger: 'blur' 
@@ -241,17 +240,17 @@ const handleEdit = (row) => {
   userFormDialog.visible = true
 }
 
-const submitUserForm = async (formDataFromDialog) => { 
+const submitUserForm = async(formDataFromDialog) => { 
   userFormDialog.submitting = true
   try {
-    const dataToSubmit = { ...formDataFromDialog };
+    const dataToSubmit = { ...formDataFromDialog }
     if (!userFormDialog.isEdit && !dataToSubmit.password) {
-        ElMessage.error('新增用户时必须填写密码');
-        userFormDialog.submitting = false;
-        return;
+      ElMessage.error('新增用户时必须填写密码')
+      userFormDialog.submitting = false
+      return
     }
-     if (userFormDialog.isEdit && dataToSubmit.password === '') {
-      delete dataToSubmit.password;
+    if (userFormDialog.isEdit && dataToSubmit.password === '') {
+      delete dataToSubmit.password
     }
 
     if (userFormDialog.isEdit) {
@@ -307,14 +306,14 @@ const openChangePasswordDialog = (row) => {
   changePasswordDialog.form.newPassword = ''
   changePasswordDialog.form.confirmPassword = ''
   if (passwordFormRef.value) {
-      passwordFormRef.value.resetFields();
+    passwordFormRef.value.resetFields()
   }
   changePasswordDialog.visible = true
 }
 
-const submitChangePassword = async () => {
+const submitChangePassword = async() => {
   if (!passwordFormRef.value) return
-  await passwordFormRef.value.validate(async (valid) => {
+  await passwordFormRef.value.validate(async(valid) => {
     if (valid) {
       changePasswordDialog.submitting = true
       try {
@@ -332,7 +331,7 @@ const submitChangePassword = async () => {
 }
 
 // --- 通用逻辑 ---
-const fetchUserList = async () => {
+const fetchUserList = async() => {
   loading.value = true
   try {
     const res = await getUserList(queryParams)
@@ -380,7 +379,7 @@ const handleDelete = (row) => {
     `确定要删除用户 "${row.username}" 吗?`,
     '系统提示',
     { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
-  ).then(async () => {
+  ).then(async() => {
     try {
       await deleteUser(row.id)
       ElMessage.success('删除成功')
@@ -393,20 +392,20 @@ const handleDelete = (row) => {
 }
 
 const getRoleTagType = (roleName) => {
-  if (!roleName) return 'info';
-  const nameLower = roleName.toLowerCase();
+  if (!roleName) return 'info'
+  const nameLower = roleName.toLowerCase()
   if (nameLower.includes('admin') || nameLower.includes('超级')) return 'danger'
   if (nameLower.includes('manager') || nameLower.includes('管理')) return 'warning'
   return 'primary'
 }
 
 const getRoleDisplayName = (roleName) => {
-  if (!roleName) return '未知角色';
-  const nameLower = roleName.toLowerCase();
+  if (!roleName) return '未知角色'
+  const nameLower = roleName.toLowerCase()
   if (nameLower.includes('admin') || nameLower.includes('超级')) return '超级管理员'
   if (nameLower.includes('manager') || nameLower.includes('管理')) return '管理员'
   if (nameLower.includes('operator') || nameLower.includes('操作')) return '操作员'
-  return roleName;
+  return roleName
 }
 
 onMounted(() => {

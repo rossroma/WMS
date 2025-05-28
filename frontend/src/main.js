@@ -17,7 +17,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 // 配置ElementPlus使用中文语言包
 app.use(ElementPlus, {
-  locale: zhCn,
+  locale: zhCn
 })
 app.use(createPinia())
 app.use(router)

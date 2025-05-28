@@ -306,7 +306,7 @@ const rules = {
 }
 
 // 获取分类树
-const fetchCategoryTree = async () => {
+const fetchCategoryTree = async() => {
   try {
     const res = await getCategoryTree()
     categoryOptions.value = res.data
@@ -316,7 +316,7 @@ const fetchCategoryTree = async () => {
 }
 
 // 获取供应商列表
-const fetchSupplierList = async () => {
+const fetchSupplierList = async() => {
   try {
     const res = await getSupplierList()
     const suppliers = res.data.list || res.data || []
@@ -333,7 +333,7 @@ const fetchSupplierList = async () => {
 }
 
 // 获取商品列表
-const fetchProductList = async () => {
+const fetchProductList = async() => {
   loading.value = true
   try {
     const params = {
@@ -407,7 +407,7 @@ const handleEdit = (row) => {
 }
 
 // 复制商品
-const handleCopy = async (row) => {
+const handleCopy = async(row) => {
   try {
     dialogType.value = 'add'
     isCopy.value = true
@@ -458,7 +458,7 @@ const handleDelete = (row) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(async () => {
+  }).then(async() => {
     try {
       await deleteProduct(row.id)
       ElMessage.success('删除成功')
@@ -470,7 +470,7 @@ const handleDelete = (row) => {
 }
 
 // 提交表单
-const handleSubmit = async (formData) => {
+const handleSubmit = async(formData) => {
   submitting.value = true
   try {
     if (dialogType.value === 'add') {

@@ -28,7 +28,7 @@ export function getUnreadCount() {
 // 标记消息为已读
 export function markAsRead(id) {
   return request({
-    url: '/messages/' + id + '/read',
+    url: `/messages/${  id  }/read`,
     method: 'put'
   })
 }
@@ -44,7 +44,7 @@ export function markAllAsRead() {
 // 删除消息
 export function deleteMessage(id) {
   return request({
-    url: '/messages/' + id,
+    url: `/messages/${  id}`,
     method: 'delete'
   })
 } 

@@ -25,7 +25,11 @@ export default [
         window: 'readonly',
         document: 'readonly',
         console: 'readonly',
-        process: 'readonly'
+        process: 'readonly',
+        FormData: 'readonly',
+        localStorage: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly'
       }
     },
     rules: {

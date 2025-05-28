@@ -137,7 +137,7 @@ const formatTime = (dateString) => {
 }
 
 // 获取未读消息数量
-const fetchUnreadCount = async () => {
+const fetchUnreadCount = async() => {
   try {
     const res = await getUnreadCount()
     unreadCount.value = res.data.count || 0
@@ -147,7 +147,7 @@ const fetchUnreadCount = async () => {
 }
 
 // 获取未读消息列表
-const fetchUnreadMessages = async () => {
+const fetchUnreadMessages = async() => {
   loading.value = true
   try {
     const res = await getUnreadMessages()
@@ -167,7 +167,7 @@ const handleToggle = () => {
 }
 
 // 标记单条消息为已读
-const handleMarkRead = async (message) => {
+const handleMarkRead = async(message) => {
   try {
     await markAsRead(message.id)
     message.isRead = true
@@ -180,7 +180,7 @@ const handleMarkRead = async (message) => {
 }
 
 // 标记所有消息为已读
-const handleMarkAllRead = async () => {
+const handleMarkAllRead = async() => {
   try {
     await markAllAsRead()
     messages.value.forEach(msg => msg.isRead = true)

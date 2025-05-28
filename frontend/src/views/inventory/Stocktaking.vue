@@ -313,7 +313,7 @@ const lossCount = computed(() => {
 })
 
 // 获取盘点列表
-const getList = async () => {
+const getList = async() => {
   loading.value = true
   try {
     const res = await getStocktakingList(queryParams)
@@ -374,7 +374,7 @@ const handleDetail = (row) => {
 const handleDelete = (row) => {
   ElMessageBox.confirm('确认要删除该盘点单吗？删除后不可恢复！', '提示', {
     type: 'warning'
-  }).then(async () => {
+  }).then(async() => {
     try {
       await deleteStocktaking(row.id)
       ElMessage.success('删除成功')
@@ -392,10 +392,10 @@ const handleAddProduct = () => {
 }
 
 // 商品选择确认
-const handleProductSelectConfirm = async (selectedProducts) => {
+const handleProductSelectConfirm = async(selectedProducts) => {
   try {
     // 获取选中商品的库存信息
-    const productIds = selectedProducts.map(p => p.id)
+    const _productIds = selectedProducts.map(p => p.id)
     
     // 过滤掉已经存在的商品
     const existingProductIds = form.value.items.map(item => item.productId)
@@ -438,7 +438,7 @@ const getDifferenceClass = (difference) => {
 }
 
 // 提交表单
-const handleSubmit = async () => {
+const handleSubmit = async() => {
   if (form.value.items.length === 0) {
     ElMessage.warning('请至少选择一个商品进行盘点')
     return
