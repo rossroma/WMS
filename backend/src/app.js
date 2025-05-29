@@ -30,7 +30,7 @@ const app = express();
 
 // 跨域配置
 app.use(cors({
-  origin: config.server.corsOrigin,
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true

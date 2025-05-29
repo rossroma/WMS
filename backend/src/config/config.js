@@ -3,9 +3,8 @@ require('dotenv').config();
 module.exports = {
   // 服务器配置
   server: {
-    port: process.env.PORT || 5000,
-    env: process.env.NODE_ENV || 'development',
-    corsOrigin: process.env.CORS_ORIGIN || '*'
+    port: process.env.PORT || 3000,
+    env: process.env.NODE_ENV || 'development'
   },
 
   // 数据库配置

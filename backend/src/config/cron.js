@@ -1,3 +1,7 @@
+// 修复 node-cron crypto 未定义问题
+const crypto = require('crypto');
+global.crypto = crypto;
+
 const cron = require('node-cron');
 const { Op } = require('sequelize');
 const { Message } = require('../models/Message');
