@@ -6,7 +6,7 @@ services:
     container_name: wms-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
