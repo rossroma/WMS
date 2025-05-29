@@ -79,6 +79,56 @@ module.exports = [
     }
   },
   {
+    // Jest 测试文件配置
+    files: ['tests/**/*.js', '**/*.test.js', '**/*.spec.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'commonjs',
+      globals: {
+        // Node.js 全局变量
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        global: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        exports: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        // Jest 全局变量
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        jest: 'readonly'
+      }
+    },
+    rules: {
+      // 基础推荐规则
+      ...js.configs.recommended.rules,
+      
+      // 测试文件中的特殊规则
+      'no-unused-vars': ['error', {
+        'vars': 'all',
+        'args': 'after-used',
+        'argsIgnorePattern': '^_',
+        'varsIgnorePattern': '^_',
+        'caughtErrors': 'all'
+      }],
+      
+      // 在测试中允许使用 console
+      'no-console': 'off'
+    }
+  },
+  {
     // 忽略某些文件/目录
     ignores: [
       'node_modules/**',
