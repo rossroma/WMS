@@ -262,7 +262,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search, Refresh } from '@element-plus/icons-vue'
 import { getOutboundList, createOutbound, updateOutbound, deleteOutbound, getOutboundItems } from '@/api/outbound'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import BaseDialog from '@/components/BaseDialog.vue'

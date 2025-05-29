@@ -40,7 +40,6 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus, Loading } from '@element-plus/icons-vue'
 import { uploadFile } from '@/api/upload'
 import { getSquareThumbnail, getPreviewThumbnail } from '@/utils/image'
 

@@ -222,7 +222,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Rank, ArrowRight } from '@element-plus/icons-vue'
 import draggable from 'vuedraggable'
 import { getCategoryTree, createCategory, updateCategory, deleteCategory, batchUpdateSort } from '@/api/category'
 

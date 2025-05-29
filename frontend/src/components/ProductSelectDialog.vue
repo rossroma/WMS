@@ -112,7 +112,6 @@
 <script setup>
 import { ref, reactive, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Search, Refresh } from '@element-plus/icons-vue'
 import { getInventoryList } from '@/api/inventory'
 
 // Props

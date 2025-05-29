@@ -91,7 +91,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, Refresh, List } from '@element-plus/icons-vue'
 import { getInventoryList } from '@/api/inventory'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 

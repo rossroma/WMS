@@ -85,7 +85,6 @@ import { ref, reactive, onMounted } from 'vue'
 import ListPageLayout from '@/components/ListPageLayout.vue' // 统一路径
 import { getLogs, getLogFilterOptions } from '@/api/log'
 import { formatDate } from '@/utils/date'
-import { Search, Refresh } from '@element-plus/icons-vue'
 
 const loading = ref(true)
 const logList = ref([])

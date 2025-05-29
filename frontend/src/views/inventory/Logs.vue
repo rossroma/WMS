@@ -124,7 +124,6 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { Search, Refresh } from '@element-plus/icons-vue'
 import { getInventoryLogs } from '@/api/inventory'
 import { formatDateTime } from '@/utils/date'
 import ListPageLayout from '@/components/ListPageLayout.vue'

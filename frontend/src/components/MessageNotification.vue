@@ -91,7 +91,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Bell, CircleCheck } from '@element-plus/icons-vue'
 import { getUnreadMessages, getUnreadCount, markAsRead, markAllAsRead } from '@/api/message'
 import { useRouter } from 'vue-router'
 import { formatRelativeTime } from '@/utils/date'

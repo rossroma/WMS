@@ -149,7 +149,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Check } from '@element-plus/icons-vue'
 import { getMessageList, markAsRead, markAllAsRead } from '@/api/message'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import { formatDateTime } from '@/utils/date'
