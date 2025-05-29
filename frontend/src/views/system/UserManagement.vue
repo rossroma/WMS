@@ -28,7 +28,7 @@
     <template #content>
       <el-table :data="userList" v-loading="loading" border style="width: 100%;">
         <el-table-column prop="username" label="用户名" width="150" />
-        <el-table-column prop="email" label="邮箱" min-width="200"   />
+        <el-table-column prop="email" label="邮箱" min-width="200" />
         <el-table-column prop="phone" label="手机号码" min-width="150" />
         <el-table-column prop="fullname" label="姓名" min-width="150" />
         <el-table-column label="角色" width="150">
