@@ -2,6 +2,50 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
+// 特殊字符过滤函数
+const filterSpecialChars = (data) => {
+  if (typeof data === 'string') {
+    return data
+      // 过滤HTML标签
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+      .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+      .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
+      // 过滤危险的事件处理器
+      .replace(/on\w+\s*=/gi, '')
+      // 过滤javascript和vbscript协议
+      .replace(/javascript:/gi, '')
+      .replace(/vbscript:/gi, '')
+      // 过滤SQL注入相关字符
+      .replace(/'/g, '&#39;')
+      .replace(/"/g, '&quot;')
+      .replace(/--/g, '&#45;&#45;')
+      .replace(/\/\*/g, '&#47;&#42;')
+      .replace(/\*\//g, '&#42;&#47;')
+      // 过滤其他潜在危险字符
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .trim()
+  }
+  
+  if (Array.isArray(data)) {
+    return data.map(item => filterSpecialChars(item))
+  }
+  
+  if (data && typeof data === 'object') {
+    const filteredData = {}
+    for (const key in data) {
+      if (data.hasOwnProperty(key)) {
+        filteredData[key] = filterSpecialChars(data[key])
+      }
+    }
+    return filteredData
+  }
+  
+  return data
+}
+
 // 创建axios实例
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
@@ -15,6 +59,16 @@ service.interceptors.request.use(
     if (userStore.token) {
       config.headers.Authorization = `Bearer ${userStore.token}`
     }
+    
+    // 对请求数据进行特殊字符过滤
+    if (config.data) {
+      config.data = filterSpecialChars(config.data)
+    }
+    
+    if (config.params) {
+      config.params = filterSpecialChars(config.params)
+    }
+    
     return config
   },
   error => {
