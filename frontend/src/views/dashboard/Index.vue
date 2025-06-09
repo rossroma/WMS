@@ -61,7 +61,7 @@
     </el-row>
 
     <!-- 第二行统计卡片 -->
-    <el-row :gutter="20" style="margin-top: 20px;">
+    <el-row :gutter="20">
       <el-col :span="8">
         <el-card shadow="hover" class="data-card">
           <template #header>
@@ -467,7 +467,7 @@ onUnmounted(() => {
 }
 
 .chart-row {
-  margin: 20px 0;
+  margin-bottom: 20px;
 }
 
 .chart-card {
