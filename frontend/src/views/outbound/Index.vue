@@ -272,6 +272,7 @@ import { useUserStore } from '@/stores/user'
 import { formatDateTime, getToday, formatDateOnly } from '@/utils/date'
 import UserDisplay from '@/components/UserDisplay.vue'
 import { useUsers } from '@/composables/useUsers'
+import { useRoute } from 'vue-router'
 
 const userStore = useUserStore()
 
@@ -573,7 +574,17 @@ const handleCurrentChange = (val) => {
   getList()
 }
 
+const route = useRoute()
+
 onMounted(() => {
+  // 检测路由参数，设置日期筛选
+  if (route.query.startDate && route.query.endDate) {
+    console.log('检测到日期参数，设置日期筛选:', route.query.startDate, route.query.endDate)
+    queryParams.startDate = route.query.startDate
+    queryParams.endDate = route.query.endDate
+    dateRange.value = [route.query.startDate, route.query.endDate]
+  }
+  
   getList()
   // 预加载用户数据，确保UserDisplay和UserSelect组件能正常显示
   getAllUsers()

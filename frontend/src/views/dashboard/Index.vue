@@ -3,7 +3,7 @@
     <!-- 数据概览卡片 -->
     <el-row :gutter="20">
       <el-col :span="6">
-        <el-card shadow="hover" class="data-card">
+        <el-card shadow="hover" class="data-card clickable-card" @click="handleTodayInbound">
           <template #header>
             <div class="card-header">
               <span>今日入库</span>
@@ -17,7 +17,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="data-card">
+        <el-card shadow="hover" class="data-card clickable-card" @click="handleTodayOutbound">
           <template #header>
             <div class="card-header">
               <span>今日出库</span>
@@ -381,6 +381,30 @@ const handleInbound = (row) => {
   })
 }
 
+// 点击今日入库卡片
+const handleTodayInbound = () => {
+  const today = new Date().toISOString().split('T')[0] // 获取今天日期 YYYY-MM-DD
+  router.push({
+    path: '/warehouse/inbound',
+    query: {
+      startDate: today,
+      endDate: today
+    }
+  })
+}
+
+// 点击今日出库卡片
+const handleTodayOutbound = () => {
+  const today = new Date().toISOString().split('T')[0] // 获取今天日期 YYYY-MM-DD
+  router.push({
+    path: '/warehouse/outbound',
+    query: {
+      startDate: today,
+      endDate: today
+    }
+  })
+}
+
 // 查看所有预警
 const handleViewAllWarnings = () => {
   router.push({
@@ -433,6 +457,16 @@ onUnmounted(() => {
 
 .data-card {
   margin-bottom: 20px;
+}
+
+.clickable-card {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clickable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .card-header {
