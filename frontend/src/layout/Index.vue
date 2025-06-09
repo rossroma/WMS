@@ -4,7 +4,9 @@
     <div class="sidebar">
       <div class="logo">
         <!-- <img src="@/assets/logo.png" alt="logo"> -->
-        <span>仓库管理系统</span>
+        <router-link to="/" class="logo-link">
+          <span>仓库管理系统</span>
+        </router-link>
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -190,6 +192,20 @@ const handleLogout = () => {
         width: 32px;
         height: 32px;
         margin-right: 12px;
+      }
+
+      .logo-link {
+        color: #fff;
+        text-decoration: none;
+        transition: opacity 0.3s ease;
+        
+        &:hover {
+          opacity: 0.8;
+        }
+        
+        span {
+          cursor: pointer;
+        }
       }
     }
 
