@@ -258,7 +258,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getInboundList, createInbound, updateInbound, deleteInbound, getInboundItems } from '@/api/inbound'
 import ListPageLayout from '@/components/ListPageLayout.vue'
@@ -270,8 +270,11 @@ import { useUserStore } from '@/stores/user'
 import { formatDateTime, getToday, formatDateOnly } from '@/utils/date'
 import UserDisplay from '@/components/UserDisplay.vue'
 import { useUsers } from '@/composables/useUsers'
+import { useRouter, useRoute } from 'vue-router'
 
 const userStore = useUserStore()
+const router = useRouter()
+const route = useRoute()
 
 // 使用用户数据composable
 const { getAllUsers } = useUsers()
@@ -572,6 +575,27 @@ onMounted(() => {
   getList()
   // 预加载用户数据，确保UserDisplay和UserSelect组件能正常显示
   getAllUsers()
+  
+  // 检测路由参数，如果有action=create，自动打开新建弹窗
+  if (route.query.action === 'create') {
+    console.log('检测到action=create参数，自动打开新建弹窗')
+    // 使用nextTick确保页面渲染完成后再打开弹窗
+    nextTick(() => {
+      handleCreate()
+      
+      // 如果有productId参数，可以在这里处理预选商品的逻辑
+      if (route.query.productId) {
+        console.log('检测到productId参数:', route.query.productId)
+        // 这里可以后续扩展：预先在商品列表中选中该商品
+      }
+      
+      // 清除URL中的action参数，避免重复触发
+      router.replace({ 
+        path: route.path, 
+        query: { ...route.query, action: undefined } 
+      })
+    })
+  }
 })
 </script>
 

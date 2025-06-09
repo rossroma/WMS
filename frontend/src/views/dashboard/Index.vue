@@ -160,13 +160,10 @@
             <el-tag type="danger">库存不足</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作" width="80">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleInbound(row)">
-              入库
-            </el-button>
-            <el-button type="primary" link @click="handleDetail(row)">
-              详情
+              补货
             </el-button>
           </template>
         </el-table-column>
@@ -377,15 +374,10 @@ const refreshHotProducts = () => {
 const handleInbound = (row) => {
   router.push({
     path: '/warehouse/inbound',
-    query: { productId: row.id }
-  })
-}
-
-// 查看详情
-const handleDetail = (row) => {
-  router.push({
-    path: '/product/list',
-    query: { id: row.id }
+    query: { 
+      productId: row.id,
+      action: 'create'
+    }
   })
 }
 
