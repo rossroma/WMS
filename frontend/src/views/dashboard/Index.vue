@@ -31,7 +31,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="data-card">
+        <el-card shadow="hover" class="data-card clickable-card" @click="handleStockWarning">
           <template #header>
             <div class="card-header">
               <span>库存预警</span>
@@ -405,11 +405,23 @@ const handleTodayOutbound = () => {
   })
 }
 
+// 点击库存预警卡片
+const handleStockWarning = () => {
+  router.push({
+    path: '/inventory/list',
+    query: {
+      stockStatus: 'warning'
+    }
+  })
+}
+
 // 查看所有预警
 const handleViewAllWarnings = () => {
   router.push({
     path: '/inventory/list',
-    query: { warning: true }
+    query: {
+      stockStatus: 'warning'
+    }
   })
 }
 
@@ -467,6 +479,10 @@ onUnmounted(() => {
 .clickable-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.clickable-card .number {
+  color: #409eff;
 }
 
 .card-header {

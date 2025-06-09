@@ -5,6 +5,19 @@
         <el-form-item label="商品名称">
           <el-input v-model="queryParams.productName" placeholder="请输入商品名称" clearable />
         </el-form-item>
+        <el-form-item label="库存状态">
+          <el-select 
+            v-model="queryParams.stockStatus" 
+            placeholder="请选择库存状态" 
+            clearable
+            style="width: 120px"
+          >
+            <el-option label="全部" value="" />
+            <el-option label="库存正常" value="normal" />
+            <el-option label="库存预警" value="warning" />
+            <el-option label="无库存" value="out_of_stock" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleQuery">
             <el-icon><Search /></el-icon>查询
@@ -90,17 +103,19 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { getInventoryList } from '@/api/inventory'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 
 const router = useRouter()
+const route = useRoute()
 
 // 查询参数
 const queryParams = reactive({
   page: 1,
   pageSize: 20,
-  productName: ''
+  productName: '',
+  stockStatus: ''
 })
 
 // 数据列表
@@ -155,6 +170,7 @@ const handleQuery = () => {
 // 重置按钮
 const resetQuery = () => {
   queryParams.productName = ''
+  queryParams.stockStatus = ''
   queryParams.page = 1
   fetchInventoryList()
 }
@@ -177,6 +193,12 @@ const handleCurrentChange = (val) => {
 }
 
 onMounted(() => {
+  // 检测路由参数，如果有stockStatus，自动设置库存状态筛选
+  if (route.query.stockStatus) {
+    console.log('检测到库存状态参数，设置库存状态筛选:', route.query.stockStatus)
+    queryParams.stockStatus = route.query.stockStatus
+  }
+  
   fetchInventoryList()
 })
 </script>

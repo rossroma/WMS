@@ -11,7 +11,8 @@ exports.getInventory = async (req, res, next) => {
     const { 
       page = 1, 
       pageSize = 10, 
-      productName
+      productName,
+      stockStatus
     } = req.query;
 
     // 计算分页参数
@@ -36,19 +37,60 @@ exports.getInventory = async (req, res, next) => {
       };
     }
 
+    // 如果有库存状态筛选，添加相应的查询条件
+    if (stockStatus) {
+      // 由于库存状态需要根据quantity和stockAlertQuantity的关系来判断
+      // 这里先查询所有数据，然后在JavaScript中进行筛选
+      // 为了性能考虑，我们先获取较大的数据集
+      queryConfig.limit = 10000; // 临时设置大的限制
+      queryConfig.offset = 0;
+    }
+
     // 查询库存列表和总数
     const { count, rows } = await Inventory.findAndCountAll(queryConfig);
+
+    let filteredRows = rows;
+    let filteredCount = count;
+
+    // 如果有库存状态筛选，进行筛选
+    if (stockStatus) {
+      filteredRows = rows.filter(row => {
+        const quantity = row.quantity || 0;
+        const alertQuantity = row.Product?.stockAlertQuantity || 0;
+        
+        switch (stockStatus) {
+          case 'normal':
+            // 库存正常：有库存且不在预警范围内
+            return quantity > 0 && (alertQuantity <= 0 || quantity > alertQuantity);
+          case 'warning':
+            // 库存预警：有库存但在预警范围内
+            return quantity > 0 && alertQuantity > 0 && quantity <= alertQuantity;
+          case 'out_of_stock':
+            // 无库存：库存为0
+            return quantity <= 0;
+          default:
+            return true;
+        }
+      });
+
+      filteredCount = filteredRows.length;
+
+      // 应用分页
+      const start = (parseInt(page) - 1) * limit;
+      const end = start + limit;
+      filteredRows = filteredRows.slice(start, end);
+    }
 
     // 返回分页数据
     res.status(200).json({
       status: 'success',
       message: '获取库存信息成功',
       data: {
-        list: rows,
-        total: count,
+        list: filteredRows,
+        total: filteredCount,
         page: parseInt(page),
         pageSize: parseInt(pageSize),
-        totalPages: Math.ceil(count / limit)
+        totalPages: Math.ceil(filteredCount / limit)
       }
     });
   } catch (error) {
