@@ -38,7 +38,10 @@ service.interceptors.response.use(
           message = '未授权，请重新登录'
           const userStore = useUserStore()
           userStore.clearUserInfo()
-          window.location.href = '/login'
+          // 延迟1秒跳转，让错误信息有时间显示
+          window.setTimeout(() => {
+            window.location.href = '/login'
+          }, 1000)
           break
         }
         case 403:
@@ -58,7 +61,6 @@ service.interceptors.response.use(
     } else {
       message = '网络连接失败'
     }
-
     ElMessage.error(message)
     return Promise.reject(error)
   }
