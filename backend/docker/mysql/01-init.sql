@@ -114,7 +114,7 @@ CREATE TABLE `inventories` (
 CREATE TABLE `inbound_orders` (
   `id` int NOT NULL AUTO_INCREMENT,
   `order_no` varchar(50) NOT NULL COMMENT '入库单号',
-  `type` enum('STOCK_IN','PURCHASE','RETURN','TRANSFER_IN') NOT NULL COMMENT '入库类型',
+  `type` enum('STOCK_IN','PURCHASE','RETURN') NOT NULL COMMENT '入库类型',
   `total_amount` decimal(10,2) DEFAULT 0.00 COMMENT '总金额',
   `total_quantity` int DEFAULT 0 COMMENT '总数量',
   `order_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '入库日期',

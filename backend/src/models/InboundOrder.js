@@ -4,8 +4,7 @@ const sequelize = require('../config/database');
 const InboundType = {
   STOCK_IN: 'STOCK_IN',           // 盘盈入库
   PURCHASE: 'PURCHASE',           // 采购入库
-  RETURN: 'RETURN',              // 退货入库
-  TRANSFER_IN: 'TRANSFER_IN'      // 调拨入库
+  RETURN: 'RETURN'               // 退货入库
 };
 
 const InboundTypeDisplay = {
