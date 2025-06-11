@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品管理页面 - 线框原型</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .wireframe-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .wireframe-header {
+            background: white;
+            border: 2px solid #333;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .wireframe-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* 搜索筛选区域 */
+        .search-filter-section {
+            background: white;
+            border: 1px solid #999;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .search-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-label {
+            font-size: 12px;
+            color: #666;
+            min-width: 60px;
+        }
+
+        .search-input {
+            border: 1px solid #999;
+            padding: 8px;
+            font-size: 12px;
+            width: 150px;
+        }
+
+        .search-select {
+            border: 1px solid #999;
+            padding: 8px;
+            font-size: 12px;
+            width: 120px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .wireframe-button {
+            border: 1px solid #999;
+            padding: 8px 15px;
+            font-size: 12px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .primary-button {
+            border: 2px solid #333;
+            font-weight: bold;
+        }
+
+        /* 数据表格区域 */
+        .table-section {
+            background: white;
+            border: 1px solid #999;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+
+        .product-image {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            display: inline-block;
+            text-align: center;
+            line-height: 28px;
+            font-size: 10px;
+            color: #999;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            border: 1px solid #ccc;
+            padding: 2px 6px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        /* 分页区域 */
+        .pagination-section {
+            background: white;
+            border: 1px solid #999;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pagination-info {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-input {
+            border: 1px solid #999;
+            padding: 4px;
+            width: 50px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .page-button {
+            border: 1px solid #999;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .wireframe-note {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-container">
+        <!-- 页面标题 -->
+        <div class="wireframe-header">
+            <div class="wireframe-title">商品管理页面</div>
+        </div>
+
+        <!-- 搜索筛选区域 -->
+        <div class="search-filter-section">
+            <div class="search-row">
+                <div class="search-group">
+                    <span class="search-label">商品名称</span>
+                    <input type="text" class="search-input" placeholder="请输入商品名称">
+                </div>
+                
+                <div class="search-group">
+                    <span class="search-label">品牌</span>
+                    <select class="search-select">
+                        <option>请选择品牌</option>
+                    </select>
+                </div>
+                
+                <div class="search-group">
+                    <span class="search-label">商品分类</span>
+                    <select class="search-select">
+                        <option>请选择商品分类</option>
+                    </select>
+                </div>
+                
+                <div class="search-group">
+                    <span class="search-label">供应商</span>
+                    <select class="search-select">
+                        <option>请选择供应商</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button class="wireframe-button primary-button">查询</button>
+                    <button class="wireframe-button">重置</button>
+                    <button class="wireframe-button">新增商品</button>
+                    <button class="wireframe-button">分类管理</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据表格区域 -->
+        <div class="table-section">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>商品名称</th>
+                        <th>图片</th>
+                        <th>商品编码</th>
+                        <th>品牌</th>
+                        <th>价格</th>
+                        <th>库存</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>商品A</td>
+                        <td><div class="product-image">图</div></td>
+                        <td>PROD-001</td>
+                        <td>品牌A</td>
+                        <td>¥150.00</td>
+                        <td>50</td>
+                        <td>
+                            <div class="action-buttons">
+                                <span class="action-btn">编辑</span>
+                                <span class="action-btn">删除</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>商品B</td>
+                        <td><div class="product-image">图</div></td>
+                        <td>PROD-002</td>
+                        <td>品牌B</td>
+                        <td>¥800.00</td>
+                        <td>20</td>
+                        <td>
+                            <div class="action-buttons">
+                                <span class="action-btn">编辑</span>
+                                <span class="action-btn">删除</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>商品C</td>
+                        <td><div class="product-image">图</div></td>
+                        <td>PROD-003</td>
+                        <td>品牌C</td>
+                        <td>¥3.00</td>
+                        <td>200</td>
+                        <td>
+                            <div class="action-buttons">
+                                <span class="action-btn">编辑</span>
+                                <span class="action-btn">删除</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>商品D</td>
+                        <td><div class="product-image">图</div></td>
+                        <td>PROD-004</td>
+                        <td>品牌D</td>
+                        <td>¥25.00</td>
+                        <td>80</td>
+                        <td>
+                            <div class="action-buttons">
+                                <span class="action-btn">编辑</span>
+                                <span class="action-btn">删除</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页区域 -->
+        <div class="pagination-section">
+            <div class="pagination-info">
+                共 4 条　20条/页
+            </div>
+            <div class="pagination-controls">
+                <span class="page-button">前往</span>
+                <input type="text" class="page-input" value="1">
+                <span>页</span>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html> 
