@@ -1,51 +1,10 @@
 const { InboundOrder } = require('../models/InboundOrder');
 const { OrderItem, OrderItemType } = require('../models/OrderItem');
 const Product = require('../models/Product');
-const Inventory = require('../models/Inventory');
-const InventoryLog = require('../models/InventoryLog');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const { createInboundOrderService, deleteInboundOrderService } = require('../services/inboundOrderService');
-
-// 更新库存数量并生成库存日志
-const updateInventoryAndLog = async (productId, quantityChange, type, relatedDocument, operator, transaction) => {
-  try {
-    // 查找或创建库存记录
-    let inventory = await Inventory.findOne({
-      where: { productId },
-      transaction
-    });
-
-    if (!inventory) {
-      // 如果库存记录不存在，创建新的库存记录
-      inventory = await Inventory.create({
-        productId,
-        quantity: Math.max(0, quantityChange) // 确保库存不为负数
-      }, { transaction });
-    } else {
-      // 更新现有库存
-      const newQuantity = Math.max(0, inventory.quantity + quantityChange);
-      await inventory.update({
-        quantity: newQuantity
-      }, { transaction });
-    }
-
-    // 创建库存流水记录
-    await InventoryLog.create({
-      inventoryId: inventory.id,
-      changeQuantity: quantityChange,
-      type,
-      relatedDocument,
-      operator
-    }, { transaction });
-
-    return inventory;
-  } catch (error) {
-    console.error('更新库存失败:', error);
-    throw error;
-  }
-};
 
 // 创建入库单
 exports.createInboundOrder = async (req, res, next) => {

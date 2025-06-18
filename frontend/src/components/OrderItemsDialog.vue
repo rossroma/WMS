@@ -131,7 +131,7 @@ const queryParams = reactive({
 // 计算属性
 const dialogTitle = computed(() => {
   const typeText = props.orderType === 'inbound' ? '入库单' : 
-                   props.orderType === 'outbound' ? '出库单' : '采购订单'
+    props.orderType === 'outbound' ? '出库单' : '采购订单'
   return `${typeText}关联商品`
 })
 

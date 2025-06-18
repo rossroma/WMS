@@ -36,7 +36,7 @@ const filterSpecialChars = (data) => {
   if (data && typeof data === 'object') {
     const filteredData = {}
     for (const key in data) {
-      if (data.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
         filteredData[key] = filterSpecialChars(data[key])
       }
     }

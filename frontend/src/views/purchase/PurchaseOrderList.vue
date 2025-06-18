@@ -335,7 +335,6 @@
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router'
 import { formatDate, formatDateTime } from '@/utils/date'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import OrderItemsDialog from '@/components/OrderItemsDialog.vue'
@@ -356,7 +355,6 @@ import { getSupplierList } from '@/api/supplier'
 import { useUserStore } from '@/stores/user'
 import { getToday } from '@/utils/date'
 
-const router = useRouter()
 const userStore = useUserStore()
 
 // 数据
@@ -418,10 +416,6 @@ const statusMap = {
 }
 
 // 计算属性
-const hasSelectedDateRange = computed(() => {
-  return searchForm.value.dateRange && searchForm.value.dateRange.length === 2
-})
-
 const dialogTitle = computed(() => {
   return dialogType.value === 'create' ? '新建采购订单' : '编辑采购订单'
 })
@@ -438,7 +432,7 @@ const selectedProductIds = computed(() => {
 })
 
 // 获取订单列表
-const fetchOrders = async () => {
+const fetchOrders = async() => {
   loading.value = true
   try {
     const params = {
@@ -462,7 +456,7 @@ const fetchOrders = async () => {
 }
 
 // 获取供应商列表
-const fetchSuppliers = async () => {
+const fetchSuppliers = async() => {
   try {
     const res = await getSupplierList()
     suppliers.value = res.data.list || res.data || []
@@ -544,7 +538,7 @@ const handleDetail = (order) => {
   orderItemsVisible.value = true
 }
 
-const handleConfirm = async (order) => {
+const handleConfirm = async(order) => {
   try {
     await ElMessageBox.confirm('确认要确认该采购订单吗？确认后将自动生成采购入库单。', '提示', {
       type: 'warning',
@@ -561,7 +555,7 @@ const handleConfirm = async (order) => {
   }
 }
 
-const handleDelete = async (order) => {
+const handleDelete = async(order) => {
   try {
     await ElMessageBox.confirm(`确认要删除采购订单 ${order.orderNo} 吗？${order.status === 'CONFIRMED' ? '该操作会同时删除关联的入库单。' : ''}`, '删除确认', {
       type: 'warning',
@@ -604,7 +598,7 @@ const handleCurrentChange = (val) => {
   fetchOrders()
 }
 
-const handleSubmit = async (formData) => {
+const handleSubmit = async(formData) => {
   submitting.value = true
   try {
     if (isEdit.value) {

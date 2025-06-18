@@ -1,6 +1,5 @@
-const { InboundOrder, InboundType } = require('../models/InboundOrder');
+const { InboundOrder } = require('../models/InboundOrder');
 const { OrderItem, OrderItemType } = require('../models/OrderItem');
-const Product = require('../models/Product');
 const Inventory = require('../models/Inventory');
 const InventoryLog = require('../models/InventoryLog');
 const { generateInboundOrderNo } = require('../utils/orderUtils');

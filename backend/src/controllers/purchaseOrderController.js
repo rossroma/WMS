@@ -3,10 +3,9 @@ const Product = require('../models/Product');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
-const { generatePurchaseOrderNo, generateInboundOrderNo } = require('../utils/orderUtils');
+const { generatePurchaseOrderNo } = require('../utils/orderUtils');
 const Supplier = require('../models/Supplier');
 const { InboundOrder, InboundType } = require('../models/InboundOrder');
-const { OrderItem, OrderItemType } = require('../models/OrderItem');
 const { createInboundOrderService, deleteInboundOrderService } = require('../services/inboundOrderService');
 
 // 创建采购订单
