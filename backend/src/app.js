@@ -23,6 +23,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const logRoutes = require('./routes/logRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const userRoutes = require('./routes/userRoutes');
+const purchaseOrderRoutes = require('./routes/purchaseOrderRoutes');
 const { startCronJobs, stopCronJobs } = require('./config/cron');
 
 // 创建Express应用
@@ -82,6 +83,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/purchase-orders', purchaseOrderRoutes);
 
 // 错误处理中间件
 app.use(errorHandler);

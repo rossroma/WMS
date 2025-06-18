@@ -8,6 +8,7 @@ const { StocktakingOrder } = require('./StocktakingOrder');
 const { StocktakingItem } = require('./StocktakingItem');
 const Supplier = require('./Supplier');
 const Category = require('./Category');
+const { PurchaseOrder, PurchaseOrderItem } = require('./PurchaseOrder');
 
 // Product ↔ Inventory: 一对一关系
 Product.hasOne(Inventory, { foreignKey: 'productId' });
@@ -89,6 +90,36 @@ Product.hasMany(StocktakingItem, {
   as: 'stocktakingItems'
 });
 
+// 采购订单关联关系
+// PurchaseOrder ↔ Supplier: 多对一关系
+PurchaseOrder.belongsTo(Supplier, {
+  foreignKey: 'supplierId',
+  as: 'supplier'
+});
+Supplier.hasMany(PurchaseOrder, {
+  foreignKey: 'supplierId'
+});
+
+// PurchaseOrder ↔ PurchaseOrderItem: 一对多关系
+PurchaseOrder.hasMany(PurchaseOrderItem, {
+  foreignKey: 'purchaseOrderId',
+  as: 'items'
+});
+PurchaseOrderItem.belongsTo(PurchaseOrder, {
+  foreignKey: 'purchaseOrderId',
+  as: 'purchaseOrder'
+});
+
+// PurchaseOrderItem ↔ Product: 多对一关系
+PurchaseOrderItem.belongsTo(Product, {
+  foreignKey: 'productId',
+  as: 'product'
+});
+Product.hasMany(PurchaseOrderItem, {
+  foreignKey: 'productId',
+  as: 'purchaseOrderItems'
+});
+
 module.exports = {
   Product,
   Inventory,
@@ -100,5 +131,7 @@ module.exports = {
   StocktakingOrder,
   StocktakingItem,
   Supplier,
-  Category
+  Category,
+  PurchaseOrder,
+  PurchaseOrderItem
 }; 

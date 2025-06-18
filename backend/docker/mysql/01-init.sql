@@ -17,6 +17,8 @@ DROP TABLE IF EXISTS `stocktaking_items`;
 DROP TABLE IF EXISTS `stocktaking_orders`;
 DROP TABLE IF EXISTS `outbound_orders`;
 DROP TABLE IF EXISTS `inbound_orders`;
+DROP TABLE IF EXISTS `purchase_order_items`;
+DROP TABLE IF EXISTS `purchase_orders`;
 DROP TABLE IF EXISTS `inventories`;
 DROP TABLE IF EXISTS `products`;
 DROP TABLE IF EXISTS `categories`;
@@ -249,6 +251,47 @@ CREATE TABLE `logs` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 14. 采购订单表
+CREATE TABLE `purchase_orders` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `order_no` varchar(50) NOT NULL COMMENT '采购单号',
+  `supplier_id` int NOT NULL COMMENT '供应商ID',
+  `order_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '采购日期',
+  `expected_arrival_date` datetime DEFAULT NULL COMMENT '预计到货日期',
+  `status` enum('PENDING','CONFIRMED') NOT NULL DEFAULT 'PENDING' COMMENT '订单状态：PENDING-未确认，CONFIRMED-已确认',
+  `payment_status` enum('UNPAID','PARTIALLY_PAID','PAID') NOT NULL DEFAULT 'UNPAID' COMMENT '付款状态',
+  `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '总金额',
+  `total_quantity` int NOT NULL DEFAULT 0 COMMENT '总数量',
+  `payment_method` varchar(50) DEFAULT NULL COMMENT '付款方式',
+  `operator` varchar(100) NOT NULL COMMENT '操作员',
+  `remark` varchar(500) DEFAULT NULL COMMENT '备注',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `order_no` (`order_no`),
+  KEY `supplier_id` (`supplier_id`),
+  KEY `status` (`status`),
+  KEY `order_date` (`order_date`),
+  CONSTRAINT `purchase_orders_ibfk_1` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 15. 采购订单明细表
+CREATE TABLE `purchase_order_items` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `purchase_order_id` int NOT NULL COMMENT '采购单ID',
+  `product_id` int NOT NULL COMMENT '商品ID',
+  `quantity` int NOT NULL COMMENT '采购数量',
+  `unit_price` decimal(10,2) NOT NULL COMMENT '单价',
+  `total_price` decimal(10,2) NOT NULL COMMENT '总价',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `purchase_order_id` (`purchase_order_id`),
+  KEY `product_id` (`product_id`),
+  CONSTRAINT `purchase_order_items_ibfk_1` FOREIGN KEY (`purchase_order_id`) REFERENCES `purchase_orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `purchase_order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 插入初始数据（测试中文字符集）
 
 -- 插入默认用户，密码：123456
@@ -295,3 +338,12 @@ INSERT INTO `logs` (`user_id`, `username`, `action_type`, `module`, `details`, `
 (1, 'admin', 'LOGIN', 'AUTH', '管理员登录系统', '127.0.0.1'),
 (1, 'admin', 'CREATE', 'PRODUCT', '创建商品：iPhone 15', '127.0.0.1'),
 (1, 'admin', 'CREATE', 'PRODUCT', '创建商品：MacBook Pro', '127.0.0.1');
+
+-- 插入示例采购订单
+INSERT INTO `purchase_orders` (`order_no`, `supplier_id`, `order_date`, `expected_arrival_date`, `status`, `payment_status`, `total_amount`, `total_quantity`, `payment_method`, `operator`, `remark`) VALUES
+('PO20250617001', 1, '2025-06-17 10:00:00', '2025-06-20 10:00:00', 'PENDING', 'UNPAID', 10000.00, 10, '现金', 'admin', '测试采购订单');
+
+-- 插入示例采购订单明细
+INSERT INTO `purchase_order_items` (`purchase_order_id`, `product_id`, `quantity`, `unit_price`, `total_price`) VALUES
+(1, 1, 10, 5999.00, 59990.00),
+(1, 2, 5, 9999.00, 49995.00);

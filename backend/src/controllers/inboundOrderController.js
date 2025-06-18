@@ -6,7 +6,7 @@ const InventoryLog = require('../models/InventoryLog');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
-const { generateInboundOrderNo } = require('../utils/orderUtils');
+const { createInboundOrderService, deleteInboundOrderService } = require('../services/inboundOrderService');
 
 // 更新库存数量并生成库存日志
 const updateInventoryAndLog = async (productId, quantityChange, type, relatedDocument, operator, transaction) => {
@@ -54,59 +54,14 @@ exports.createInboundOrder = async (req, res, next) => {
   try {
     const { type, remark, operator, items, orderDate } = req.body;
     
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return next(new AppError('入库商品明细不能为空', 400));
-    }
-
-    // 生成入库单号
-    const orderNo = generateInboundOrderNo();
-
-    // 计算总数量和总金额
-    let totalQuantity = 0;
-    let totalAmount = 0;
-    
-    for (const item of items) {
-      totalQuantity += item.quantity || 0;
-      totalAmount += (item.quantity || 0) * (item.unitPrice || 0);
-    }
-
-    // 创建入库单
-    const order = await InboundOrder.create({
-      orderNo,
+    // 使用入库单服务创建入库单
+    const result = await createInboundOrderService({
       type,
-      totalAmount,
-      totalQuantity,
       operator,
       remark,
-      orderDate: orderDate ? new Date(orderDate) : new Date()
-    }, { transaction });
-
-    // 创建商品明细
-    const orderItems = items.map(item => ({
-      orderType: OrderItemType.INBOUND,
-      orderId: order.id,
-      productId: item.productId,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice || 0,
-      totalPrice: (item.quantity || 0) * (item.unitPrice || 0),
-      unit: item.unit
-    }));
-
-    await OrderItem.bulkCreate(orderItems, { transaction });
-
-    // 更新库存数量并生成库存流水
-    for (const item of items) {
-      if (item.quantity > 0) {
-        await updateInventoryAndLog(
-          item.productId,
-          item.quantity, // 入库为正数
-          '入库',
-          orderNo,
-          operator,
-          transaction
-        );
-      }
-    }
+      items,
+      orderDate
+    }, transaction);
 
     await transaction.commit();
 
@@ -114,14 +69,14 @@ exports.createInboundOrder = async (req, res, next) => {
       status: 'success',
       message: '入库单创建成功，库存已更新',
       data: {
-        ...order.dataValues,
-        items: orderItems
+        ...result.order.dataValues,
+        items: result.items
       }
     });
   } catch (error) {
     await transaction.rollback();
     console.error('创建入库单失败:', error);
-    next(new AppError('创建入库单失败', 400));
+    next(new AppError(error.message || '创建入库单失败', 400));
   }
 };
 
@@ -247,44 +202,8 @@ exports.deleteInboundOrder = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   
   try {
-    const order = await InboundOrder.findByPk(req.params.id, {
-      include: [{
-        model: OrderItem,
-        as: 'items'
-      }],
-      transaction
-    });
-    
-    if (!order) {
-      await transaction.rollback();
-      return next(new AppError('入库单不存在', 404));
-    }
-
-    // 撤销库存变更
-    for (const item of order.items) {
-      if (item.quantity > 0) {
-        await updateInventoryAndLog(
-          item.productId,
-          -item.quantity, // 撤销入库，所以是负数
-          '入库撤销',
-          order.orderNo,
-          order.operator,
-          transaction
-        );
-      }
-    }
-
-    // 删除商品明细
-    await OrderItem.destroy({
-      where: {
-        orderType: OrderItemType.INBOUND,
-        orderId: order.id
-      },
-      transaction
-    });
-
-    // 删除入库单
-    await order.destroy({ transaction });
+    // 使用入库单服务删除入库单
+    await deleteInboundOrderService(req.params.id, transaction);
 
     await transaction.commit();
 
@@ -295,7 +214,7 @@ exports.deleteInboundOrder = async (req, res, next) => {
   } catch (error) {
     await transaction.rollback();
     console.error('删除入库单失败:', error);
-    next(new AppError('删除入库单失败', 500));
+    next(new AppError(error.message || '删除入库单失败', 500));
   }
 };
 

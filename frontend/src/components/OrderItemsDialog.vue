@@ -11,7 +11,8 @@
       <div class="order-info" v-if="orderInfo">
         <el-descriptions :column="3" border>
           <el-descriptions-item label="单据号">{{ orderInfo.orderNo }}</el-descriptions-item>
-          <el-descriptions-item label="类型">{{ getTypeText(orderInfo.type) }}</el-descriptions-item>
+          <el-descriptions-item label="类型" v-if="orderType !== 'purchase'">{{ getTypeText(orderInfo.type) }}</el-descriptions-item>
+          <el-descriptions-item label="状态" v-if="orderType === 'purchase'">{{ getTypeText(orderInfo.status) }}</el-descriptions-item>
           <el-descriptions-item label="日期">{{ formatDateTime(orderInfo.orderDate) }}</el-descriptions-item>
           <el-descriptions-item label="操作员">{{ orderInfo.operator }}</el-descriptions-item>
           <el-descriptions-item label="总数量">{{ orderInfo.totalQuantity }}</el-descriptions-item>
@@ -33,23 +34,31 @@
           <el-table-column label="商品信息" min-width="200">
             <template #default="{ row }">
               <div class="product-info">
-                <div class="product-name">{{ row.Product?.name }}</div>
-                <div class="product-code">编码：{{ row.Product?.code }}</div>
-                <div class="product-brand" v-if="row.Product?.brand">品牌：{{ row.Product?.brand }}</div>
+                <div class="product-name">{{ getProductName(row) }}</div>
+                <div class="product-code">编码：{{ getProductCode(row) }}</div>
+                <div class="product-brand" v-if="getProductBrand(row)">品牌：{{ getProductBrand(row) }}</div>
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="Product.specification" label="规格" width="120" />
-          <el-table-column prop="Product.unit" label="单位" width="80" />
-          <el-table-column prop="quantity" label="数量" width="100" />
-          <el-table-column prop="unitPrice" label="单价" width="100">
+          <el-table-column label="规格" width="120">
             <template #default="{ row }">
-              ¥{{ Number(row.unitPrice || 0).toFixed(2) }}
+              {{ getProductSpecification(row) }}
             </template>
           </el-table-column>
-          <el-table-column prop="totalPrice" label="小计" width="120">
+          <el-table-column label="单位" width="80">
             <template #default="{ row }">
-              ¥{{ Number(row.totalPrice || 0).toFixed(2) }}
+              {{ getProductUnit(row) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="quantity" label="数量" width="100" />
+          <el-table-column label="单价" width="100">
+            <template #default="{ row }">
+              ¥{{ Number(getUnitPrice(row)).toFixed(2) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="小计" width="120">
+            <template #default="{ row }">
+              ¥{{ Number(getTotalPrice(row)).toFixed(2) }}
             </template>
           </el-table-column>
         </el-table>
@@ -89,7 +98,7 @@ const props = defineProps({
   orderType: {
     type: String,
     required: true,
-    validator: (value) => ['inbound', 'outbound'].includes(value)
+    validator: (value) => ['inbound', 'outbound', 'purchase'].includes(value)
   },
   orderId: {
     type: [String, Number],
@@ -121,13 +130,49 @@ const queryParams = reactive({
 
 // 计算属性
 const dialogTitle = computed(() => {
-  const typeText = props.orderType === 'inbound' ? '入库单' : '出库单'
+  const typeText = props.orderType === 'inbound' ? '入库单' : 
+                   props.orderType === 'outbound' ? '出库单' : '采购订单'
   return `${typeText}关联商品`
 })
 
 // 获取类型文本
 const getTypeText = (type) => {
   return props.typeMap[type] || type
+}
+
+// 获取商品名称（兼容不同数据结构）
+const getProductName = (row) => {
+  return row.Product?.name || row.product?.name || ''
+}
+
+// 获取商品编码（兼容不同数据结构）
+const getProductCode = (row) => {
+  return row.Product?.code || row.product?.code || ''
+}
+
+// 获取商品品牌（兼容不同数据结构）
+const getProductBrand = (row) => {
+  return row.Product?.brand || row.product?.brand || ''
+}
+
+// 获取规格（兼容不同数据结构）
+const getProductSpecification = (row) => {
+  return row.Product?.specification || row.product?.specification || ''
+}
+
+// 获取单位（兼容不同数据结构）
+const getProductUnit = (row) => {
+  return row.Product?.unit || row.product?.unit || ''
+}
+
+// 获取单价（兼容不同数据结构）
+const getUnitPrice = (row) => {
+  return row.unitPrice || row.unit_price || 0
+}
+
+// 获取总价（兼容不同数据结构）
+const getTotalPrice = (row) => {
+  return row.totalPrice || row.total_price || 0
 }
 
 // 获取关联商品列表

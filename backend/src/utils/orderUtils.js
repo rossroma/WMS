@@ -14,6 +14,14 @@ const generateOrderNo = (prefix) => {
 };
 
 /**
+ * 生成采购订单号
+ * @returns {string} 采购订单号
+ */
+const generatePurchaseOrderNo = () => {
+  return generateOrderNo('PO');
+};
+
+/**
  * 生成入库单号
  * @returns {string} 入库单号
  */
@@ -41,6 +49,7 @@ const generateStocktakingOrderNo = () => {
  * 订单号前缀枚举
  */
 const OrderNoPrefix = {
+  PURCHASE: 'PO',
   INBOUND: 'IN',
   OUTBOUND: 'OUT',
   STOCKTAKING: 'ST'
@@ -48,6 +57,7 @@ const OrderNoPrefix = {
 
 module.exports = {
   generateOrderNo,
+  generatePurchaseOrderNo,
   generateInboundOrderNo,
   generateOutboundOrderNo,
   generateStocktakingOrderNo,

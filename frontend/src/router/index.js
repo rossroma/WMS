@@ -9,7 +9,7 @@ const router = createRouter({
       path: '/login',
       name: 'Login',
       component: () => import('@/views/login/Index.vue'),
-      meta: { title: '登录', requiresAuth: false, isMenu: false }
+      meta: { title: '登录', ignoreAuth: true, isMenu: false }
     },
     {
       path: '/',
@@ -23,8 +23,7 @@ const router = createRouter({
           component: () => import('@/views/dashboard/Index.vue'),
           meta: { 
             title: '仪表盘', 
-            icon: 'DataBoard',
-            requiresAuth: true 
+            icon: 'DataBoard'
           }
         }
       ]
@@ -69,6 +68,25 @@ const router = createRouter({
             title: '供应商列表',
             icon: 'List'
           }
+        }
+      ]
+    },
+    {
+      path: '/purchase',
+      component: () => import('@/layout/Index.vue'),
+      redirect: '/purchase/orders',
+      name: 'Purchase',
+      meta: {
+        title: '采购管理',
+        icon: 'ShoppingCart',
+        needPermission: 'manager'
+      },
+      children: [
+        {
+          path: 'orders',
+          name: 'PurchaseOrders',
+          component: () => import('@/views/purchase/PurchaseOrderList.vue'),
+          meta: { title: '采购订单', icon: 'document' }
         }
       ]
     },
@@ -157,8 +175,7 @@ const router = createRouter({
           component: () => import('@/views/messages/Index.vue'),
           meta: {
             title: '消息列表',
-            icon: 'List',
-            requiresAuth: true
+            icon: 'List'
           }
         }
       ]
@@ -177,13 +194,13 @@ const router = createRouter({
           path: 'users',
           name: 'Users',
           component: () => import('@/views/system/UserManagement.vue'),
-          meta: { title: '用户管理', icon: 'User', requiresAuth: true }
+          meta: { title: '用户管理', icon: 'User' }
         },
         {
           path: 'logs',
           name: 'LogManagement',
           component: () => import('@/views/system/LogManagement.vue'),
-          meta: { title: '日志管理', icon: 'Memo', requiresAuth: true }
+          meta: { title: '日志管理', icon: 'Memo' }
         }
       ]
     }
@@ -197,7 +214,7 @@ router.beforeEach(async(to, from, next) => {
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} - 仓库管理系统` : '仓库管理系统'
   // 判断是否需要登录权限
-  if (to.meta.requiresAuth) {
+  if (!to.meta.ignoreAuth) {
     if (!userStore.token) {
       // 未登录，跳转到登录页
       next({ name: 'Login', query: { redirect: to.fullPath } })
