@@ -7,7 +7,7 @@ const LOG_MODULE = {
   LOG: '日志管理',
   SUPPLIER: '供应商管理',
   CUSTOMER: '客户管理',
-  PRODUCT: '产品管理',
+  PRODUCT: '商品管理',
   WAREHOUSE: '仓库管理',
   STOCK_IN: '入库管理',
   STOCK_OUT: '出库管理',
