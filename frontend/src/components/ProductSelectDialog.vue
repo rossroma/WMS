@@ -124,6 +124,11 @@ const props = defineProps({
   selectedProductIds: {
     type: Array,
     default: () => []
+  },
+  // 供应商ID，用于筛选商品
+  supplierId: {
+    type: [Number, String],
+    default: null
   }
 })
 
@@ -157,6 +162,15 @@ watch(() => props.modelValue, (newVal) => {
   }
 })
 
+// 监听供应商变化，重新加载商品列表
+watch(() => props.supplierId, () => {
+  if (props.modelValue) {
+    // 供应商变化时重置数据并重新加载
+    resetData()
+    fetchProductList()
+  }
+})
+
 // 重置数据
 const resetData = () => {
   currentPage.value = 1
@@ -171,7 +185,8 @@ const fetchProductList = async() => {
     const params = {
       page: currentPage.value,
       pageSize: pageSize.value,
-      productName: searchForm.name // 库存API使用productName参数搜索
+      productName: searchForm.name, // 库存API使用productName参数搜索
+      supplierId: props.supplierId // 添加供应商筛选参数
     }
     
     const res = await getInventoryList(params)
@@ -185,7 +200,8 @@ const fetchProductList = async() => {
       unit: inventory.Product.unit,
       purchasePrice: inventory.Product.purchasePrice,
       retailPrice: inventory.Product.retailPrice,
-      currentStock: inventory.quantity // 从库存记录中获取当前库存
+      currentStock: inventory.quantity, // 从库存记录中获取当前库存
+      supplierId: inventory.Product.supplierId // 添加供应商ID信息
     }))
     total.value = res.data.total || 0
     

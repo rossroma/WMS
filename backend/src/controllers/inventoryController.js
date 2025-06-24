@@ -12,30 +12,38 @@ exports.getInventory = async (req, res, next) => {
       page = 1, 
       pageSize = 10, 
       productName,
-      stockStatus
+      stockStatus,
+      supplierId
     } = req.query;
 
     // 计算分页参数
     const limit = parseInt(pageSize);
     const offset = (parseInt(page) - 1) * limit;
 
+    // 构建Product的查询条件
+    const productWhere = {};
+    
+    // 如果有商品名称搜索条件
+    if (productName) {
+      productWhere.name = { [Op.like]: `%${productName}%` };
+    }
+    
+    // 如果有供应商筛选条件
+    if (supplierId) {
+      productWhere.supplierId = supplierId;
+    }
+
     // 构建查询配置
     const queryConfig = {
       include: [{
         model: Product,
-        required: true // 使用 INNER JOIN 确保有关联的 Product
+        required: true, // 使用 INNER JOIN 确保有关联的 Product
+        where: Object.keys(productWhere).length > 0 ? productWhere : undefined
       }],
       limit,
       offset,
       order: [['createdAt', 'DESC']]
     };
-
-    // 如果有商品名称搜索条件，添加到 include 的 where 中
-    if (productName) {
-      queryConfig.include[0].where = {
-        name: { [Op.like]: `%${productName}%` }
-      };
-    }
 
     // 如果有库存状态筛选，添加相应的查询条件
     if (stockStatus) {

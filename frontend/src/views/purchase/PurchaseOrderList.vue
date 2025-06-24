@@ -176,6 +176,7 @@
             placeholder="请选择供应商"
             style="width: 100%"
             filterable
+            @change="handleSupplierChange"
           >
             <el-option
               v-for="supplier in suppliers"
@@ -204,24 +205,24 @@
             value-format="YYYY-MM-DD"
             style="width: 100%"
           />
-                  </el-form-item>
-          
-          <el-form-item label="付款方式" prop="paymentMethod">
-            <el-select 
-              v-model="formData.paymentMethod" 
-              placeholder="请选择付款方式"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="(text, method) in PAYMENT_METHOD"
-                :key="method"
-                :label="text"
-                :value="method"
-              />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item label="备注" prop="remark">
+        </el-form-item>
+        
+        <el-form-item label="付款方式" prop="paymentMethod">
+          <el-select 
+            v-model="formData.paymentMethod" 
+            placeholder="请选择付款方式"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="(text, method) in PAYMENT_METHOD"
+              :key="method"
+              :label="text"
+              :value="method"
+            />
+          </el-select>
+        </el-form-item>
+        
+        <el-form-item label="备注" prop="remark">
           <el-input
             v-model="formData.remark"
             type="textarea"
@@ -233,9 +234,16 @@
         <el-form-item label="采购商品" v-if="!isEdit">
           <div class="product-section">
             <div class="product-header">
-              <el-button type="primary" @click="handleAddProduct">
+              <el-button 
+                type="primary" 
+                :disabled="!formData.supplierId"
+                @click="handleAddProduct"
+              >
                 <el-icon><Plus /></el-icon>选择商品
               </el-button>
+              <span class="supplier-tip" v-if="!formData.supplierId">
+                请先选择供应商
+              </span>
               <span class="product-count" v-if="formData.items.length > 0">
                 已选择 {{ formData.items.length }} 个商品
               </span>
@@ -311,6 +319,7 @@
     <ProductSelectDialog
       v-model="productSelectVisible"
       :selected-product-ids="selectedProductIds"
+      :supplier-id="form.supplierId"
       @confirm="handleProductSelectConfirm"
     />
 
@@ -471,8 +480,6 @@ const getStatusText = (status) => {
   return statusMap[status] || status
 }
 
-
-
 // 事件处理方法
 const handleCreate = () => {
   dialogType.value = 'create'
@@ -606,6 +613,10 @@ const handleCancel = () => {
 }
 
 const handleAddProduct = () => {
+  if (!form.value.supplierId) {
+    ElMessage.warning('请先选择供应商')
+    return
+  }
   productSelectVisible.value = true
 }
 
@@ -647,6 +658,16 @@ const calculateTotal = () => {
   form.value.items.forEach(item => {
     item.totalPrice = (item.quantity || 0) * (item.unitPrice || 0)
   })
+}
+
+const handleSupplierChange = () => {
+  // 如果有已选商品，提示用户
+  if (form.value.items.length > 0) {
+    ElMessage.warning('更换供应商将清空已选择的商品')
+  }
+  // 清空已选商品
+  form.value.items = []
+  calculateTotal()
 }
 
 // 生命周期钩子
@@ -719,5 +740,10 @@ onMounted(() => {
       color: #409eff;
     }
   }
+}
+
+.supplier-tip {
+  color: #909399;
+  font-size: 12px;
 }
 </style> 
