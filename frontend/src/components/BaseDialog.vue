@@ -67,7 +67,7 @@ const props = defineProps({
   // 标签宽度
   labelWidth: {
     type: String,
-    default: '100px'
+    default: '120px'
   },
   // 加载状态
   loading: {

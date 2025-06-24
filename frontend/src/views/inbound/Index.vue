@@ -174,7 +174,7 @@
             </div>
             <el-table :data="formData.items" border style="width: 100%; margin-top: 10px;" v-if="formData.items.length > 0">
               <el-table-column type="index" label="序号" width="54" />
-              <el-table-column label="商品信息" min-width="180">
+              <el-table-column label="商品信息" min-width="160">
                 <template #default="{ row }">
                   <div class="product-info">
                     <div class="product-name">{{ row.productName }}</div>
@@ -207,7 +207,7 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column label="金额" width="80">
+              <el-table-column label="金额" width="100">
                 <template #default="{ row }">
                   <span class="amount">¥{{ ((row.quantity || 0) * (row.unitPrice || 0)).toFixed(2) }}</span>
                 </template>

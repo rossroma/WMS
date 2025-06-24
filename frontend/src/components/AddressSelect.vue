@@ -139,6 +139,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .address-select {
+  width: 100%;
   .cascader-row {
     margin-bottom: 12px;
   }
