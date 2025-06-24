@@ -78,13 +78,6 @@ export const PURCHASE_ORDER_STATUS = {
   CONFIRMED: 'CONFIRMED'
 }
 
-// 付款状态枚举
-export const PAYMENT_STATUS = {
-  UNPAID: 'UNPAID',
-  PARTIAL: 'PARTIALLY_PAID',
-  PAID: 'PAID'
-}
-
 // 付款方式枚举
 export const PAYMENT_METHOD = {
   CASH: '现金',

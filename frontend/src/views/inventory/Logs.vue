@@ -16,7 +16,6 @@
             <el-option label="入库" value="inbound" />
             <el-option label="出库" value="outbound" />
             <el-option label="盘点" value="stocktaking" />
-            <el-option label="调拨" value="transfer" />
           </el-select>
         </el-form-item>
         <el-form-item label="操作员">
@@ -170,8 +169,7 @@ const getTypeTagType = (type) => {
   const typeMap = {
     'inbound': 'success',
     'outbound': 'warning',
-    'stocktaking': 'info',
-    'transfer': 'primary'
+    'stocktaking': 'info'
   }
   return typeMap[type] || 'info'
 }
@@ -181,8 +179,7 @@ const getTypeText = (type) => {
   const typeMap = {
     'inbound': '入库',
     'outbound': '出库',
-    'stocktaking': '盘点',
-    'transfer': '调拨'
+    'stocktaking': '盘点'
   }
   return typeMap[type] || type
 }

@@ -302,13 +302,10 @@
 - `STOCK_IN`: 盘盈入库
 - `PURCHASE`: 采购入库
 - `RETURN`: 退货入库
-- `TRANSFER_IN`: 调拨入库
 
 #### 出库类型 (OutboundType)
 - `STOCK_OUT`: 盘亏出库
 - `SALE`: 销售出库
-- `TRANSFER_OUT`: 调拨出库
-- `SCRAP`: 报废出库
 
 #### 订单项类型 (OrderItemType)
 - `INBOUND`: 入库单明细

@@ -134,7 +134,7 @@ CREATE TABLE `inbound_orders` (
 CREATE TABLE `outbound_orders` (
   `id` int NOT NULL AUTO_INCREMENT,
   `order_no` varchar(50) NOT NULL COMMENT '出库单号',
-  `type` enum('STOCK_OUT','SALE','TRANSFER_OUT','SCRAP') NOT NULL COMMENT '出库类型',
+  `type` enum('STOCK_OUT','SALE') NOT NULL COMMENT '出库类型',
   `total_amount` decimal(10,2) DEFAULT 0.00 COMMENT '总金额',
   `total_quantity` int DEFAULT 0 COMMENT '总数量',
   `order_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '出库日期',
