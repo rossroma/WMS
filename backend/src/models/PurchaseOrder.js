@@ -13,18 +13,6 @@ const PurchaseOrderStatusDisplay = {
     [PurchaseOrderStatus.CONFIRMED]: '已确认'
 };
 
-const PaymentStatus = {
-    UNPAID: 'UNPAID',           // 未付款
-    PARTIALLY_PAID: 'PARTIALLY_PAID', // 部分付款
-    PAID: 'PAID'               // 已付款
-};
-
-const PaymentStatusDisplay = {
-    [PaymentStatus.UNPAID]: '未付款',
-    [PaymentStatus.PARTIALLY_PAID]: '部分付款',
-    [PaymentStatus.PAID]: '已付款'
-};
-
 const PurchaseOrder = sequelize.define('PurchaseOrder', {
     id: {
         type: DataTypes.INTEGER,
@@ -61,12 +49,6 @@ const PurchaseOrder = sequelize.define('PurchaseOrder', {
         type: DataTypes.ENUM(Object.values(PurchaseOrderStatus)),
         allowNull: false,
         defaultValue: PurchaseOrderStatus.PENDING
-    },
-    paymentStatus: {
-        type: DataTypes.ENUM(Object.values(PaymentStatus)),
-        allowNull: false,
-        defaultValue: PaymentStatus.UNPAID,
-        field: 'payment_status'
     },
     totalAmount: {
         type: DataTypes.DECIMAL(10, 2),
@@ -177,7 +159,5 @@ module.exports = {
     PurchaseOrder,
     PurchaseOrderItem,
     PurchaseOrderStatus,
-    PurchaseOrderStatusDisplay,
-    PaymentStatus,
-    PaymentStatusDisplay
+    PurchaseOrderStatusDisplay
 }; 

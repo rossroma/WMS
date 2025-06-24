@@ -259,7 +259,6 @@ CREATE TABLE `purchase_orders` (
   `order_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '采购日期',
   `expected_arrival_date` datetime DEFAULT NULL COMMENT '预计到货日期',
   `status` enum('PENDING','CONFIRMED') NOT NULL DEFAULT 'PENDING' COMMENT '订单状态：PENDING-未确认，CONFIRMED-已确认',
-  `payment_status` enum('UNPAID','PARTIALLY_PAID','PAID') NOT NULL DEFAULT 'UNPAID' COMMENT '付款状态',
   `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '总金额',
   `total_quantity` int NOT NULL DEFAULT 0 COMMENT '总数量',
   `payment_method` varchar(50) DEFAULT NULL COMMENT '付款方式',
@@ -340,8 +339,8 @@ INSERT INTO `logs` (`user_id`, `username`, `action_type`, `module`, `details`, `
 (1, 'admin', 'CREATE', 'PRODUCT', '创建商品：MacBook Pro', '127.0.0.1');
 
 -- 插入示例采购订单
-INSERT INTO `purchase_orders` (`order_no`, `supplier_id`, `order_date`, `expected_arrival_date`, `status`, `payment_status`, `total_amount`, `total_quantity`, `payment_method`, `operator`, `remark`) VALUES
-('PO20250617001', 1, '2025-06-17 10:00:00', '2025-06-20 10:00:00', 'PENDING', 'UNPAID', 10000.00, 10, '现金', 'admin', '测试采购订单');
+INSERT INTO `purchase_orders` (`order_no`, `supplier_id`, `order_date`, `expected_arrival_date`, `status`, `total_amount`, `total_quantity`, `payment_method`, `operator`, `remark`) VALUES
+('PO20250617001', 1, '2025-06-17 10:00:00', '2025-06-20 10:00:00', 'PENDING', 10000.00, 10, '现金', 'admin', '测试采购订单');
 
 -- 插入示例采购订单明细
 INSERT INTO `purchase_order_items` (`purchase_order_id`, `product_id`, `quantity`, `unit_price`, `total_price`) VALUES

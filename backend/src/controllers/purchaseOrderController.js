@@ -52,7 +52,6 @@ exports.createPurchaseOrder = async (req, res, next) => {
       status: 'PENDING',
       totalAmount,
       totalQuantity,
-      paymentStatus: 'UNPAID',
       paymentMethod,
       operator,
       remark

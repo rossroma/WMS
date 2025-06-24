@@ -97,13 +97,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="paymentStatus" label="付款状态" width="100">
-          <template #default="scope">
-            <el-tag :type="getPaymentStatusType(scope.row.paymentStatus)">
-              {{ getPaymentStatusText(scope.row.paymentStatus) }}
-            </el-tag>
-          </template>
-        </el-table-column>
+
         <el-table-column prop="operator" label="操作员" width="110">
           <template #default="scope">
             <UserDisplay :value="scope.row.operator" />
@@ -210,24 +204,24 @@
             value-format="YYYY-MM-DD"
             style="width: 100%"
           />
-        </el-form-item>
-        
-        <el-form-item label="付款方式" prop="paymentMethod">
-          <el-select 
-            v-model="formData.paymentMethod" 
-            placeholder="请选择付款方式"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="(text, method) in PAYMENT_METHOD"
-              :key="method"
-              :label="text"
-              :value="method"
-            />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="备注" prop="remark">
+                  </el-form-item>
+          
+          <el-form-item label="付款方式" prop="paymentMethod">
+            <el-select 
+              v-model="formData.paymentMethod" 
+              placeholder="请选择付款方式"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="(text, method) in PAYMENT_METHOD"
+                :key="method"
+                :label="text"
+                :value="method"
+              />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="备注" prop="remark">
           <el-input
             v-model="formData.remark"
             type="textarea"
@@ -341,15 +335,14 @@ import OrderItemsDialog from '@/components/OrderItemsDialog.vue'
 import UserDisplay from '@/components/UserDisplay.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import ProductSelectDialog from '@/components/ProductSelectDialog.vue'
-import { 
-  getPurchaseOrders, 
+import {
+  getPurchaseOrders,
   getPurchaseOrderItems,
   confirmPurchaseOrder,
   createPurchaseOrder,
   deletePurchaseOrder,
   PURCHASE_ORDER_STATUS,
-  PAYMENT_STATUS,
-  PAYMENT_METHOD 
+  PAYMENT_METHOD
 } from '@/api/purchase'
 import { getSupplierList } from '@/api/supplier'
 import { useUserStore } from '@/stores/user'
@@ -478,23 +471,7 @@ const getStatusText = (status) => {
   return statusMap[status] || status
 }
 
-const getPaymentStatusType = (status) => {
-  const map = {
-    [PAYMENT_STATUS.UNPAID]: 'danger',
-    [PAYMENT_STATUS.PARTIAL]: 'warning',
-    [PAYMENT_STATUS.PAID]: 'success'
-  }
-  return map[status]
-}
 
-const getPaymentStatusText = (status) => {
-  const map = {
-    [PAYMENT_STATUS.UNPAID]: '未付款',
-    [PAYMENT_STATUS.PARTIAL]: '部分付款',
-    [PAYMENT_STATUS.PAID]: '已付款'
-  }
-  return map[status]
-}
 
 // 事件处理方法
 const handleCreate = () => {
