@@ -1,7 +1,6 @@
 const Inventory = require('../models/Inventory');
 const InventoryLog = require('../models/InventoryLog');
 const Product = require('../models/Product');
-const MessageService = require('../services/messageService');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const logger = require('../services/loggerService');
@@ -193,27 +192,3 @@ exports.getInventoryLogs = async (req, res, next) => {
     next(new AppError('获取库存流水失败', 500));
   }
 };
-
-// 库存预警检查
-exports.checkInventoryAlerts = async (pusher = 'system') => {
-  try {
-    const inventories = await Inventory.findAll({
-      include: [{ 
-        model: Product,
-        where: {
-          stockAlertQuantity: {
-            [Op.gt]: 0
-          }
-        }
-      }]
-    });
-
-    for (const inventory of inventories) {
-      if (inventory.quantity < inventory.Product.stockAlertQuantity) {
-        await MessageService.createInventoryAlert(inventory, inventory.Product, pusher);
-      }
-    }
-  } catch (error) {
-    logger.error('Error checking inventory alerts:', error);
-  }
-}; 

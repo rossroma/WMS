@@ -434,35 +434,6 @@ exports.createStocktakingOrder = async (req, res, next) => {
   }
 };
 
-// 获取盘点单详情
-exports.getStocktakingOrderById = async (req, res, next) => {
-  try {
-    const order = await StocktakingOrder.findByPk(req.params.id, {
-      include: [{
-        model: StocktakingItem,
-        as: 'items',
-        include: [{
-          model: Product,
-          as: 'product'
-        }]
-      }]
-    });
-    
-    if (!order) {
-      return next(new AppError('盘点单不存在', 404));
-    }
-    
-    res.status(200).json({
-      status: 'success',
-      message: '获取盘点单详情成功',
-      data: order
-    });
-  } catch (error) {
-    logger.error('获取盘点单详情失败:', error);
-    next(new AppError('获取盘点单详情失败', 500));
-  }
-};
-
 // 删除盘点单
 exports.deleteStocktakingOrder = async (req, res, next) => {
   const transaction = await sequelize.transaction();
@@ -544,34 +515,3 @@ exports.getStocktakingItems = async (req, res, next) => {
     next(new AppError('获取盘点商品明细失败', 500));
   }
 };
-
-// 更新盘点商品的实际数量
-exports.updateStocktakingItem = async (req, res, next) => {
-  const transaction = await sequelize.transaction();
-  
-  try {
-    const { actualQuantity } = req.body;
-    
-    const item = await StocktakingItem.findByPk(req.params.itemId, { transaction });
-    if (!item) {
-      return next(new AppError('盘点商品不存在', 404));
-    }
-    
-    // 更新盘点商品
-    await item.update({
-      actualQuantity
-    }, { transaction });
-
-    await transaction.commit();
-    
-    res.status(200).json({
-      status: 'success',
-      message: '盘点商品更新成功',
-      data: item
-    });
-  } catch (error) {
-    await transaction.rollback();
-    logger.error('更新盘点商品失败:', error);
-    next(new AppError('更新盘点商品失败', 400));
-  }
-}; 
