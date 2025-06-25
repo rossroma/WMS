@@ -157,6 +157,7 @@ const authenticateToken = async (req, res, next) => {
 - 商品搜索过滤：按名称、编码、分类、供应商等条件快速查找
 - 商品导入导出：批量导入商品数据，支持Excel格式
 - 商品状态管理：启用/禁用商品，控制商品在系统中的可用性
+- **关联关系管理**：商品与采购订单、库存、出入库单的完整关联追踪
 
 ##### **4.3.2 网页截图说明**
 
@@ -545,6 +546,193 @@ const getTodayInboundQuantity = async (req, res) => {
 }
 ```
 
-#### **4.7 本章小结**
+#### **4.7 核心业务逻辑实现**
 
-本章详细介绍了基于Node.js的仓储管理系统的编码实现过程。首先明确了开发环境和前后端技术选型。接着，重点阐述了用户认证与权限管理（JWT、bcryptjs）、商品管理、出入库管理（含事务处理）、库存管理（含盘点、预警定时任务）以及数据看板（ECharts集成）等核心功能模块的具体实现思路和关键代码片段。通过这些模块的实现，系统初步具备了中小型商家仓储管理所需的核心功能。下一章将对已实现的系统进行调试与测试。
+##### **4.7.1 业务逻辑概述**
+
+为确保仓储管理系统的数据一致性和业务完整性，系统实现了严格的业务逻辑控制，包括：
+- **采购订单业务逻辑**：从创建到确认的完整流程，自动生成关联入库单
+- **盘点管理业务逻辑**：支持盘盈盘亏自动处理，生成相应出入库单
+- **出入库单业务逻辑**：完整的库存同步和流水记录机制
+- **关联关系管理**：单据间的关联追踪和删除保护机制
+
+##### **4.7.2 采购订单业务逻辑实现**
+
+**技术描述：**
+采购订单模块实现了从创建、确认到删除的完整业务流程，确保采购数据的完整性和一致性。
+
+**核心代码示例：**
+
+```javascript
+// 采购订单确认业务逻辑
+const confirmPurchaseOrder = async (req, res) => {
+  const transaction = await sequelize.transaction()
+  
+  try {
+    const { id } = req.params
+    const purchaseOrder = await PurchaseOrder.findByPk(id, {
+      include: [{ model: PurchaseOrderItem, include: [Product] }]
+    })
+
+    // 1. 更新采购订单状态
+    await purchaseOrder.update({ status: 'CONFIRMED' }, { transaction })
+
+    // 2. 自动创建采购入库单
+    const inboundOrder = await InboundOrder.create({
+      orderNo: generateOrderNo('RK'),
+      type: 'PURCHASE',
+      relatedOrderId: purchaseOrder.id, // 关联采购订单ID
+      remark: `采购订单${purchaseOrder.orderNo}自动生成`
+    }, { transaction })
+
+    // 3. 更新库存和创建流水
+    for (const item of purchaseOrder.PurchaseOrderItems) {
+      await updateInventory(item.productId, item.quantity, 'ADD', transaction)
+      await createInventoryLog({
+        productId: item.productId,
+        changeQuantity: item.quantity,
+        type: '采购入库',
+        relatedDocument: inboundOrder.orderNo,
+        operator: req.user.fullname
+      }, transaction)
+    }
+
+    await transaction.commit()
+    res.json({ message: '采购订单确认成功，已自动生成入库单' })
+  } catch (error) {
+    await transaction.rollback()
+    res.status(500).json({ message: '确认失败' })
+  }
+}
+
+// 采购订单删除保护逻辑
+const deletePurchaseOrder = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    // 检查是否存在关联入库单
+    const relatedInboundOrders = await InboundOrder.findAll({
+      where: { relatedOrderId: id }
+    })
+
+    if (relatedInboundOrders.length > 0) {
+      return res.status(400).json({
+        message: '该采购订单已生成入库单，不允许删除'
+      })
+    }
+
+    await PurchaseOrder.destroy({ where: { id } })
+    res.json({ message: '采购订单删除成功' })
+  } catch (error) {
+    res.status(500).json({ message: '删除失败' })
+  }
+}
+```
+
+##### **4.7.3 盘点管理业务逻辑实现**
+
+**技术描述：**
+盘点管理实现了盘盈盘亏的自动处理机制，根据实际盘点结果自动生成相应的出入库单。
+
+**核心代码示例：**
+
+```javascript
+// 盘点结果处理业务逻辑
+const processStocktakingResult = async (req, res) => {
+  const transaction = await sequelize.transaction()
+  
+  try {
+    const { id } = req.params
+    const { items } = req.body
+
+    for (const item of items) {
+      const difference = item.actualQuantity - item.systemQuantity
+
+      if (difference !== 0) {
+        const isProfit = difference > 0
+        const orderType = isProfit ? 'INBOUND' : 'OUTBOUND'
+        const docType = isProfit ? 'STOCK_IN' : 'STOCK_OUT'
+
+        // 创建盘盈入库单或盘亏出库单
+        const order = isProfit 
+          ? await InboundOrder.create({
+              orderNo: generateOrderNo('RK'),
+              type: docType,
+              relatedOrderId: id,
+              remark: `盘点单盘盈处理`
+            }, { transaction })
+          : await OutboundOrder.create({
+              orderNo: generateOrderNo('CK'),
+              type: docType,
+              relatedOrderId: id,
+              remark: `盘点单盘亏处理`
+            }, { transaction })
+
+        // 更新库存和创建流水
+        const operation = isProfit ? 'ADD' : 'SUBTRACT'
+        await updateInventory(item.productId, Math.abs(difference), operation, transaction)
+        await createInventoryLog({
+          productId: item.productId,
+          changeQuantity: difference,
+          type: isProfit ? '盘盈入库' : '盘亏出库',
+          relatedDocument: order.orderNo,
+          operator: req.user.fullname
+        }, transaction)
+      }
+    }
+
+    await transaction.commit()
+    res.json({ message: '盘点结果处理完成' })
+  } catch (error) {
+    await transaction.rollback()
+    res.status(500).json({ message: '处理失败' })
+  }
+}
+```
+
+##### **4.7.4 前端关联关系显示实现**
+
+**技术描述：**
+前端实现了关联来源的显示逻辑，根据单据的关联关系显示相应的来源标签。
+
+**核心代码示例：**
+
+```javascript
+// 关联来源显示逻辑
+export function useOrderRelation() {
+  const getInboundRelationTag = (order) => {
+    if (!order.relatedOrderId) {
+      return { text: '手动创建', type: 'info' }
+    }
+    
+    switch (order.type) {
+      case 'PURCHASE':
+        return { text: '采购单', type: 'success' }
+      case 'STOCK_IN':
+        return { text: '盘点单', type: 'warning' }
+      default:
+        return { text: '手动创建', type: 'info' }
+    }
+  }
+
+  return { getInboundRelationTag }
+}
+```
+
+##### **4.7.5 业务逻辑总结**
+
+通过以上业务逻辑实现，系统确保了：
+
+1. **数据一致性**：所有涉及库存变动的操作都使用数据库事务
+2. **业务完整性**：采购订单确认自动生成入库单，盘点结果自动处理
+3. **关联追踪**：通过 `relatedOrderId` 字段建立单据间的关联关系
+4. **删除保护**：有关联关系的单据不允许删除，避免数据不一致
+5. **操作可逆性**：出入库单删除时自动回退/恢复库存
+
+#### **4.8 本章小结**
+
+本章详细介绍了基于Node.js的仓储管理系统的编码实现过程。首先明确了开发环境和前后端技术选型。接着，重点阐述了用户认证与权限管理（JWT、bcryptjs）、商品管理、出入库管理（含事务处理）、库存管理（含盘点、预警定时任务）、数据看板（ECharts集成）以及核心业务逻辑等功能模块的具体实现思路和关键代码片段。
+
+特别是在核心业务逻辑部分，详细介绍了采购订单、盘点管理、出入库单的完整业务流程实现，包括自动化处理机制、关联关系管理、删除保护机制等，确保了系统的数据一致性和业务完整性。
+
+通过这些模块的实现，系统初步具备了中小型商家仓储管理所需的核心功能，为后续的测试和部署奠定了坚实的基础。

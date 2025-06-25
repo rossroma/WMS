@@ -143,6 +143,7 @@
 | order_date | DATE | NOT NULL | 入库日期 |
 | operator | STRING(100) | NOT NULL | 操作员 |
 | remark | STRING(500) | - | 备注 |
+| **related_order_id** | INTEGER | - | **关联订单ID（盘盈入库关联盘点单ID，采购入库关联采购单ID）** |
 | createdAt | DATE | AUTO | 创建时间 |
 | updatedAt | DATE | AUTO | 更新时间 |
 
@@ -151,6 +152,7 @@
 - UNIQUE (order_no)
 - INDEX (type)
 - INDEX (order_date)
+- **INDEX (related_order_id)**
 
 ### OutboundOrders 出库单表
 | 字段名 | 类型 | 约束 | 说明 |
@@ -163,6 +165,7 @@
 | order_date | DATE | NOT NULL | 出库日期 |
 | operator | STRING(100) | NOT NULL | 操作员 |
 | remark | STRING(500) | - | 备注 |
+| **related_order_id** | INTEGER | - | **关联订单ID（盘亏出库关联盘点单ID）** |
 | createdAt | DATE | AUTO | 创建时间 |
 | updatedAt | DATE | AUTO | 更新时间 |
 
@@ -171,6 +174,7 @@
 - UNIQUE (order_no)
 - INDEX (type)
 - INDEX (order_date)
+- **INDEX (related_order_id)**
 
 ### OrderItems 订单项表
 | 字段名 | 类型 | 约束 | 默认值 | 说明 |
@@ -364,4 +368,130 @@
 4. 枚举类型限制数据取值范围
 5. 验证规则确保数据质量
 
-这个WMS系统数据库设计支持完整的仓库管理功能，包括用户管理、商品管理、库存管理、入库出库、盘点以及系统日志等核心业务。 
+这个WMS系统数据库设计支持完整的仓库管理功能，包括用户管理、商品管理、库存管理、入库出库、盘点以及系统日志等核心业务。
+
+---
+
+## 核心业务逻辑说明
+
+### 1. 采购订单业务流程
+
+#### 创建采购订单
+1. **创建采购订单记录** → `purchase_orders` 表
+2. **自动生成采购明细** → `purchase_order_items` 表
+3. **状态设置为** `PENDING`（未确认）
+
+#### 确认采购订单
+1. **更新订单状态** → `CONFIRMED`（已确认）
+2. **自动创建采购入库单** → `inbound_orders` 表，设置 `type = 'PURCHASE'`
+3. **设置关联关系** → `inbound_orders.related_order_id = purchase_order.id`
+4. **生成入库明细** → `order_items` 表，`orderType = 'INBOUND'`
+5. **更新库存** → `inventories` 表增加库存数量
+6. **创建库存流水** → `inventory_logs` 表记录变动
+
+#### 删除采购订单
+1. **检查关联入库单** → 查询 `inbound_orders` 表中 `related_order_id` 字段
+2. **如存在关联入库单** → 禁止删除，返回错误信息
+3. **如无关联关系** → 允许删除采购订单及其明细
+
+### 2. 盘点单业务流程
+
+#### 创建盘点单
+1. **创建盘点单记录** → `stocktaking_orders` 表
+2. **自动生成盘点明细** → `stocktaking_items` 表
+3. **记录系统库存快照** → `system_quantity` 字段记录当前库存
+4. **实际盘点数量** → `actual_quantity` 字段初始为空，待录入
+
+#### 盘点结果处理
+1. **录入实际盘点数量** → 更新 `actual_quantity` 字段
+2. **计算盘盈盘亏** → `actual_quantity - system_quantity`
+3. **盘盈处理**：
+   - 创建盘盈入库单 → `inbound_orders` 表，`type = 'STOCK_IN'`
+   - 设置关联关系 → `related_order_id = stocktaking_order.id`
+   - 增加库存数量 → `inventories` 表
+   - 创建库存流水 → `inventory_logs` 表
+4. **盘亏处理**：
+   - 创建盘亏出库单 → `outbound_orders` 表，`type = 'STOCK_OUT'`
+   - 设置关联关系 → `related_order_id = stocktaking_order.id`
+   - 减少库存数量 → `inventories` 表
+   - 创建库存流水 → `inventory_logs` 表
+
+#### 删除盘点单
+1. **检查关联出入库单** → 查询相关表中的 `related_order_id` 字段
+2. **如存在关联单据** → 禁止删除，返回错误信息
+3. **如无关联关系** → 允许删除盘点单及其明细
+
+### 3. 入库单业务流程
+
+#### 创建入库单
+1. **创建入库单记录** → `inbound_orders` 表
+2. **生成订单明细** → `order_items` 表，`orderType = 'INBOUND'`
+3. **更新库存数量** → `inventories` 表增加对应数量
+4. **创建库存流水** → `inventory_logs` 表记录入库操作
+
+#### 删除入库单
+1. **删除订单明细** → `order_items` 表
+2. **回退库存数量** → `inventories` 表减少对应数量
+3. **删除库存流水** → `inventory_logs` 表删除相关记录
+4. **删除入库单** → `inbound_orders` 表
+
+### 4. 出库单业务流程
+
+#### 创建出库单
+1. **创建出库单记录** → `outbound_orders` 表
+2. **生成订单明细** → `order_items` 表，`orderType = 'OUTBOUND'`
+3. **更新库存数量** → `inventories` 表减少对应数量
+4. **创建库存流水** → `inventory_logs` 表记录出库操作
+
+#### 删除出库单
+1. **删除订单明细** → `order_items` 表
+2. **恢复库存数量** → `inventories` 表增加对应数量
+3. **删除库存流水** → `inventory_logs` 表删除相关记录
+4. **删除出库单** → `outbound_orders` 表
+
+### 5. 关联关系管理
+
+#### 入库单关联来源
+- **采购入库** → `related_order_id` 关联采购订单ID
+- **盘盈入库** → `related_order_id` 关联盘点单ID
+- **手动入库** → `related_order_id` 为空
+
+#### 出库单关联来源
+- **盘亏出库** → `related_order_id` 关联盘点单ID
+- **手动出库** → `related_order_id` 为空
+
+#### 前端显示逻辑
+- 根据 `related_order_id` 和 `type` 字段判断关联来源
+- 显示相应的关联来源标签（采购单、盘点单、手动创建）
+
+### 6. 数据一致性保证
+
+#### 删除保护机制
+- 采购订单：检查关联入库单
+- 盘点单：检查关联出入库单
+- 商品：检查库存记录和订单明细
+- 供应商：检查关联商品和采购订单
+
+#### 事务处理
+- 所有涉及多表操作的业务都使用数据库事务
+- 确保操作的原子性和一致性
+- 失败时自动回滚所有相关操作
+
+#### 库存同步
+- 所有库存变动都通过统一的库存服务处理
+- 确保库存数量的准确性和一致性
+- 实时更新库存流水记录
+
+---
+
+## 业务规则总结
+
+1. **采购单逻辑**：新建采购单→创建采购明细；采购单确认后→创建采购入库单；采购单删除前检查关联入库单，如有则不允许删除
+
+2. **盘点单逻辑**：新建盘点单→创建盘点明细；盘盈→创建盘盈入库单；盘亏→创建盘亏出库单；盘点单删除前检查关联出入库单，如有则不允许删除
+
+3. **入库单逻辑**：新建入库单→创建明细→更新库存→创建库存流水；删除入库单→删除明细→回退库存→删除库存流水
+
+4. **出库单逻辑**：新建出库单→创建明细→更新库存→创建库存流水；删除出库单→删除明细→恢复库存→删除库存流水
+
+这些业务规则确保了系统数据的完整性和一致性，为仓库管理提供了可靠的数据基础。 

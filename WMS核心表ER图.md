@@ -345,4 +345,96 @@ erDiagram
 - 枚举类型限制数据取值范围
 - 非空约束保证必要数据完整
 
-这些 ER 图展示了 WMS 系统的核心数据结构和表之间的关联关系，为系统开发和维护提供了清晰的数据模型参考。 
+这些 ER 图展示了 WMS 系统的核心数据结构和表之间的关联关系，为系统开发和维护提供了清晰的数据模型参考。
+
+## 7. 业务逻辑关联关系说明
+
+### 关联字段设计
+
+#### InboundOrders 入库单关联
+- **related_order_id**: 关联订单ID
+  - 采购入库：关联采购订单ID (purchase_orders.id)
+  - 盘盈入库：关联盘点单ID (stocktaking_orders.id)
+  - 手动入库：值为 NULL
+
+#### OutboundOrders 出库单关联
+- **related_order_id**: 关联订单ID
+  - 盘亏出库：关联盘点单ID (stocktaking_orders.id)
+  - 手动出库：值为 NULL
+
+### 业务流程关联图
+
+```mermaid
+flowchart TD
+    A[采购订单 PurchaseOrders] -->|确认后自动生成| B[采购入库单 InboundOrders]
+    C[盘点单 StocktakingOrders] -->|盘盈自动生成| D[盘盈入库单 InboundOrders]
+    C -->|盘亏自动生成| E[盘亏出库单 OutboundOrders]
+    
+    B -->|设置关联| F[related_order_id = purchase_order.id]
+    D -->|设置关联| G[related_order_id = stocktaking_order.id]
+    E -->|设置关联| H[related_order_id = stocktaking_order.id]
+    
+    A -.->|删除检查| I{是否有关联入库单?}
+    C -.->|删除检查| J{是否有关联出入库单?}
+    
+    I -->|有| K[禁止删除]
+    I -->|无| L[允许删除]
+    J -->|有| M[禁止删除]
+    J -->|无| N[允许删除]
+    
+    style A fill:#e1f5fe
+    style C fill:#f3e5f5
+    style B fill:#e8f5e8
+    style D fill:#e8f5e8
+    style E fill:#fff3e0
+    style K fill:#ffebee
+    style M fill:#ffebee
+```
+
+### 删除保护机制
+
+#### 采购订单删除保护
+```sql
+-- 检查采购订单是否有关联入库单
+SELECT COUNT(*) FROM inbound_orders 
+WHERE related_order_id = ? AND type = 'PURCHASE'
+```
+
+#### 盘点单删除保护
+```sql
+-- 检查盘点单是否有关联出入库单
+SELECT 
+  (SELECT COUNT(*) FROM inbound_orders WHERE related_order_id = ? AND type = 'STOCK_IN') +
+  (SELECT COUNT(*) FROM outbound_orders WHERE related_order_id = ? AND type = 'STOCK_OUT') 
+  AS total_related
+```
+
+### 前端显示逻辑
+
+#### 入库单关联来源显示
+- **采购入库** (type='PURCHASE' && related_order_id): 显示"采购单"标签
+- **盘盈入库** (type='STOCK_IN' && related_order_id): 显示"盘点单"标签  
+- **手动入库** (related_order_id IS NULL): 显示"手动创建"标签
+
+#### 出库单关联来源显示
+- **盘亏出库** (type='STOCK_OUT' && related_order_id): 显示"盘点单"标签
+- **手动出库** (related_order_id IS NULL): 显示"手动创建"标签
+
+### 业务规则总结
+
+1. **采购单逻辑**：
+   - 新建采购单 → 创建采购明细
+   - 采购单确认 → 创建采购入库单 (设置 related_order_id)
+   - 删除采购单 → 检查关联入库单，如有则禁止删除
+
+2. **盘点单逻辑**：
+   - 新建盘点单 → 创建盘点明细
+   - 盘盈处理 → 创建盘盈入库单 (设置 related_order_id)
+   - 盘亏处理 → 创建盘亏出库单 (设置 related_order_id)
+   - 删除盘点单 → 检查关联出入库单，如有则禁止删除
+
+3. **出入库单逻辑**：
+   - 新建出入库单 → 创建明细 → 更新库存 → 创建库存流水
+   - 删除出入库单 → 删除明细 → 回退库存 → 删除库存流水
+
+这些关联关系和业务规则确保了系统数据的完整性和一致性，为仓库管理提供了可靠的数据基础。 
