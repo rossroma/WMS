@@ -3,6 +3,7 @@ const User = require('../models/User');
 const { AppError } = require('../middleware/errorHandler');
 const { createLog } = require('../services/logService');
 const { LOG_MODULE, LOG_ACTION_TYPE, LOG_DETAILS } = require('../constants/logConstants');
+const logger = require('../services/loggerService');
 
 // 生成 JWT token
 const generateToken = (user) => {
@@ -73,7 +74,7 @@ exports.login = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('登录失败:', error);
+    logger.error('登录失败:', error);
     next(new AppError('登录失败', 500));
   }
 };
@@ -101,7 +102,7 @@ exports.logout = async (req, res, next) => {
       data: null
     });
   } catch (error) {
-    console.error('登出失败:', error);
+    logger.error('登出失败:', error);
     next(new AppError('登出失败', 500));
   }
 };
@@ -127,7 +128,7 @@ exports.getCurrentUser = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取用户信息失败:', error);
+    logger.error('获取用户信息失败:', error);
     next(new AppError('获取用户信息失败', 500));
   }
 };

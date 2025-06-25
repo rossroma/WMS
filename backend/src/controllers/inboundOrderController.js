@@ -5,6 +5,7 @@ const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const { createInboundOrderService, deleteInboundOrderService } = require('../services/inboundOrderService');
+const logger = require('../services/loggerService');
 
 // 创建入库单
 exports.createInboundOrder = async (req, res, next) => {
@@ -34,7 +35,7 @@ exports.createInboundOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('创建入库单失败:', error);
+    logger.error('创建入库单失败:', error);
     next(new AppError(error.message || '创建入库单失败', 400));
   }
 };
@@ -84,7 +85,7 @@ exports.getAllInboundOrders = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取入库单列表失败:', error);
+    logger.error('获取入库单列表失败:', error);
     next(new AppError('获取入库单列表失败', 500));
   }
 };
@@ -115,7 +116,7 @@ exports.getInboundOrderById = async (req, res, next) => {
       data: order
     });
   } catch (error) {
-    console.error('获取入库单失败:', error);
+    logger.error('获取入库单失败:', error);
     next(new AppError('获取入库单失败', 500));
   }
 };
@@ -151,7 +152,7 @@ exports.updateInboundOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('更新入库单失败:', error);
+    logger.error('更新入库单失败:', error);
     next(new AppError('更新入库单失败', 400));
   }
 };
@@ -172,7 +173,7 @@ exports.deleteInboundOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('删除入库单失败:', error);
+    logger.error('删除入库单失败:', error);
     next(new AppError(error.message || '删除入库单失败', 500));
   }
 };
@@ -226,7 +227,7 @@ exports.getInboundOrderItems = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取入库单关联商品失败:', error);
+    logger.error('获取入库单关联商品失败:', error);
     next(new AppError('获取入库单关联商品失败', 500));
   }
 }; 

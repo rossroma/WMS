@@ -14,6 +14,7 @@ const { Op } = require('sequelize');
 const { generateStocktakingOrderNo, generateInboundOrderNo, generateOutboundOrderNo } = require('../utils/orderUtils');
 const { createLog } = require('../services/logService');
 const { LOG_MODULE, LOG_ACTION_TYPE } = require('../constants/logConstants');
+const logger = require('../services/loggerService');
 
 // 更新库存数量并生成库存日志
 const updateInventoryAndLog = async (productId, quantityChange, type, relatedDocument, operator, transaction) => {
@@ -49,7 +50,7 @@ const updateInventoryAndLog = async (productId, quantityChange, type, relatedDoc
 
     return inventory;
   } catch (error) {
-    console.error('更新库存失败:', error);
+    logger.error('更新库存失败:', error);
     throw error;
   }
 };
@@ -120,7 +121,7 @@ exports.getStocktakingOrders = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取盘点单列表失败:', error);
+    logger.error('获取盘点单列表失败:', error);
     next(new AppError('获取盘点单列表失败', 500));
   }
 };
@@ -277,7 +278,7 @@ exports.createStocktakingOrder = async (req, res, next) => {
             details: `系统自动创建盘盈入库单 ${inboundOrderNo} (关联盘点单: ${orderNo})`
           });
         } catch (logError) {
-          console.error('记录盘盈入库单创建日志失败:', logError);
+          logger.error('记录盘盈入库单创建日志失败:', logError);
         }
       }
       
@@ -331,7 +332,7 @@ exports.createStocktakingOrder = async (req, res, next) => {
             details: `系统自动创建盘亏出库单 ${outboundOrderNo} (关联盘点单: ${orderNo})`
           });
         } catch (logError) {
-          console.error('记录盘亏出库单创建日志失败:', logError);
+          logger.error('记录盘亏出库单创建日志失败:', logError);
         }
       }
     }
@@ -364,7 +365,7 @@ exports.createStocktakingOrder = async (req, res, next) => {
         details: `创建盘点单 ${orderNo} 成功，包含 ${items.length} 个品项。`
       });
     } catch (logError) {
-      console.error('记录盘点单创建日志失败:', logError);
+      logger.error('记录盘点单创建日志失败:', logError);
       // 日志记录失败不应影响主流程响应
     }
 
@@ -380,7 +381,7 @@ exports.createStocktakingOrder = async (req, res, next) => {
         await MessageService.createStockOutMessage(item.stocktakingItem, item.product, operator, outboundOrderNo);
       }
     } catch (messageError) {
-      console.error('创建消息通知失败:', messageError);
+      logger.error('创建消息通知失败:', messageError);
       // 消息创建失败不影响主流程
     }
 
@@ -428,7 +429,7 @@ exports.createStocktakingOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('创建盘点单失败:', error);
+    logger.error('创建盘点单失败:', error);
     next(new AppError(error.message || '创建盘点单失败', 400));
   }
 };
@@ -457,7 +458,7 @@ exports.getStocktakingOrderById = async (req, res, next) => {
       data: order
     });
   } catch (error) {
-    console.error('获取盘点单详情失败:', error);
+    logger.error('获取盘点单详情失败:', error);
     next(new AppError('获取盘点单详情失败', 500));
   }
 };
@@ -484,7 +485,7 @@ exports.deleteStocktakingOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('删除盘点单失败:', error);
+    logger.error('删除盘点单失败:', error);
     next(new AppError('删除盘点单失败', 500));
   }
 };
@@ -539,7 +540,7 @@ exports.getStocktakingItems = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取盘点商品明细失败:', error);
+    logger.error('获取盘点商品明细失败:', error);
     next(new AppError('获取盘点商品明细失败', 500));
   }
 };
@@ -570,7 +571,7 @@ exports.updateStocktakingItem = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('更新盘点商品失败:', error);
+    logger.error('更新盘点商品失败:', error);
     next(new AppError('更新盘点商品失败', 400));
   }
 }; 

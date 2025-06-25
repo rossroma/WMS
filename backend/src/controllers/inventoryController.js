@@ -4,6 +4,7 @@ const Product = require('../models/Product');
 const MessageService = require('../services/messageService');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
+const logger = require('../services/loggerService');
 
 // 库存查询
 exports.getInventory = async (req, res, next) => {
@@ -102,7 +103,7 @@ exports.getInventory = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取库存信息失败:', error);
+    logger.error('获取库存信息失败:', error);
     next(new AppError('获取库存信息失败', 500));
   }
 };
@@ -188,7 +189,7 @@ exports.getInventoryLogs = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取库存流水失败:', error);
+    logger.error('获取库存流水失败:', error);
     next(new AppError('获取库存流水失败', 500));
   }
 };
@@ -213,6 +214,6 @@ exports.checkInventoryAlerts = async (pusher = 'system') => {
       }
     }
   } catch (error) {
-    console.error('Error checking inventory alerts:', error);
+    logger.error('Error checking inventory alerts:', error);
   }
 }; 

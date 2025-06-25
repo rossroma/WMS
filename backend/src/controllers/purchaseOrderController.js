@@ -7,6 +7,7 @@ const { generatePurchaseOrderNo } = require('../utils/orderUtils');
 const Supplier = require('../models/Supplier');
 const { InboundOrder, InboundType } = require('../models/InboundOrder');
 const { createInboundOrderService, deleteInboundOrderService } = require('../services/inboundOrderService');
+const logger = require('../services/loggerService');
 
 // 创建采购订单
 exports.createPurchaseOrder = async (req, res, next) => {
@@ -80,8 +81,8 @@ exports.createPurchaseOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('创建采购订单失败:', error);
-    next(new AppError('创建采购订单失败', 400));
+    logger.error('创建采购订单失败:', error);
+    next(new AppError('创建采购订单失败', 500));
   }
 };
 
@@ -161,8 +162,8 @@ exports.confirmPurchaseOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('确认采购订单失败:', error);
-    next(new AppError('确认采购订单失败', 400));
+    logger.error('确认采购订单失败:', error);
+    next(new AppError('确认采购订单失败', 500));
   }
 };
 
@@ -230,8 +231,8 @@ exports.deletePurchaseOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('删除采购订单失败:', error);
-    next(new AppError('删除采购订单失败', 400));
+    logger.error('删除采购订单失败:', error);
+    next(new AppError('删除采购订单失败', 500));
   }
 };
 
@@ -297,8 +298,8 @@ exports.getPurchaseOrders = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取采购订单列表失败:', error);
-    next(new AppError(error.message, 500));
+    logger.error('获取采购订单列表失败:', error);
+    next(new AppError('获取采购订单列表失败', 500));
   }
 };
 
@@ -349,7 +350,7 @@ exports.getPurchaseOrderItems = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取采购订单商品明细失败:', error);
+    logger.error('获取采购订单商品明细失败:', error);
     next(new AppError('获取采购订单商品明细失败', 500));
   }
 }; 

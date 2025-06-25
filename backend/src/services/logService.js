@@ -1,4 +1,5 @@
 const Log = require('../models/Log');
+const logger = require('./loggerService');
 
 /**
  * 创建日志记录
@@ -21,7 +22,7 @@ async function createLog(logData) {
       ipAddress: logData.ipAddress,
     });
   } catch (error) {
-    console.error('Failed to create log:', error);
+    logger.error('Failed to create log:', error);
     // 根据实际需求，这里可以抛出错误或进行其他处理
   }
 }

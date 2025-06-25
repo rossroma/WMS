@@ -1,6 +1,7 @@
 const Supplier = require('../models/Supplier');
 const { Op } = require('sequelize');
 const { AppError } = require('../middleware/errorHandler');
+const logger = require('../services/loggerService');
 
 // 创建供应商
 exports.createSupplier = async (req, res, next) => {
@@ -12,7 +13,7 @@ exports.createSupplier = async (req, res, next) => {
       data: supplier
     });
   } catch (error) {
-    console.error('创建供应商失败:', error);
+    logger.error('创建供应商失败:', error);
     next(new AppError('创建供应商失败', 400));
   }
 };
@@ -68,7 +69,7 @@ exports.getAllSuppliers = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取供应商列表失败:', error);
+    logger.error('获取供应商列表失败:', error);
     next(new AppError('获取供应商列表失败', 500));
   }
 };
@@ -87,7 +88,7 @@ exports.getSupplierById = async (req, res, next) => {
       data: supplier
     });
   } catch (error) {
-    console.error('获取供应商失败:', error);
+    logger.error('获取供应商失败:', error);
     next(new AppError('获取供应商失败', 500));
   }
 };
@@ -107,7 +108,7 @@ exports.updateSupplier = async (req, res, next) => {
       data: supplier
     });
   } catch (error) {
-    console.error('更新供应商失败:', error);
+    logger.error('更新供应商失败:', error);
     next(new AppError('更新供应商失败', 400));
   }
 };
@@ -126,7 +127,7 @@ exports.deleteSupplier = async (req, res, next) => {
       message: '供应商删除成功'
     });
   } catch (error) {
-    console.error('删除供应商失败:', error);
+    logger.error('删除供应商失败:', error);
     next(new AppError('删除供应商失败', 500));
   }
 }; 

@@ -3,6 +3,7 @@ const Supplier = require('../models/Supplier');
 const Category = require('../models/Category');
 const { Op } = require('sequelize');
 const { AppError } = require('../middleware/errorHandler');
+const logger = require('../services/loggerService');
 
 // 创建商品
 exports.createProduct = async (req, res, next) => {
@@ -14,7 +15,7 @@ exports.createProduct = async (req, res, next) => {
       data: product
     });
   } catch (error) {
-    console.error('创建商品失败:', error);
+    logger.error('创建商品失败:', error);
     next(new AppError('创建商品失败', 400));
   }
 };
@@ -90,7 +91,7 @@ exports.getAllProducts = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取商品列表失败:', error);
+    logger.error('获取商品列表失败:', error);
     next(new AppError('获取商品列表失败', 500));
   }
 };
@@ -109,7 +110,7 @@ exports.getProductById = async (req, res, next) => {
       data: product
     });
   } catch (error) {
-    console.error('获取商品失败:', error);
+    logger.error('获取商品失败:', error);
     next(new AppError('获取商品失败', 500));
   }
 };
@@ -129,7 +130,7 @@ exports.updateProduct = async (req, res, next) => {
       data: product
     });
   } catch (error) {
-    console.error('更新商品失败:', error);
+    logger.error('更新商品失败:', error);
     next(new AppError('更新商品失败', 400));
   }
 };
@@ -148,7 +149,7 @@ exports.deleteProduct = async (req, res, next) => {
       message: '商品删除成功'
     });
   } catch (error) {
-    console.error('删除商品失败:', error);
+    logger.error('删除商品失败:', error);
     next(new AppError('删除商品失败', 500));
   }
 }; 

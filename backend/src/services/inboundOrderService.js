@@ -3,6 +3,7 @@ const { OrderItem, OrderItemType } = require('../models/OrderItem');
 const Inventory = require('../models/Inventory');
 const InventoryLog = require('../models/InventoryLog');
 const { generateInboundOrderNo } = require('../utils/orderUtils');
+const logger = require('./loggerService');
 
 // 更新库存数量并生成库存日志
 const updateInventoryAndLog = async (productId, quantityChange, type, relatedDocument, operator, transaction) => {
@@ -38,7 +39,7 @@ const updateInventoryAndLog = async (productId, quantityChange, type, relatedDoc
 
     return inventory;
   } catch (error) {
-    console.error('更新库存失败:', error);
+    logger.error('更新库存失败:', error);
     throw error;
   }
 };

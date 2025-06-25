@@ -8,6 +8,7 @@ const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const { generateOutboundOrderNo } = require('../utils/orderUtils');
+const logger = require('../services/loggerService');
 
 // 更新库存数量并生成库存日志
 const updateInventoryAndLog = async (productId, quantityChange, type, relatedDocument, operator, transaction) => {
@@ -53,7 +54,7 @@ const updateInventoryAndLog = async (productId, quantityChange, type, relatedDoc
 
     return inventory;
   } catch (error) {
-    console.error('更新库存失败:', error);
+    logger.error('更新库存失败:', error);
     throw error;
   }
 };
@@ -155,7 +156,7 @@ exports.createOutboundOrder = async (req, res, next) => {
         }
       }
     } catch (alertError) {
-      console.error('创建库存预警消息失败:', alertError);
+      logger.error('创建库存预警消息失败:', alertError);
       // 预警消息创建失败不影响主流程
     }
 
@@ -169,7 +170,7 @@ exports.createOutboundOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('创建出库单失败:', error);
+    logger.error('创建出库单失败:', error);
     next(new AppError(error.message || '创建出库单失败', 400));
   }
 };
@@ -219,7 +220,7 @@ exports.getAllOutboundOrders = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取出库单列表失败:', error);
+    logger.error('获取出库单列表失败:', error);
     next(new AppError('获取出库单列表失败', 500));
   }
 };
@@ -250,7 +251,7 @@ exports.getOutboundOrderById = async (req, res, next) => {
       data: order
     });
   } catch (error) {
-    console.error('获取出库单失败:', error);
+    logger.error('获取出库单失败:', error);
     next(new AppError('获取出库单失败', 500));
   }
 };
@@ -286,7 +287,7 @@ exports.updateOutboundOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('更新出库单失败:', error);
+    logger.error('更新出库单失败:', error);
     next(new AppError(error.message || '更新出库单失败', 400));
   }
 };
@@ -343,7 +344,7 @@ exports.deleteOutboundOrder = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('删除出库单失败:', error);
+    logger.error('删除出库单失败:', error);
     next(new AppError('删除出库单失败', 500));
   }
 };
@@ -397,7 +398,7 @@ exports.getOutboundOrderItems = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('获取出库单关联商品失败:', error);
+    logger.error('获取出库单关联商品失败:', error);
     next(new AppError('获取出库单关联商品失败', 500));
   }
 }; 
