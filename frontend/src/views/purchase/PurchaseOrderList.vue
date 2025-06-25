@@ -76,14 +76,15 @@
         </el-table-column>
         <el-table-column prop="orderDate" label="采购日期" width="120">
           <template #default="scope">
-            {{ formatDate(scope.row.orderDate) }}
+            {{ formatDateOnly(scope.row.orderDate) }}
           </template>
         </el-table-column>
         <el-table-column prop="expectedArrivalDate" label="预计到货日期" width="120">
           <template #default="scope">
-            {{ formatDate(scope.row.expectedArrivalDate) }}
+            {{ formatDateOnly(scope.row.expectedArrivalDate) }}
           </template>
         </el-table-column>
+        <el-table-column prop="paymentMethod" label="支付方式" width="100" />
         <el-table-column prop="totalAmount" label="总金额" width="120">
           <template #default="scope">
             <span class="amount">¥{{ Number(scope.row.totalAmount || 0).toFixed(2) }}</span>
@@ -338,7 +339,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
-import { formatDate, formatDateTime } from '@/utils/date'
+import { formatDateOnly, formatDateTime } from '@/utils/date'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import OrderItemsDialog from '@/components/OrderItemsDialog.vue'
 import UserDisplay from '@/components/UserDisplay.vue'

@@ -42,9 +42,9 @@
       >
         <el-table-column prop="name" label="供应商名称" min-width="150" />
         <el-table-column prop="contactPerson" label="联系人" width="100" />
-        <el-table-column prop="phone" label="联系电话" width="120" />
+        <el-table-column prop="phone" label="联系电话" width="150" />
         <el-table-column prop="email" label="邮箱" width="180" />
-        <el-table-column prop="address" label="地址" min-width="200" />
+        <el-table-column prop="address" label="地址" width="250" />
         <el-table-column prop="creditRating" label="信用评级" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getCreditRatingType(row.creditRating)">
@@ -52,7 +52,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="paymentMethod" label="支付方式" width="120" />
+        <el-table-column prop="paymentMethod" label="支付方式" width="120">
+          <template #default="{ row }">
+            {{ getPaymentMethodText(row.paymentMethod) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="manager" label="负责人" width="110">
           <template #default="{ row }">
             {{ getUserNameById(row.manager) }}
@@ -124,12 +128,12 @@
         
         <el-form-item label="支付方式" prop="paymentMethod">
           <el-select v-model="formData.paymentMethod" placeholder="请选择支付方式">
-            <el-option label="现金" value="cash" />
-            <el-option label="银行转账" value="bank_transfer" />
-            <el-option label="支票" value="check" />
-            <el-option label="信用证" value="letter_of_credit" />
-            <el-option label="月结" value="monthly_settlement" />
-            <el-option label="季结" value="quarterly_settlement" />
+            <el-option
+              v-for="(text, method) in PAYMENT_METHOD"
+              :key="method"
+              :label="text"
+              :value="method"
+            />
           </el-select>
         </el-form-item>
         
@@ -156,6 +160,7 @@ import BaseDialog from '@/components/BaseDialog.vue'
 import ListPageLayout from '@/components/ListPageLayout.vue'
 import { formatDateTime } from '@/utils/date'
 import { useUsers } from '@/composables/useUsers'
+import { PAYMENT_METHOD } from '@/api/purchase'
 
 // 用户store
 const userStore = useUserStore()
@@ -239,6 +244,11 @@ const getCreditRatingType = (rating) => {
   if (rating >= 3) return 'warning'
   if (rating >= 2) return 'info'
   return 'danger'
+}
+
+// 支付方式相关方法
+const getPaymentMethodText = (paymentMethod) => {
+  return PAYMENT_METHOD[paymentMethod] || paymentMethod || '未设置'
 }
 
 // 获取供应商列表
