@@ -70,6 +70,20 @@ exports.getAllInboundOrders = async (req, res, next) => {
 
     const { count, rows } = await InboundOrder.findAndCountAll({
       where: whereClause,
+      include: [
+        {
+          model: require('../models/PurchaseOrder').PurchaseOrder,
+          as: 'relatedPurchaseOrder',
+          attributes: ['id', 'orderNo'],
+          required: false
+        },
+        {
+          model: require('../models/StocktakingOrder').StocktakingOrder,
+          as: 'relatedStocktakingOrder',
+          attributes: ['id', 'orderNo'],
+          required: false
+        }
+      ],
       order: [['createdAt', 'DESC']],
       offset,
       limit

@@ -371,15 +371,23 @@ const handleDetail = (row) => {
 
 // 删除盘点单
 const handleDelete = (row) => {
-  ElMessageBox.confirm('确认要删除该盘点单吗？删除后不可恢复！', '提示', {
-    type: 'warning'
-  }).then(async() => {
+  ElMessageBox.confirm(
+    '确认要删除该盘点单吗？注意：如果该盘点单已生成入库单或出库单，需要先删除相关单据才能删除此盘点单。', 
+    '删除确认', 
+    {
+      type: 'warning',
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+      confirmButtonClass: 'el-button--danger'
+    }
+  ).then(async() => {
     try {
       await deleteStocktaking(row.id)
       ElMessage.success('删除成功')
       getList()
     } catch (error) {
       console.error('删除盘点单失败:', error)
+      // 错误信息会自动显示后端返回的详细信息
     }
   })
 }

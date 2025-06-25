@@ -75,6 +75,14 @@ exports.getAllOutboundOrders = async (req, res, next) => {
 
     const { count, rows } = await OutboundOrder.findAndCountAll({
       where: whereClause,
+      include: [
+        {
+          model: require('../models/StocktakingOrder').StocktakingOrder,
+          as: 'relatedStocktakingOrder',
+          attributes: ['id', 'orderNo'],
+          required: false
+        }
+      ],
       order: [['createdAt', 'DESC']],
       offset,
       limit

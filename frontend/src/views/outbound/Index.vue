@@ -76,7 +76,18 @@
             ¥{{ Number(row.totalAmount || 0).toFixed(2) }}
           </template>
         </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="220" />
+        <el-table-column label="关联来源" width="150">
+          <template #default="{ row }">
+            <span v-if="row.relatedStocktakingOrder" class="related-order">
+              <el-tag type="warning" size="small">盘点单</el-tag>
+              <br/>{{ row.relatedStocktakingOrder.orderNo }}
+            </span>
+            <span v-else class="manual-entry">
+              <el-tag type="success" size="small">手动创建</el-tag>
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="remark" label="备注" min-width="180" />
         <el-table-column prop="createdAt" label="创建时间" width="160">
           <template #default="{ row }">
             {{ formatDateTime(row.createdAt) }}
@@ -654,5 +665,18 @@ onMounted(() => {
       color: #409eff;
     }
   }
+}
+
+.related-order {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.manual-entry {
+  display: flex;
+  justify-content: center;
 }
 </style> 
