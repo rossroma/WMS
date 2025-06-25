@@ -148,6 +148,39 @@ Product.hasMany(PurchaseOrderItem, {
   as: 'purchaseOrderItems'
 });
 
+// 入库单关联订单关系（可选关联）
+// 入库单 ↔ 采购单: 多对一关系（采购入库时）
+InboundOrder.belongsTo(PurchaseOrder, {
+  foreignKey: 'relatedOrderId',
+  constraints: false, // 不强制约束，因为可能关联不同类型的订单
+  as: 'relatedPurchaseOrder'
+});
+PurchaseOrder.hasMany(InboundOrder, {
+  foreignKey: 'relatedOrderId',
+  constraints: false,
+  as: 'relatedInboundOrders'
+});
+
+// 入库单 ↔ 盘点单: 多对一关系（盘盈入库时）
+InboundOrder.belongsTo(StocktakingOrder, {
+  foreignKey: 'relatedOrderId',
+  constraints: false, // 不强制约束，因为可能关联不同类型的订单
+  as: 'relatedStocktakingOrder'
+});
+StocktakingOrder.hasMany(InboundOrder, {
+  foreignKey: 'relatedOrderId',
+  constraints: false,
+  as: 'relatedInboundOrders'
+});
+
+// 出库单关联订单关系（可选关联）
+// 出库单 ↔ 盘点单: 多对一关系（盘亏出库时）
+OutboundOrder.belongsTo(StocktakingOrder, {
+  foreignKey: 'relatedOrderId',
+  constraints: false, // 不强制约束，因为可能关联不同类型的订单
+  as: 'relatedStocktakingOrder'
+});
+
 module.exports = {
   Product,
   Inventory,

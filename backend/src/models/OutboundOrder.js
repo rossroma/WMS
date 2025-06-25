@@ -59,6 +59,12 @@ const OutboundOrder = sequelize.define('OutboundOrder', {
     type: DataTypes.STRING(500),
     allowNull: true,
     comment: '备注'
+  },
+  relatedOrderId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'related_order_id',
+    comment: '关联订单ID（盘亏出库关联盘点单ID）'
   }
 }, {
   indexes: [

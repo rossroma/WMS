@@ -61,11 +61,12 @@ const createInventoryLog = async (orderItemId, quantityChange, type, relatedDocu
  * @param {Array} params.items - 商品明细
  * @param {Date} params.orderDate - 入库日期
  * @param {string} params.orderNo - 入库单号（可选，不传则自动生成）
+ * @param {number} params.relatedOrderId - 关联订单ID（可选，盘盈入库关联盘点单ID，采购入库关联采购单ID）
  * @param {Object} transaction - 数据库事务
  * @returns {Object} 创建的入库单和明细
  */
 const createInboundOrderService = async (params, transaction) => {
-  const { type, operator, remark, items, orderDate, orderNo } = params;
+  const { type, operator, remark, items, orderDate, orderNo, relatedOrderId } = params;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     throw new Error('入库商品明细不能为空');
@@ -91,7 +92,8 @@ const createInboundOrderService = async (params, transaction) => {
     totalQuantity,
     operator,
     remark,
-    orderDate: orderDate ? new Date(orderDate) : new Date()
+    orderDate: orderDate ? new Date(orderDate) : new Date(),
+    relatedOrderId: relatedOrderId || null
   }, { transaction });
 
   // 创建商品明细

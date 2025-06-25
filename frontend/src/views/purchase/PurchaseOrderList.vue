@@ -542,7 +542,11 @@ const handleConfirm = async(order) => {
 
 const handleDelete = async(order) => {
   try {
-    await ElMessageBox.confirm(`确认要删除采购订单 ${order.orderNo} 吗？${order.status === 'CONFIRMED' ? '该操作会同时删除关联的入库单。' : ''}`, '删除确认', {
+    const confirmMessage = order.status === 'CONFIRMED' 
+      ? `确认要删除采购订单 ${order.orderNo} 吗？注意：如果该订单已生成入库单，需要先删除入库单才能删除此采购订单。`
+      : `确认要删除采购订单 ${order.orderNo} 吗？`
+    
+    await ElMessageBox.confirm(confirmMessage, '删除确认', {
       type: 'warning',
       confirmButtonText: '确认删除',
       cancelButtonText: '取消',

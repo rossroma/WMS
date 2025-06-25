@@ -14,13 +14,14 @@ exports.createInboundOrder = async (req, res, next) => {
   try {
     const { type, remark, operator, items, orderDate } = req.body;
     
-    // 使用入库单服务创建入库单
+    // 手动创建入库单时，不允许设置关联订单ID
     const result = await createInboundOrderService({
       type,
       operator,
       remark,
       items,
-      orderDate
+      orderDate,
+      relatedOrderId: null // 手动创建的入库单不设置关联ID
     }, transaction);
 
     await transaction.commit();
@@ -135,12 +136,13 @@ exports.updateInboundOrder = async (req, res, next) => {
 
     const { type, remark, operator, orderDate } = req.body;
 
-    // 只更新基本信息，不允许更新商品明细和汇总数据
+    // 只更新基本信息，不允许更新商品明细、汇总数据和关联订单ID
     await order.update({
       type,
       remark,
       operator,
       orderDate: orderDate ? new Date(orderDate) : order.orderDate
+      // 注意：不更新relatedOrderId字段，保持原有关联关系
     }, { transaction });
 
     await transaction.commit();

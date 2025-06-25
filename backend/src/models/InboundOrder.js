@@ -61,6 +61,12 @@ const InboundOrder = sequelize.define('InboundOrder', {
     type: DataTypes.STRING(500),
     allowNull: true,
     comment: '备注'
+  },
+  relatedOrderId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'related_order_id',
+    comment: '关联订单ID（盘盈入库关联盘点单ID，采购入库关联采购单ID）'
   }
 }, {
   indexes: [

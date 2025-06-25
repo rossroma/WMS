@@ -6,7 +6,7 @@ const sequelize = require('../config/database');
 const { generatePurchaseOrderNo } = require('../utils/orderUtils');
 const Supplier = require('../models/Supplier');
 const { InboundOrder, InboundType } = require('../models/InboundOrder');
-const { createInboundOrderService, deleteInboundOrderService } = require('../services/inboundOrderService');
+const { createInboundOrderService } = require('../services/inboundOrderService');
 const logger = require('../services/loggerService');
 
 // 创建采购订单
@@ -141,7 +141,8 @@ exports.confirmPurchaseOrder = async (req, res, next) => {
       operator: purchaseOrder.operator,
       remark: `采购订单${purchaseOrder.orderNo}自动生成的入库单`,
       items: inboundItems,
-      orderDate: new Date()
+      orderDate: new Date(),
+      relatedOrderId: purchaseOrder.id // 关联采购单ID
     }, transaction);
 
     await transaction.commit();
@@ -188,25 +189,20 @@ exports.deletePurchaseOrder = async (req, res, next) => {
       return next(new AppError('采购订单不存在', 404));
     }
 
-    let deletedInboundOrdersCount = 0;
-
-    // 如果订单已确认，需要检查并删除关联的入库单
+    // 如果订单已确认，检查是否有关联的入库单，如果有则不允许删除
     if (purchaseOrder.status === 'CONFIRMED') {
-      // 查找关联的采购入库单（通过备注字段匹配）
+      // 查找关联的采购入库单（通过关联订单ID）
       const relatedInboundOrders = await InboundOrder.findAll({
         where: {
           type: InboundType.PURCHASE,
-          remark: {
-            [Op.like]: `%${purchaseOrder.orderNo}%`
-          }
+          relatedOrderId: purchaseOrder.id
         },
         transaction
       });
 
-      // 使用入库单服务删除关联的入库单（包含库存回退和流水记录）
-      for (const inboundOrder of relatedInboundOrders) {
-        await deleteInboundOrderService(inboundOrder.id, transaction);
-        deletedInboundOrdersCount++;
+      if (relatedInboundOrders.length > 0) {
+        await transaction.rollback();
+        return next(new AppError(`采购订单已确认且存在关联的入库单，无法删除。请先删除相关入库单：${relatedInboundOrders.map(order => order.orderNo).join(', ')}`, 400));
       }
     }
 
@@ -217,10 +213,9 @@ exports.deletePurchaseOrder = async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      message: '采购订单及其关联数据删除成功，库存已回退',
+      message: '采购订单删除成功',
       data: {
-        deletedPurchaseOrderId: id,
-        deletedInboundOrdersCount
+        deletedPurchaseOrderId: id
       }
     });
   } catch (error) {

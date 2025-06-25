@@ -74,12 +74,13 @@ const createInventoryLog = async (orderItemId, quantityChange, type, relatedDocu
  * @param {Array} params.items - 商品明细
  * @param {Date} params.orderDate - 出库日期
  * @param {string} params.orderNo - 出库单号（可选，不传则自动生成）
+ * @param {number} params.relatedOrderId - 关联订单ID（可选，盘亏出库关联盘点单ID）
  * @param {Object} transaction - 数据库事务
  * @param {boolean} params.enableStockAlert - 是否启用库存预警检查（可选，默认true）
  * @returns {Object} 创建的出库单和明细
  */
 const createOutboundOrderService = async (params, transaction) => {
-  const { type, operator, remark, items, orderDate, orderNo, enableStockAlert = true } = params;
+  const { type, operator, remark, items, orderDate, orderNo, relatedOrderId, enableStockAlert = true } = params;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     throw new Error('出库商品明细不能为空');
@@ -123,7 +124,8 @@ const createOutboundOrderService = async (params, transaction) => {
     totalQuantity,
     operator,
     remark,
-    orderDate: orderDate ? new Date(orderDate) : new Date()
+    orderDate: orderDate ? new Date(orderDate) : new Date(),
+    relatedOrderId: relatedOrderId || null
   }, { transaction });
 
   // 创建商品明细

@@ -16,6 +16,9 @@ const { LOG_MODULE, LOG_ACTION_TYPE } = require('../constants/logConstants');
 const { createInboundOrderService } = require('../services/inboundOrderService');
 const { createOutboundOrderService } = require('../services/outboundOrderService');
 const logger = require('../services/loggerService');
+const { InboundOrder } = require('../models/InboundOrder');
+const { OutboundOrder } = require('../models/OutboundOrder');
+
 
 
 
@@ -208,7 +211,8 @@ exports.createStocktakingOrder = async (req, res, next) => {
             unit: item.product.unit
           })),
           orderDate: stocktakingDate ? new Date(stocktakingDate) : new Date(),
-          orderNo: inboundOrderNo
+          orderNo: inboundOrderNo,
+          relatedOrderId: stocktakingOrder.id // 关联盘点单ID
         };
         
         // 使用服务创建入库单
@@ -245,6 +249,7 @@ exports.createStocktakingOrder = async (req, res, next) => {
           })),
           orderDate: stocktakingDate ? new Date(stocktakingDate) : new Date(),
           orderNo: outboundOrderNo,
+          relatedOrderId: stocktakingOrder.id, // 关联盘点单ID
           enableStockAlert: false // 盘亏出库不需要库存预警
         };
         
@@ -374,14 +379,50 @@ exports.deleteStocktakingOrder = async (req, res, next) => {
       return next(new AppError('盘点单不存在', 404));
     }
     
-    // 删除盘点商品明细（由于设置了CASCADE，会自动删除）
+    // 检查是否存在关联的盘盈入库单
+    const relatedInboundOrders = await InboundOrder.findAll({
+      where: {
+        type: InboundType.STOCK_IN,
+        relatedOrderId: order.id
+      },
+      transaction
+    });
+
+    // 检查是否存在关联的盘亏出库单
+    const relatedOutboundOrders = await OutboundOrder.findAll({
+      where: {
+        type: OutboundType.STOCK_OUT,
+        relatedOrderId: order.id
+      },
+      transaction
+    });
+
+    // 如果存在关联的出入库单，则不允许删除
+    if (relatedInboundOrders.length > 0 || relatedOutboundOrders.length > 0) {
+      await transaction.rollback();
+      
+      const relatedOrders = [];
+      if (relatedInboundOrders.length > 0) {
+        relatedOrders.push(`入库单：${relatedInboundOrders.map(inboundOrder => inboundOrder.orderNo).join(', ')}`);
+      }
+      if (relatedOutboundOrders.length > 0) {
+        relatedOrders.push(`出库单：${relatedOutboundOrders.map(outboundOrder => outboundOrder.orderNo).join(', ')}`);
+      }
+      
+      return next(new AppError(`盘点单存在关联的出入库单，无法删除。请先删除相关单据：${relatedOrders.join('；')}`, 400));
+    }
+    
+    // 删除盘点单（关联的StocktakingItem会通过CASCADE自动删除）
     await order.destroy({ transaction });
 
     await transaction.commit();
     
     res.status(200).json({
       status: 'success',
-      message: '盘点单删除成功'
+      message: '盘点单删除成功',
+      data: {
+        deletedStocktakingOrderId: req.params.id
+      }
     });
   } catch (error) {
     await transaction.rollback();
