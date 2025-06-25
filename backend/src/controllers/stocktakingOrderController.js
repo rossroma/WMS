@@ -1,8 +1,7 @@
 const { StocktakingOrder } = require('../models/StocktakingOrder');
 const { StocktakingItem } = require('../models/StocktakingItem');
-const { InboundOrder, InboundType } = require('../models/InboundOrder');
-const { OutboundOrder, OutboundType } = require('../models/OutboundOrder');
-const { OrderItem, OrderItemType } = require('../models/OrderItem');
+const { InboundType } = require('../models/InboundOrder');
+const { OutboundType } = require('../models/OutboundOrder');
 const Product = require('../models/Product');
 const Inventory = require('../models/Inventory');
 
@@ -14,7 +13,8 @@ const { Op } = require('sequelize');
 const { generateStocktakingOrderNo, generateInboundOrderNo, generateOutboundOrderNo } = require('../utils/orderUtils');
 const { createLog } = require('../services/logService');
 const { LOG_MODULE, LOG_ACTION_TYPE } = require('../constants/logConstants');
-const { updateInventory, createInventoryLog } = require('../services/inboundOrderService');
+const { createInboundOrderService } = require('../services/inboundOrderService');
+const { createOutboundOrderService } = require('../services/outboundOrderService');
 const logger = require('../services/loggerService');
 
 
@@ -195,50 +195,25 @@ exports.createStocktakingOrder = async (req, res, next) => {
       // 创建盘盈入库单
       if (profitItems.length > 0) {
         inboundOrderNo = generateInboundOrderNo();
-        const totalQuantity = profitItems.reduce((sum, item) => sum + item.quantity, 0);
-        const totalAmount = profitItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
         
-        const inboundOrder = await InboundOrder.create({
-          orderNo: inboundOrderNo,
+        // 构建入库单参数
+        const inboundParams = {
           type: InboundType.STOCK_IN,
-          totalAmount,
-          totalQuantity,
           operator,
           remark: `盘点单${orderNo}自动生成的盘盈入库`,
-          orderDate: stocktakingDate ? new Date(stocktakingDate) : new Date()
-        }, { transaction });
+          items: profitItems.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            unit: item.product.unit
+          })),
+          orderDate: stocktakingDate ? new Date(stocktakingDate) : new Date(),
+          orderNo: inboundOrderNo
+        };
         
-        // 创建入库商品明细
-        const inboundItems = profitItems.map(item => ({
-          orderType: OrderItemType.INBOUND,
-          orderId: inboundOrder.id,
-          productId: item.productId,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          totalPrice: item.quantity * item.unitPrice,
-          unit: item.product.unit
-        }));
+        // 使用服务创建入库单
+        await createInboundOrderService(inboundParams, transaction);
         
-        const createdInboundItems = await OrderItem.bulkCreate(inboundItems, { transaction });
-        
-        // 更新库存并创建库存流水
-        for (let i = 0; i < profitItems.length; i++) {
-          const item = profitItems[i];
-          const orderItem = createdInboundItems[i];
-          
-          // 更新库存
-          await updateInventory(item.productId, item.quantity, transaction);
-          
-          // 创建库存流水
-          await createInventoryLog(
-            orderItem.id,
-            item.quantity,
-            '盘盈入库',
-            inboundOrderNo,
-            operator,
-            transaction
-          );
-        }
         try {
           await createLog({
             userId: null,
@@ -256,50 +231,26 @@ exports.createStocktakingOrder = async (req, res, next) => {
       // 创建盘亏出库单
       if (lossItems.length > 0) {
         outboundOrderNo = generateOutboundOrderNo();
-        const totalQuantity = lossItems.reduce((sum, item) => sum + item.quantity, 0);
-        const totalAmount = lossItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
         
-        const outboundOrder = await OutboundOrder.create({
-          orderNo: outboundOrderNo,
+        // 构建出库单参数
+        const outboundParams = {
           type: OutboundType.STOCK_OUT,
-          totalAmount,
-          totalQuantity,
           operator,
           remark: `盘点单${orderNo}自动生成的盘亏出库`,
-          orderDate: stocktakingDate ? new Date(stocktakingDate) : new Date()
-        }, { transaction });
+          items: lossItems.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            unit: item.product.unit
+          })),
+          orderDate: stocktakingDate ? new Date(stocktakingDate) : new Date(),
+          orderNo: outboundOrderNo,
+          enableStockAlert: false // 盘亏出库不需要库存预警
+        };
         
-        // 创建出库商品明细
-        const outboundItems = lossItems.map(item => ({
-          orderType: OrderItemType.OUTBOUND,
-          orderId: outboundOrder.id,
-          productId: item.productId,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          totalPrice: item.quantity * item.unitPrice,
-          unit: item.product.unit
-        }));
+        // 使用服务创建出库单
+        await createOutboundOrderService(outboundParams, transaction);
         
-        const createdOutboundItems = await OrderItem.bulkCreate(outboundItems, { transaction });
-        
-        // 更新库存并创建库存流水
-        for (let i = 0; i < lossItems.length; i++) {
-          const item = lossItems[i];
-          const orderItem = createdOutboundItems[i];
-          
-          // 更新库存
-          await updateInventory(item.productId, -item.quantity, transaction);
-          
-          // 创建库存流水
-          await createInventoryLog(
-            orderItem.id,
-            -item.quantity, // 出库为负数
-            '盘亏出库',
-            outboundOrderNo,
-            operator,
-            transaction
-          );
-        }
         try {
           await createLog({
             userId: null,

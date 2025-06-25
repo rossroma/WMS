@@ -1,72 +1,11 @@
 const { OutboundOrder } = require('../models/OutboundOrder');
 const { OrderItem, OrderItemType } = require('../models/OrderItem');
 const Product = require('../models/Product');
-const Inventory = require('../models/Inventory');
-const InventoryLog = require('../models/InventoryLog');
-const MessageService = require('../services/messageService');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
-const { generateOutboundOrderNo } = require('../utils/orderUtils');
-const { updateInventory } = require('../services/inboundOrderService');
+const { createOutboundOrderService, deleteOutboundOrderService, checkStockAlertAndCreateMessage } = require('../services/outboundOrderService');
 const logger = require('../services/loggerService');
-
-// 更新库存数量（出库专用，包含库存检查）
-const updateInventoryForOutbound = async (productId, quantityChange, transaction) => {
-  try {
-    // 查找库存记录
-    let inventory = await Inventory.findOne({
-      where: { productId },
-      transaction
-    });
-
-    if (!inventory) {
-      // 如果是出库操作且库存记录不存在，报错
-      if (quantityChange < 0) {
-        throw new Error(`商品ID ${productId} 的库存记录不存在，无法出库`);
-      }
-      // 如果是入库操作，创建新的库存记录
-      inventory = await Inventory.create({
-        productId,
-        quantity: Math.max(0, quantityChange)
-      }, { transaction });
-    } else {
-      // 更新现有库存
-      const newQuantity = inventory.quantity + quantityChange;
-      
-      // 检查库存是否足够（出库时）
-      if (newQuantity < 0) {
-        throw new Error(`商品ID ${productId} 库存不足，当前库存：${inventory.quantity}，需要出库：${Math.abs(quantityChange)}`);
-      }
-      
-      await inventory.update({
-        quantity: newQuantity
-      }, { transaction });
-    }
-
-    return inventory;
-  } catch (error) {
-    logger.error('更新库存失败:', error);
-    throw error;
-  }
-};
-
-// 创建库存流水（基于OrderItem）
-const createInventoryLog = async (orderItemId, quantityChange, type, relatedDocument, operator, transaction) => {
-  try {
-    // 创建库存流水记录
-    await InventoryLog.create({
-      orderItemId,
-      changeQuantity: quantityChange,
-      type,
-      relatedDocument,
-      operator
-    }, { transaction });
-  } catch (error) {
-    logger.error('创建库存流水失败:', error);
-    throw error;
-  }
-};
 
 // 创建出库单
 exports.createOutboundOrder = async (req, res, next) => {
@@ -75,118 +14,29 @@ exports.createOutboundOrder = async (req, res, next) => {
   try {
     const { type, remark, operator, items, orderDate } = req.body;
     
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return next(new AppError('出库商品明细不能为空', 400));
-    }
-
-    // 生成出库单号
-    const orderNo = generateOutboundOrderNo();
-
-    // 计算总数量和总金额
-    let totalQuantity = 0;
-    let totalAmount = 0;
-    
-    for (const item of items) {
-      totalQuantity += item.quantity || 0;
-      totalAmount += (item.quantity || 0) * (item.unitPrice || 0);
-    }
-
-    // 验证库存是否足够
-    for (const item of items) {
-      if (item.quantity > 0) {
-        const inventory = await Inventory.findOne({
-          where: { productId: item.productId },
-          transaction
-        });
-        
-        if (!inventory) {
-          await transaction.rollback();
-          return next(new AppError(`商品ID ${item.productId} 的库存记录不存在`, 400));
-        }
-        
-        if (inventory.quantity < item.quantity) {
-          await transaction.rollback();
-          return next(new AppError(`商品ID ${item.productId} 库存不足，当前库存：${inventory.quantity}，需要出库：${item.quantity}`, 400));
-        }
-      }
-    }
-
-    // 创建出库单
-    const order = await OutboundOrder.create({
-      orderNo,
+    // 使用出库单服务创建出库单
+    const result = await createOutboundOrderService({
       type,
-      totalAmount,
-      totalQuantity,
       operator,
       remark,
-      orderDate: orderDate ? new Date(orderDate) : new Date()
-    }, { transaction });
-
-    // 创建商品明细
-    const orderItems = items.map(item => ({
-      orderType: OrderItemType.OUTBOUND,
-      orderId: order.id,
-      productId: item.productId,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice || 0,
-      totalPrice: (item.quantity || 0) * (item.unitPrice || 0),
-      unit: item.unit
-    }));
-
-    const createdOrderItems = await OrderItem.bulkCreate(orderItems, { transaction });
-
-    // 更新库存数量并创建库存流水
-    const updatedInventories = [];
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const orderItem = createdOrderItems[i];
-      
-      if (item.quantity > 0) {
-        // 更新库存
-        const updatedInventory = await updateInventoryForOutbound(
-          item.productId,
-          -item.quantity, // 出库为负数
-          transaction
-        );
-        
-        // 创建库存流水
-        await createInventoryLog(
-          orderItem.id,
-          -item.quantity, // 出库为负数
-          '出库',
-          orderNo,
-          operator,
-          transaction
-        );
-        
-        updatedInventories.push({
-          inventory: updatedInventory,
-          productId: item.productId
-        });
-      }
-    }
+      items,
+      orderDate,
+      enableStockAlert: true
+    }, transaction);
 
     await transaction.commit();
 
     // 检查库存预警（在事务提交后）
-    try {
-      for (const { inventory, productId } of updatedInventories) {
-        const product = await Product.findByPk(productId);
-        if (product && product.stockAlertQuantity > 0 && inventory.quantity < product.stockAlertQuantity) {
-          await MessageService.createInventoryAlert(inventory, product, operator, orderNo);
-        }
-      }
-    } catch (alertError) {
-      logger.error('创建库存预警消息失败:', alertError);
-      // 预警消息创建失败不影响主流程
+    if (result.enableStockAlert && result.updatedInventories && result.updatedInventories.length > 0) {
+      await checkStockAlertAndCreateMessage(result.updatedInventories, operator, result.order.orderNo);
     }
 
     res.status(201).json({
       status: 'success',
       message: '出库单创建成功，库存已更新',
       data: {
-        ...order.dataValues,
-        items: orderItems
+        ...result.order.dataValues,
+        items: result.items
       }
     });
   } catch (error) {
@@ -318,32 +168,8 @@ exports.deleteOutboundOrder = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   
   try {
-    const order = await OutboundOrder.findByPk(req.params.id, {
-      include: [{
-        model: OrderItem,
-        as: 'items'
-      }],
-      transaction
-    });
-    
-    if (!order) {
-      await transaction.rollback();
-      return next(new AppError('出库单不存在', 404));
-    }
-
-    // 撤销库存变更（恢复库存）
-    for (const item of order.items) {
-      if (item.quantity > 0) {
-        await updateInventory(
-          item.productId,
-          item.quantity, // 撤销出库，恢复库存，所以是正数
-          transaction
-        );
-      }
-    }
-
-    // 删除出库单（关联的OrderItem会通过CASCADE自动删除）
-    await order.destroy({ transaction });
+    // 使用出库单服务删除出库单
+    await deleteOutboundOrderService(req.params.id, transaction);
 
     await transaction.commit();
 
@@ -354,7 +180,7 @@ exports.deleteOutboundOrder = async (req, res, next) => {
   } catch (error) {
     await transaction.rollback();
     logger.error('删除出库单失败:', error);
-    next(new AppError('删除出库单失败', 500));
+    next(new AppError(error.message || '删除出库单失败', 500));
   }
 };
 
