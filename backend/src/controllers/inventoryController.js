@@ -1,5 +1,6 @@
 const Inventory = require('../models/Inventory');
 const InventoryLog = require('../models/InventoryLog');
+const { OrderItem } = require('../models/OrderItem');
 const Product = require('../models/Product');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
@@ -149,17 +150,21 @@ exports.getInventoryLogs = async (req, res, next) => {
     const limit = parseInt(pageSize);
     const offset = (parseInt(page) - 1) * limit;
 
-    // 构建查询配置 - InventoryLog 通过 Inventory 关联到 Product
+    // 构建查询配置 - InventoryLog 关联 OrderItem 和 Product
     const queryConfig = {
       where,
-      include: [{
-        model: Inventory,
-        required: true,
-        include: [{
-          model: Product,
-          required: true
-        }]
-      }],
+      include: [
+        {
+          model: OrderItem,
+          as: 'orderItem',
+          include: [
+            {
+              model: Product,
+              attributes: ['id', 'name', 'code', 'specification', 'unit']
+            }
+          ]
+        }
+      ],
       limit,
       offset,
       order: [['date', 'DESC']]

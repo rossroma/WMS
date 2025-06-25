@@ -11,18 +11,29 @@ const Category = require('./Category');
 const { PurchaseOrder, PurchaseOrderItem } = require('./PurchaseOrder');
 
 // Product ↔ Inventory: 一对一关系
-Product.hasOne(Inventory, { foreignKey: 'productId' });
-Inventory.belongsTo(Product, { foreignKey: 'productId' });
+Product.hasOne(Inventory, { 
+  foreignKey: 'productId',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+Inventory.belongsTo(Product, { 
+  foreignKey: 'productId',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
 
-// Inventory ↔ InventoryLog: 一对多关系
-Inventory.hasMany(InventoryLog, { foreignKey: 'inventoryId' });
-InventoryLog.belongsTo(Inventory, { foreignKey: 'inventoryId' });
-
-// Product ↔ InventoryLog: 通过Inventory的间接关系，用于查询
-InventoryLog.belongsTo(Product, { 
-  foreignKey: 'inventoryId',
-  through: Inventory,
-  as: 'ProductViaInventory'
+// InventoryLog ↔ OrderItem: 一对一关系（库存流水直接关联订单明细）
+InventoryLog.belongsTo(OrderItem, {
+  foreignKey: 'orderItemId',
+  as: 'orderItem',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+OrderItem.hasOne(InventoryLog, {
+  foreignKey: 'orderItemId',
+  as: 'inventoryLog',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 
 // 通用订单商品明细关联关系
@@ -31,28 +42,37 @@ Product.hasMany(OrderItem, { foreignKey: 'productId' });
 OrderItem.belongsTo(Product, { foreignKey: 'productId' });
 
 // 入库单多态关联
-// InboundOrder ↔ OrderItem: 一对多关系（通过orderType='INBOUND'筛选）
+// InboundOrder ↔ OrderItem: 一对多关系（通过orderType='INBOUND'筛选，级联删除）
 InboundOrder.hasMany(OrderItem, {
   foreignKey: 'orderId',
   scope: { orderType: OrderItemType.INBOUND },
-  as: 'items'
+  as: 'items',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 OrderItem.belongsTo(InboundOrder, {
   foreignKey: 'orderId',
   constraints: false,
-  scope: { orderType: OrderItemType.INBOUND }
+  scope: { orderType: OrderItemType.INBOUND },
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 
 // 出库单多态关联
-// OutboundOrder ↔ OrderItem: 一对多关系（通过orderType='OUTBOUND'筛选）
+// OutboundOrder ↔ OrderItem: 一对多关系（通过orderType='OUTBOUND'筛选，级联删除）
 OutboundOrder.hasMany(OrderItem, {
   foreignKey: 'orderId',
   scope: { orderType: OrderItemType.OUTBOUND },
-  as: 'items'
+  as: 'items',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 OrderItem.belongsTo(OutboundOrder, {
   foreignKey: 'orderId',
-  constraints: false
+  constraints: false,
+  scope: { orderType: OrderItemType.OUTBOUND },
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 
 // 其他现有关联关系
@@ -68,15 +88,19 @@ Category.hasMany(Product, { foreignKey: 'categoryId' });
 Category.belongsTo(Category, { as: 'ParentCategory', foreignKey: 'parentId' });
 Category.hasMany(Category, { as: 'SubCategories', foreignKey: 'parentId' });
 
-// 盘点单与盘点商品的一对多关系
+// 盘点单与盘点商品的一对多关系（级联删除）
 StocktakingOrder.hasMany(StocktakingItem, {
   foreignKey: 'stocktakingOrderId',
-  as: 'items'
+  as: 'items',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 
 StocktakingItem.belongsTo(StocktakingOrder, {
   foreignKey: 'stocktakingOrderId',
-  as: 'stocktakingOrder'
+  as: 'stocktakingOrder',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 
 // 盘点商品与商品的多对一关系
@@ -100,14 +124,18 @@ Supplier.hasMany(PurchaseOrder, {
   foreignKey: 'supplierId'
 });
 
-// PurchaseOrder ↔ PurchaseOrderItem: 一对多关系
+// PurchaseOrder ↔ PurchaseOrderItem: 一对多关系（级联删除）
 PurchaseOrder.hasMany(PurchaseOrderItem, {
   foreignKey: 'purchaseOrderId',
-  as: 'items'
+  as: 'items',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 PurchaseOrderItem.belongsTo(PurchaseOrder, {
   foreignKey: 'purchaseOrderId',
-  as: 'purchaseOrder'
+  as: 'purchaseOrder',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 
 // PurchaseOrderItem ↔ Product: 多对一关系

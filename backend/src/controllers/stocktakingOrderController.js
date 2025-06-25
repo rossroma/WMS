@@ -5,7 +5,7 @@ const { OutboundOrder, OutboundType } = require('../models/OutboundOrder');
 const { OrderItem, OrderItemType } = require('../models/OrderItem');
 const Product = require('../models/Product');
 const Inventory = require('../models/Inventory');
-const InventoryLog = require('../models/InventoryLog');
+
 const MessageService = require('../services/messageService');
 const User = require('../models/User');
 const { AppError } = require('../middleware/errorHandler');
@@ -14,46 +14,10 @@ const { Op } = require('sequelize');
 const { generateStocktakingOrderNo, generateInboundOrderNo, generateOutboundOrderNo } = require('../utils/orderUtils');
 const { createLog } = require('../services/logService');
 const { LOG_MODULE, LOG_ACTION_TYPE } = require('../constants/logConstants');
+const { updateInventory, createInventoryLog } = require('../services/inboundOrderService');
 const logger = require('../services/loggerService');
 
-// 更新库存数量并生成库存日志
-const updateInventoryAndLog = async (productId, quantityChange, type, relatedDocument, operator, transaction) => {
-  try {
-    // 查找或创建库存记录
-    let inventory = await Inventory.findOne({
-      where: { productId },
-      transaction
-    });
 
-    if (!inventory) {
-      // 如果库存记录不存在，创建新的库存记录
-      inventory = await Inventory.create({
-        productId,
-        quantity: Math.max(0, quantityChange) // 确保库存不为负数
-      }, { transaction });
-    } else {
-      // 更新现有库存
-      const newQuantity = Math.max(0, inventory.quantity + quantityChange);
-      await inventory.update({
-        quantity: newQuantity
-      }, { transaction });
-    }
-
-    // 创建库存流水记录
-    await InventoryLog.create({
-      inventoryId: inventory.id,
-      changeQuantity: quantityChange,
-      type,
-      relatedDocument,
-      operator
-    }, { transaction });
-
-    return inventory;
-  } catch (error) {
-    logger.error('更新库存失败:', error);
-    throw error;
-  }
-};
 
 // 获取盘点单列表
 exports.getStocktakingOrders = async (req, res, next) => {
@@ -255,12 +219,19 @@ exports.createStocktakingOrder = async (req, res, next) => {
           unit: item.product.unit
         }));
         
-        await OrderItem.bulkCreate(inboundItems, { transaction });
+        const createdInboundItems = await OrderItem.bulkCreate(inboundItems, { transaction });
         
-        // 更新库存
-        for (const item of profitItems) {
-          await updateInventoryAndLog(
-            item.productId,
+        // 更新库存并创建库存流水
+        for (let i = 0; i < profitItems.length; i++) {
+          const item = profitItems[i];
+          const orderItem = createdInboundItems[i];
+          
+          // 更新库存
+          await updateInventory(item.productId, item.quantity, transaction);
+          
+          // 创建库存流水
+          await createInventoryLog(
+            orderItem.id,
             item.quantity,
             '盘盈入库',
             inboundOrderNo,
@@ -309,12 +280,19 @@ exports.createStocktakingOrder = async (req, res, next) => {
           unit: item.product.unit
         }));
         
-        await OrderItem.bulkCreate(outboundItems, { transaction });
+        const createdOutboundItems = await OrderItem.bulkCreate(outboundItems, { transaction });
         
-        // 更新库存
-        for (const item of lossItems) {
-          await updateInventoryAndLog(
-            item.productId,
+        // 更新库存并创建库存流水
+        for (let i = 0; i < lossItems.length; i++) {
+          const item = lossItems[i];
+          const orderItem = createdOutboundItems[i];
+          
+          // 更新库存
+          await updateInventory(item.productId, -item.quantity, transaction);
+          
+          // 创建库存流水
+          await createInventoryLog(
+            orderItem.id,
             -item.quantity, // 出库为负数
             '盘亏出库',
             outboundOrderNo,

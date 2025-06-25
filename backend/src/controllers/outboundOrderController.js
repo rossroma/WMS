@@ -8,10 +8,11 @@ const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const { generateOutboundOrderNo } = require('../utils/orderUtils');
+const { updateInventory } = require('../services/inboundOrderService');
 const logger = require('../services/loggerService');
 
-// 更新库存数量并生成库存日志
-const updateInventoryAndLog = async (productId, quantityChange, type, relatedDocument, operator, transaction) => {
+// 更新库存数量（出库专用，包含库存检查）
+const updateInventoryForOutbound = async (productId, quantityChange, transaction) => {
   try {
     // 查找库存记录
     let inventory = await Inventory.findOne({
@@ -43,18 +44,26 @@ const updateInventoryAndLog = async (productId, quantityChange, type, relatedDoc
       }, { transaction });
     }
 
+    return inventory;
+  } catch (error) {
+    logger.error('更新库存失败:', error);
+    throw error;
+  }
+};
+
+// 创建库存流水（基于OrderItem）
+const createInventoryLog = async (orderItemId, quantityChange, type, relatedDocument, operator, transaction) => {
+  try {
     // 创建库存流水记录
     await InventoryLog.create({
-      inventoryId: inventory.id,
+      orderItemId,
       changeQuantity: quantityChange,
       type,
       relatedDocument,
       operator
     }, { transaction });
-
-    return inventory;
   } catch (error) {
-    logger.error('更新库存失败:', error);
+    logger.error('创建库存流水失败:', error);
     throw error;
   }
 };
@@ -124,20 +133,32 @@ exports.createOutboundOrder = async (req, res, next) => {
       unit: item.unit
     }));
 
-    await OrderItem.bulkCreate(orderItems, { transaction });
+    const createdOrderItems = await OrderItem.bulkCreate(orderItems, { transaction });
 
-    // 更新库存数量并生成库存流水
+    // 更新库存数量并创建库存流水
     const updatedInventories = [];
-    for (const item of items) {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const orderItem = createdOrderItems[i];
+      
       if (item.quantity > 0) {
-        const updatedInventory = await updateInventoryAndLog(
+        // 更新库存
+        const updatedInventory = await updateInventoryForOutbound(
           item.productId,
+          -item.quantity, // 出库为负数
+          transaction
+        );
+        
+        // 创建库存流水
+        await createInventoryLog(
+          orderItem.id,
           -item.quantity, // 出库为负数
           '出库',
           orderNo,
           operator,
           transaction
         );
+        
         updatedInventories.push({
           inventory: updatedInventory,
           productId: item.productId
@@ -313,27 +334,15 @@ exports.deleteOutboundOrder = async (req, res, next) => {
     // 撤销库存变更（恢复库存）
     for (const item of order.items) {
       if (item.quantity > 0) {
-        await updateInventoryAndLog(
+        await updateInventory(
           item.productId,
           item.quantity, // 撤销出库，恢复库存，所以是正数
-          '出库撤销',
-          order.orderNo,
-          order.operator,
           transaction
         );
       }
     }
 
-    // 删除商品明细
-    await OrderItem.destroy({
-      where: {
-        orderType: OrderItemType.OUTBOUND,
-        orderId: order.id
-      },
-      transaction
-    });
-
-    // 删除出库单
+    // 删除出库单（关联的OrderItem会通过CASCADE自动删除）
     await order.destroy({ transaction });
 
     await transaction.commit();

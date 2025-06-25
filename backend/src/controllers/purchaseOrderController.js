@@ -210,13 +210,7 @@ exports.deletePurchaseOrder = async (req, res, next) => {
       }
     }
 
-    // 删除采购订单明细
-    await PurchaseOrderItem.destroy({
-      where: { purchaseOrderId: id },
-      transaction
-    });
-
-    // 删除采购订单
+    // 删除采购订单（关联的PurchaseOrderItem会通过CASCADE自动删除）
     await purchaseOrder.destroy({ transaction });
 
     await transaction.commit();

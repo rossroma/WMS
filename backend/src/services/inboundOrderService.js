@@ -5,8 +5,8 @@ const InventoryLog = require('../models/InventoryLog');
 const { generateInboundOrderNo } = require('../utils/orderUtils');
 const logger = require('./loggerService');
 
-// 更新库存数量并生成库存日志
-const updateInventoryAndLog = async (productId, quantityChange, type, relatedDocument, operator, transaction) => {
+// 更新库存数量
+const updateInventory = async (productId, quantityChange, transaction) => {
   try {
     // 查找或创建库存记录
     let inventory = await Inventory.findOne({
@@ -28,18 +28,26 @@ const updateInventoryAndLog = async (productId, quantityChange, type, relatedDoc
       }, { transaction });
     }
 
+    return inventory;
+  } catch (error) {
+    logger.error('更新库存失败:', error);
+    throw error;
+  }
+};
+
+// 创建库存流水（基于OrderItem）
+const createInventoryLog = async (orderItemId, quantityChange, type, relatedDocument, operator, transaction) => {
+  try {
     // 创建库存流水记录
     await InventoryLog.create({
-      inventoryId: inventory.id,
+      orderItemId,
       changeQuantity: quantityChange,
       type,
       relatedDocument,
       operator
     }, { transaction });
-
-    return inventory;
   } catch (error) {
-    logger.error('更新库存失败:', error);
+    logger.error('创建库存流水失败:', error);
     throw error;
   }
 };
@@ -97,13 +105,20 @@ const createInboundOrderService = async (params, transaction) => {
     unit: item.unit
   }));
 
-  await OrderItem.bulkCreate(orderItems, { transaction });
+  const createdOrderItems = await OrderItem.bulkCreate(orderItems, { transaction });
 
-  // 更新库存数量并生成库存流水
-  for (const item of items) {
+  // 更新库存数量并创建库存流水
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const orderItem = createdOrderItems[i];
+    
     if (item.quantity > 0) {
-      await updateInventoryAndLog(
-        item.productId,
+      // 更新库存
+      await updateInventory(item.productId, item.quantity, transaction);
+      
+      // 创建库存流水
+      await createInventoryLog(
+        orderItem.id,
         item.quantity, // 入库为正数
         '入库',
         finalOrderNo,
@@ -141,27 +156,15 @@ const deleteInboundOrderService = async (inboundOrderId, transaction) => {
   // 撤销库存变更
   for (const item of order.items) {
     if (item.quantity > 0) {
-      await updateInventoryAndLog(
+      await updateInventory(
         item.productId,
         -item.quantity, // 撤销入库，所以是负数
-        '入库撤销',
-        order.orderNo,
-        order.operator,
         transaction
       );
     }
   }
 
-  // 删除商品明细
-  await OrderItem.destroy({
-    where: {
-      orderType: OrderItemType.INBOUND,
-      orderId: order.id
-    },
-    transaction
-  });
-
-  // 删除入库单
+  // 删除入库单（关联的OrderItem会通过CASCADE自动删除）
   await order.destroy({ transaction });
 
   return true;
@@ -170,5 +173,6 @@ const deleteInboundOrderService = async (inboundOrderId, transaction) => {
 module.exports = {
   createInboundOrderService,
   deleteInboundOrderService,
-  updateInventoryAndLog
+  updateInventory,
+  createInventoryLog
 }; 
