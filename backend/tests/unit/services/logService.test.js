@@ -5,7 +5,13 @@ jest.mock('../../../src/models/Log', () => ({
   create: jest.fn()
 }));
 
+// Mock logger service
+jest.mock('../../../src/services/loggerService', () => ({
+  error: jest.fn()
+}));
+
 const Log = require('../../../src/models/Log');
+const logger = require('../../../src/services/loggerService');
 
 describe('LogService', () => {
   beforeEach(() => {
@@ -76,16 +82,13 @@ describe('LogService', () => {
         module: 'AUTH'
       };
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       Log.create.mockRejectedValue(new Error('Database error'));
 
       // Act
       await createLog(logData);
 
       // Assert
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to create log:', expect.any(Error));
-      
-      consoleSpy.mockRestore();
+      expect(logger.error).toHaveBeenCalledWith('Failed to create log:', expect.any(Error));
     });
 
     it('应该处理缺少必要字段的情况', async () => {

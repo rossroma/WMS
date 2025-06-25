@@ -19,13 +19,13 @@ jest.mock('sequelize', () => {
     Sequelize: jest.fn(),
     DataTypes: {
       INTEGER: 'INTEGER',
-      STRING: 'STRING',
+      STRING: jest.fn((length) => `STRING(${length || ''})`),
       TEXT: 'TEXT',
       BOOLEAN: 'BOOLEAN',
       DATE: 'DATE',
       FLOAT: 'FLOAT',
-      DECIMAL: 'DECIMAL',
-      ENUM: 'ENUM',
+      DECIMAL: jest.fn((precision, scale) => `DECIMAL(${precision || ''},${scale || ''})`),
+      ENUM: jest.fn((...values) => `ENUM(${values.join(',')})`),
       NOW: 'NOW'
     },
     Op: {
@@ -49,10 +49,16 @@ jest.mock('sequelize', () => {
 
 // Mock数据库配置，避免在单元测试中连接真实数据库
 jest.mock('../src/config/database', () => {
+  const mockTransaction = {
+    commit: jest.fn().mockResolvedValue(true),
+    rollback: jest.fn().mockResolvedValue(true)
+  };
+  
   const mockSequelize = {
     authenticate: jest.fn().mockResolvedValue(true),
     sync: jest.fn().mockResolvedValue(true),
     close: jest.fn().mockResolvedValue(true),
+    transaction: jest.fn().mockResolvedValue(mockTransaction),
     define: jest.fn().mockReturnValue({
       init: jest.fn(),
       create: jest.fn(),
