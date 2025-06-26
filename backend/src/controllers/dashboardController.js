@@ -3,11 +3,11 @@ const sequelize = require('../config/database');
 const Product = require('../models/Product');
 const Inventory = require('../models/Inventory');
 const { InboundOrder } = require('../models/InboundOrder');
-const { OutboundOrder } = require('../models/OutboundOrder');
+const { OutboundOrder, OutboundType } = require('../models/OutboundOrder');
 const { StocktakingOrder } = require('../models/StocktakingOrder');
 const { AppError } = require('../middleware/errorHandler');
 const { StocktakingItem } = require('../models/StocktakingItem');
-const { OrderItem, OrderItemType } = require('../models/OrderItem');
+const { OrderItemType } = require('../models/OrderItem');
 const logger = require('../services/loggerService');
 
 // 获取综合dashboard数据
@@ -222,54 +222,42 @@ exports.getHotProducts = async (req, res, next) => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const topSoldProducts = await OrderItem.findAll({
-      attributes: [
-        'productId',
-        [sequelize.fn('SUM', sequelize.col('quantity')), 'totalSoldQuantity']
-      ],
-      include: [
-        {
-          model: OutboundOrder,
-          attributes: [], // 不需要出库单的任何字段，仅用于筛选
-          where: {
-            orderDate: { // 根据出库单的日期筛选
-              [Op.gte]: thirtyDaysAgo
-            }
-          },
-          required: true // 强制内连接，只找出库日期在范围内的订单明细
-        },
-        {
-          model: Product,
-          attributes: ['id', 'name', 'code', 'specification'],
-          required: true, // 确保只包含有对应商品信息的明细
-        }
-      ],
-      where: {
-        orderType: OrderItemType.OUTBOUND
+    const topSoldProducts = await sequelize.query(`
+      SELECT 
+        oi.product_id as productId,
+        SUM(oi.quantity) as totalSoldQuantity,
+        p.id as 'Product.id',
+        p.name as 'Product.name', 
+        p.code as 'Product.code',
+        p.specification as 'Product.specification'
+      FROM order_items oi
+      INNER JOIN outbound_orders ob ON oi.order_id = ob.id 
+        AND ob.order_date >= :thirtyDaysAgo 
+        AND ob.type = :saleType
+      INNER JOIN products p ON oi.product_id = p.id
+      WHERE oi.order_type = :outboundType
+      GROUP BY oi.product_id, p.id, p.name, p.code, p.specification
+      ORDER BY totalSoldQuantity DESC
+      LIMIT :limit
+    `, {
+      replacements: {
+        thirtyDaysAgo,
+        saleType: OutboundType.SALE,
+        outboundType: OrderItemType.OUTBOUND,
+        limit: parseInt(limit)
       },
-      group: [
-        'productId', 
-        'Product.id', // 所有包含在 SELECT 非聚合列和 include 中的模型的主键/属性都需要在 GROUP BY 中
-        'Product.name',
-        'Product.code',
-        'Product.specification',
-      ],
-      order: [[sequelize.literal('totalSoldQuantity'), 'DESC']],
-      limit: parseInt(limit),
-      raw: false, // 非常重要，当使用 include 和 group 时，为了正确映射嵌套对象，通常需要 raw: false
-      subQuery: false // 在某些复杂分组和聚合的场景下可能需要调整
+      type: sequelize.QueryTypes.SELECT
     });
 
     const result = topSoldProducts.map(item => {
-      const productData = item.Product; // 或者 item.get('Product') 如果是 Sequelize 实例
       return {
         product: {
-          id: productData.id,
-          name: productData.name,
-          code: productData.code,
-          specification: productData.specification,
+          id: item['Product.id'],
+          name: item['Product.name'],
+          code: item['Product.code'],
+          specification: item['Product.specification'],
         },
-        quantity: parseInt(item.get('totalSoldQuantity'), 10) // get() 用于获取聚合别名
+        quantity: parseInt(item.totalSoldQuantity, 10)
       };
     });
 

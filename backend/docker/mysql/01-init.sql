@@ -339,9 +339,9 @@ CREATE TABLE `logs` (
 
 -- 插入默认用户，密码：123456
 INSERT INTO `users` (`username`, `password`, `email`, `fullname`, `role`, `status`) VALUES
-('admin', '$2b$10$0wHElJAGLH1TqEMjDcFhF.Jc9u7vNkwZ7EYdT/FWW/4punOf8xlBi', 'admin@wms.com', '系统管理员', 'admin', 'active'),
-('manager', '$2b$10$0wHElJAGLH1TqEMjDcFhF.Jc9u7vNkwZ7EYdT/FWW/4punOf8xlBi', 'manager@wms.com', '仓库经理', 'manager', 'active'),
-('operator', '$2b$10$0wHElJAGLH1TqEMjDcFhF.Jc9u7vNkwZ7EYdT/FWW/4punOf8xlBi', 'operator@wms.com', '操作员', 'operator', 'active');
+('admin', '$2b$10$0wHElJAGLH1TqEMjDcFhF.Jc9u7vNkwZ7EYdT/FWW/4punOf8xlB.', 'admin@wms.com', '系统管理员', 'admin', 'active'),
+('manager', '$2b$10$0wHElJAGLH1TqEMjDcFhF.Jc9u7vNkwZ7EYdT/FWW/4punOf8xlB.', 'manager@wms.com', '仓库经理', 'manager', 'active'),
+('operator', '$2b$10$0wHElJAGLH1TqEMjDcFhF.Jc9u7vNkwZ7EYdT/FWW/4punOf8xlB.', 'operator@wms.com', '操作员', 'operator', 'active');
 
 -- 插入默认商品分类
 INSERT INTO `categories` (`name`, `parent_id`, `level`, `sort`) VALUES
