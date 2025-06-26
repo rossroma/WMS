@@ -141,7 +141,7 @@ exports.createStocktakingOrder = async (req, res, next) => {
         // 获取商品信息
         const product = await Product.findByPk(item.productId, { transaction });
         if (!product) {
-          throw new AppError(`商品ID ${item.productId} 不存在`, 400);
+          throw new AppError(`商品不存在 (ID: ${item.productId})`, 400);
         }
         
         // 获取当前库存数量

@@ -475,9 +475,8 @@ const handleSubmit = async() => {
     ElMessage.success(message)
     dialogVisible.value = false
     getList()
-  } catch (error) {
-    console.error('创建盘点单失败:', error)
-    ElMessage.error(error.message || '创建失败')
+  } catch {
+    // 错误已在request.js中统一处理
   }
   submitting.value = false
 }

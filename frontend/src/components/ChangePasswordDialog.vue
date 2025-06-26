@@ -112,7 +112,6 @@ const handleSubmit = async() => {
         visible.value = false 
       } catch (error) {
         console.error('密码修改失败:', error)
-        ElMessage.error(error.message || '密码修改失败，请重试。')
       } finally {
         loading.value = false
       }

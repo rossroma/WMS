@@ -84,7 +84,11 @@
             {{ formatDateOnly(scope.row.expectedArrivalDate) }}
           </template>
         </el-table-column>
-        <el-table-column prop="paymentMethod" label="支付方式" width="100" />
+        <el-table-column prop="paymentMethod" label="支付方式" width="100">
+          <template #default="scope">
+            {{ getPaymentMethodText(scope.row.paymentMethod) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="totalAmount" label="总金额" width="120">
           <template #default="scope">
             <span class="amount">¥{{ Number(scope.row.totalAmount || 0).toFixed(2) }}</span>
@@ -451,8 +455,6 @@ const fetchOrders = async() => {
     // 根据后端返回的数据结构调整
     orders.value = res.data.list || res.data.items || []
     total.value = res.data.total
-  } catch (error) {
-    ElMessage.error(error.message || '获取采购订单列表失败')
   } finally {
     loading.value = false
   }
@@ -463,8 +465,8 @@ const fetchSuppliers = async() => {
   try {
     const res = await getSupplierList()
     suppliers.value = res.data.list || res.data || []
-  } catch (error) {
-    ElMessage.error(error.message || '获取供应商列表失败')
+  } catch {
+    // 错误已在request.js中统一处理
   }
 }
 
@@ -479,6 +481,10 @@ const getStatusType = (status) => {
 
 const getStatusText = (status) => {
   return statusMap[status] || status
+}
+
+const getPaymentMethodText = (paymentMethod) => {
+  return PAYMENT_METHOD[paymentMethod] || paymentMethod || '未设置'
 }
 
 // 事件处理方法
@@ -533,10 +539,8 @@ const handleConfirm = async(order) => {
     const res = await confirmPurchaseOrder(order.id)
     ElMessage.success(`确认成功，已生成入库单：${res.data.inboundOrder.orderNo}`)
     fetchOrders()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '确认失败')
-    }
+  } catch {
+    // 错误已在request.js中统一处理
   }
 }
 
@@ -555,10 +559,8 @@ const handleDelete = async(order) => {
     await deletePurchaseOrder(order.id)
     ElMessage.success('删除成功')
     fetchOrders()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '删除失败')
-    }
+  } catch {
+    // 错误已在request.js中统一处理
   }
 }
 
@@ -607,7 +609,7 @@ const handleSubmit = async(formData) => {
     fetchOrders()
   } catch (error) {
     console.error('提交失败:', error)
-    ElMessage.error(error.message || '提交失败')
+    // 错误已在request.js中统一处理
   } finally {
     submitting.value = false
   }
