@@ -226,7 +226,7 @@ const checkStockAlertAndCreateMessage = async (updatedInventories, operator, ord
   try {
     for (const { inventory, productId } of updatedInventories) {
       const product = await Product.findByPk(productId);
-      if (product && product.stockAlertQuantity > 0 && inventory.quantity < product.stockAlertQuantity) {
+      if (product && product.stockAlertQuantity > 0 && inventory.quantity <= product.stockAlertQuantity) {
         await MessageService.createInventoryAlert(inventory, product, operator, orderNo);
       }
     }

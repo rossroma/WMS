@@ -46,7 +46,7 @@ exports.getDashboardData = async (req, res, next) => {
         }
       }]
     });
-    const stockWarning = warningProducts.filter(inv => inv.quantity < inv.Product.stockAlertQuantity).length;
+    const stockWarning = warningProducts.filter(inv => inv.quantity <= inv.Product.stockAlertQuantity).length;
 
     // 盘点准确率（最近30天）
     const thirtyDaysAgo = new Date();
@@ -143,7 +143,7 @@ exports.getWarningProducts = async (req, res, next) => {
     });
 
     const filteredProducts = warningProducts
-      .filter(inv => inv.quantity < inv.Product.stockAlertQuantity)
+      .filter(inv => inv.quantity <= inv.Product.stockAlertQuantity)
       .map(inv => ({
         id: inv.Product.id,
         name: inv.Product.name,
