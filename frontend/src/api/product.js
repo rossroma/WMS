@@ -35,6 +35,15 @@ export function updateProduct(id, data) {
   })
 }
 
+// 获取商品选择列表（包含库存信息）
+export function getProductsForSelect(params) {
+  return request({
+    url: '/products/select/list',
+    method: 'get',
+    params
+  })
+}
+
 // 删除商品
 export function deleteProduct(id) {
   return request({

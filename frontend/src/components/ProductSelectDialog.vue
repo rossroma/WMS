@@ -112,7 +112,7 @@
 <script setup>
 import { ref, reactive, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getInventoryList } from '@/api/inventory'
+import { getProductsForSelect } from '@/api/product'
 
 // Props
 const props = defineProps({
@@ -185,24 +185,13 @@ const fetchProductList = async() => {
     const params = {
       page: currentPage.value,
       pageSize: pageSize.value,
-      productName: searchForm.name, // 库存API使用productName参数搜索
+      productName: searchForm.name, // 商品名称搜索
       supplierId: props.supplierId // 添加供应商筛选参数
     }
     
-    const res = await getInventoryList(params)
-    // 处理库存API返回的数据结构，将Product信息提取出来并添加库存信息
-    productList.value = (res.data.list || []).map(inventory => ({
-      id: inventory.Product.id,
-      code: inventory.Product.code,
-      name: inventory.Product.name,
-      brand: inventory.Product.brand,
-      specification: inventory.Product.specification,
-      unit: inventory.Product.unit,
-      purchasePrice: inventory.Product.purchasePrice,
-      retailPrice: inventory.Product.retailPrice,
-      currentStock: inventory.quantity, // 从库存记录中获取当前库存
-      supplierId: inventory.Product.supplierId // 添加供应商ID信息
-    }))
+    const res = await getProductsForSelect(params)
+    // 新API直接返回处理好的商品数据，包含库存信息
+    productList.value = res.data.list || []
     total.value = res.data.total || 0
     
     // 如果有预选的商品ID，需要回显选中状态
