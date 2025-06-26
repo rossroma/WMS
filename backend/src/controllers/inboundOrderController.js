@@ -70,24 +70,43 @@ exports.getAllInboundOrders = async (req, res, next) => {
 
     const { count, rows } = await InboundOrder.findAndCountAll({
       where: whereClause,
-      include: [
-        {
-          model: require('../models/PurchaseOrder').PurchaseOrder,
-          as: 'relatedPurchaseOrder',
-          attributes: ['id', 'orderNo'],
-          required: false
-        },
-        {
-          model: require('../models/StocktakingOrder').StocktakingOrder,
-          as: 'relatedStocktakingOrder',
-          attributes: ['id', 'orderNo'],
-          required: false
-        }
-      ],
       order: [['createdAt', 'DESC']],
       offset,
       limit
     });
+
+    // 根据入库单类型分别加载关联关系
+    const { InboundType } = require('../models/InboundOrder');
+    const { PurchaseOrder } = require('../models/PurchaseOrder');
+    const { StocktakingOrder } = require('../models/StocktakingOrder');
+
+    for (const row of rows) {
+      if (row.relatedOrderId) {
+        if (row.type === InboundType.PURCHASE) {
+          // 采购入库：关联采购单
+          const purchaseOrder = await PurchaseOrder.findByPk(row.relatedOrderId, {
+            attributes: ['id', 'orderNo']
+          });
+          row.dataValues.relatedPurchaseOrder = purchaseOrder;
+          row.dataValues.relatedStocktakingOrder = null;
+        } else if (row.type === InboundType.STOCK_IN) {
+          // 盘盈入库：关联盘点单
+          const stocktakingOrder = await StocktakingOrder.findByPk(row.relatedOrderId, {
+            attributes: ['id', 'orderNo']
+          });
+          row.dataValues.relatedStocktakingOrder = stocktakingOrder;
+          row.dataValues.relatedPurchaseOrder = null;
+        } else {
+          // 其他类型：无关联
+          row.dataValues.relatedPurchaseOrder = null;
+          row.dataValues.relatedStocktakingOrder = null;
+        }
+      } else {
+        // 无关联订单
+        row.dataValues.relatedPurchaseOrder = null;
+        row.dataValues.relatedStocktakingOrder = null;
+      }
+    }
 
     res.status(200).json({
       status: 'success',
