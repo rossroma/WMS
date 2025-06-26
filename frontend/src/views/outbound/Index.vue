@@ -3,7 +3,7 @@
     <template #filter>
       <el-form :inline="true" :model="queryParams" class="filter-form">
         <el-form-item label="出库单号">
-          <el-input v-model="queryParams.orderNo" placeholder="请输入出库单号" clearable />
+          <el-input v-model="queryParams.orderNo" placeholder="请输入出库单号" />
         </el-form-item>
         <el-form-item label="出库类型">
           <el-select 

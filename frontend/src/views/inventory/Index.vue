@@ -3,7 +3,7 @@
     <template #filter>
       <el-form :inline="true" :model="queryParams" class="filter-form">
         <el-form-item label="商品名称">
-          <el-input v-model="queryParams.productName" placeholder="请输入商品名称" clearable />
+          <el-input v-model="queryParams.productName" placeholder="请输入商品名称" />
         </el-form-item>
         <el-form-item label="库存状态">
           <el-select 

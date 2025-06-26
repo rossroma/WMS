@@ -5,7 +5,8 @@
       <div class="logo">
         <!-- <img src="@/assets/logo.png" alt="logo"> -->
         <router-link to="/" class="logo-link">
-          <span>仓库管理系统</span>
+          <span v-if="!isCollapse">仓库管理系统</span>
+          <span v-else class="logo-short">WMS</span>
         </router-link>
       </div>
       <el-menu
@@ -182,11 +183,12 @@ const handleLogout = () => {
       height: 60px;
       display: flex;
       align-items: center;
-      padding: 0 16px;
+      padding: v-bind('isCollapse ? "0 8px" : "0 16px"');
       color: #fff;
       font-size: 18px;
       font-weight: bold;
       overflow: hidden;
+      justify-content: v-bind('isCollapse ? "center" : "flex-start"');
 
       img {
         width: 32px;
@@ -198,6 +200,10 @@ const handleLogout = () => {
         color: #fff;
         text-decoration: none;
         transition: opacity 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
         
         &:hover {
           opacity: 0.8;
@@ -205,6 +211,13 @@ const handleLogout = () => {
         
         span {
           cursor: pointer;
+          white-space: nowrap;
+        }
+        
+        .logo-short {
+          font-size: 16px;
+          font-weight: bold;
+          letter-spacing: 1px;
         }
       }
     }
