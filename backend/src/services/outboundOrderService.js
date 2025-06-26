@@ -201,12 +201,24 @@ const deleteOutboundOrderService = async (outboundOrderId, transaction) => {
     throw new Error('出库单不存在');
   }
 
-  // 撤销库存变更（恢复库存）
+  // 撤销库存变更（恢复库存）并创建对冲流水
   for (const item of order.items) {
     if (item.quantity > 0) {
-      await updateInventory(
+      // 恢复库存
+      const inventory = await updateInventory(
         item.productId,
         item.quantity, // 撤销出库，恢复库存，所以是正数
+        transaction
+      );
+      
+      // 创建对冲库存流水记录
+      await createInventoryLog(
+        inventory.id,     // 库存ID
+        item.id,          // 原订单明细ID（用于追溯）
+        item.quantity,    // 对冲：出库撤销为正数
+        '出库撤销',        // 操作类型
+        `撤销-${order.orderNo}`, // 相关单据
+        order.operator,   // 操作员（使用原出库单的操作员）
         transaction
       );
     }

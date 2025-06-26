@@ -157,12 +157,24 @@ const deleteInboundOrderService = async (inboundOrderId, transaction) => {
     throw new Error('入库单不存在');
   }
 
-  // 撤销库存变更
+  // 撤销库存变更并创建对冲流水
   for (const item of order.items) {
     if (item.quantity > 0) {
-      await updateInventory(
+      // 减少库存
+      const inventory = await updateInventory(
         item.productId,
         -item.quantity, // 撤销入库，所以是负数
+        transaction
+      );
+      
+      // 创建对冲库存流水记录
+      await createInventoryLog(
+        inventory.id,     // 库存ID
+        item.id,          // 原订单明细ID（用于追溯）
+        -item.quantity,   // 对冲：入库撤销为负数
+        '入库撤销',        // 操作类型
+        `撤销-${order.orderNo}`, // 相关单据
+        order.operator,   // 操作员（使用原入库单的操作员）
         transaction
       );
     }

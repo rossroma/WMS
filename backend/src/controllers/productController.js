@@ -254,24 +254,19 @@ exports.deleteProduct = async (req, res, next) => {
       return next(new AppError('商品不存在', 404));
     }
     
-    // 检查是否存在出入库记录
-    const { OrderItem } = require('../models/OrderItem');
+    // 检查是否存在采购订单明细（不能删除已有采购记录的商品）
     const { PurchaseOrderItem } = require('../models/PurchaseOrder');
-    
-    // 检查出入库单明细
-    const orderItemCount = await OrderItem.count({
-      where: { productId: req.params.id }
-    });
     
     // 检查采购订单明细
     const purchaseOrderItemCount = await PurchaseOrderItem.count({
       where: { productId: req.params.id }
     });
     
-    if (orderItemCount > 0 || purchaseOrderItemCount > 0) {
-      return next(new AppError('该商品存在出入库记录，不允许删除', 400));
+    if (purchaseOrderItemCount > 0) {
+      return next(new AppError('该商品存在采购记录，不允许删除', 400));
     }
     
+    // 删除商品（会级联删除库存和库存流水）
     await product.destroy();
     res.status(200).json({
       status: 'success',
