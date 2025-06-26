@@ -8,7 +8,13 @@ const logger = require('../services/loggerService');
 // 创建商品
 exports.createProduct = async (req, res, next) => {
   try {
-    const product = await Product.create(req.body);
+    // 自动设置创建人为当前登录用户
+    const productData = {
+      ...req.body,
+      createdBy: req.user ? req.user.username : 'system'
+    };
+    
+    const product = await Product.create(productData);
     res.status(201).json({
       status: 'success',
       message: '商品创建成功',
