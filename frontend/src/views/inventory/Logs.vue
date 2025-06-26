@@ -65,14 +65,14 @@
         style="width: 100%"
       >
         <el-table-column type="index" width="50" />
-        <el-table-column prop="Inventory.Product.name" label="商品名称" min-width="150">
+        <el-table-column prop="inventory.Product.name" label="商品名称" min-width="150">
           <template #default="{ row }">
-            {{ row.Inventory?.Product?.name || '-' }}
+            {{ row.inventory?.Product?.name || '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="Inventory.Product.code" label="商品编码" min-width="120">
+        <el-table-column prop="inventory.Product.code" label="商品编码" min-width="120">
           <template #default="{ row }">
-            {{ row.Inventory?.Product?.code || '-' }}
+            {{ row.inventory?.Product?.code || '-' }}
           </template>
         </el-table-column>
         <el-table-column prop="type" label="操作类型" width="100">

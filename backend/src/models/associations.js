@@ -22,18 +22,29 @@ Inventory.belongsTo(Product, {
   onUpdate: 'CASCADE'
 });
 
-// InventoryLog ↔ OrderItem: 一对一关系（库存流水直接关联订单明细）
+// Inventory ↔ InventoryLog: 一对多关系（库存流水关联到库存表）
+Inventory.hasMany(InventoryLog, {
+  foreignKey: 'inventoryId',
+  as: 'logs',
+  onDelete: 'CASCADE',  // 从 Inventory 删除时级联删除 InventoryLog
+  onUpdate: 'CASCADE'
+});
+InventoryLog.belongsTo(Inventory, {
+  foreignKey: 'inventoryId',
+  as: 'inventory'
+  // 不在 belongsTo 端设置级联删除，因为级联删除应该从父表到子表
+});
+
+// InventoryLog ↔ OrderItem: 多对一关系（可选，用于追溯业务来源）
 InventoryLog.belongsTo(OrderItem, {
   foreignKey: 'orderItemId',
   as: 'orderItem',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
+  constraints: false  // 设为可选关联，不强制约束
 });
-OrderItem.hasOne(InventoryLog, {
+OrderItem.hasMany(InventoryLog, {
   foreignKey: 'orderItemId',
-  as: 'inventoryLog',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
+  as: 'inventoryLogs',
+  constraints: false  // 设为可选关联，不强制约束
 });
 
 // 通用订单商品明细关联关系
@@ -52,10 +63,9 @@ InboundOrder.hasMany(OrderItem, {
 });
 OrderItem.belongsTo(InboundOrder, {
   foreignKey: 'orderId',
-  constraints: false,
-  scope: { orderType: OrderItemType.INBOUND },
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
+  constraints: false,  // 多态关联需要禁用约束，但不影响 Sequelize 层面的级联删除
+  scope: { orderType: OrderItemType.INBOUND }
+  // 在多态关联中，级联删除主要由 hasMany 端控制
 });
 
 // 出库单多态关联
@@ -69,10 +79,9 @@ OutboundOrder.hasMany(OrderItem, {
 });
 OrderItem.belongsTo(OutboundOrder, {
   foreignKey: 'orderId',
-  constraints: false,
-  scope: { orderType: OrderItemType.OUTBOUND },
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
+  constraints: false,  // 多态关联需要禁用约束，但不影响 Sequelize 层面的级联删除
+  scope: { orderType: OrderItemType.OUTBOUND }
+  // 在多态关联中，级联删除主要由 hasMany 端控制
 });
 
 // 其他现有关联关系

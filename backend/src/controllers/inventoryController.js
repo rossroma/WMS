@@ -150,17 +150,29 @@ exports.getInventoryLogs = async (req, res, next) => {
     const limit = parseInt(pageSize);
     const offset = (parseInt(page) - 1) * limit;
 
-    // 构建查询配置 - InventoryLog 关联 OrderItem 和 Product
+    // 构建查询配置 - InventoryLog 关联 Inventory 和 Product
     const queryConfig = {
       where,
       include: [
         {
-          model: OrderItem,
-          as: 'orderItem',
+          model: Inventory,
+          as: 'inventory',
           include: [
             {
               model: Product,
-              attributes: ['id', 'name', 'code', 'specification', 'unit']
+              attributes: ['id', 'name', 'code', 'specification', 'unit'],
+              where: productName ? { name: { [Op.like]: `%${productName}%` } } : undefined
+            }
+          ]
+        },
+        {
+          model: OrderItem,
+          as: 'orderItem',
+          required: false,  // 左连接，因为orderItem是可选的
+          include: [
+            {
+              model: Product,
+              attributes: ['id', 'name', 'code']
             }
           ]
         }
@@ -169,13 +181,6 @@ exports.getInventoryLogs = async (req, res, next) => {
       offset,
       order: [['date', 'DESC']]
     };
-
-    // 如果有商品名称搜索条件，添加到嵌套的 Product include 中
-    if (productName) {
-      queryConfig.include[0].include[0].where = {
-        name: { [Op.like]: `%${productName}%` }
-      };
-    }
 
     // 查询库存流水列表和总数
     const { count, rows } = await InventoryLog.findAndCountAll(queryConfig);

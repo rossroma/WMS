@@ -2,10 +2,15 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const InventoryLog = sequelize.define('InventoryLog', {
-  orderItemId: {
+  inventoryId: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    comment: '订单明细ID，建立与OrderItem的一对一关联'
+    comment: '库存ID，建立与Inventory的多对一关联'
+  },
+  orderItemId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,  // 改为可空，保持向后兼容
+    comment: '订单明细ID（可选，用于追溯业务来源）'
   },
   changeQuantity: {
     type: DataTypes.INTEGER,

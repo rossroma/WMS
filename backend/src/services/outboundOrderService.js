@@ -48,12 +48,13 @@ const updateInventoryForOutbound = async (productId, quantityChange, transaction
   }
 };
 
-// 创建库存流水（基于OrderItem）
-const createInventoryLog = async (orderItemId, quantityChange, type, relatedDocument, operator, transaction) => {
+// 创建库存流水（关联到库存表）
+const createInventoryLog = async (inventoryId, orderItemId, quantityChange, type, relatedDocument, operator, transaction) => {
   try {
     // 创建库存流水记录
     await InventoryLog.create({
-      orderItemId,
+      inventoryId,
+      orderItemId, // 可选，用于追溯业务来源
       changeQuantity: quantityChange,
       type,
       relatedDocument,
@@ -157,8 +158,9 @@ const createOutboundOrderService = async (params, transaction) => {
       
       // 创建库存流水
       await createInventoryLog(
-        orderItem.id,
-        -item.quantity, // 出库为负数
+        updatedInventory.id, // 库存ID
+        orderItem.id,        // 订单明细ID（用于追溯）
+        -item.quantity,      // 出库为负数
         '出库',
         finalOrderNo,
         operator,
