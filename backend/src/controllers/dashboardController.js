@@ -70,6 +70,7 @@ exports.getDashboardData = async (req, res, next) => {
       let accurateOrderCount = 0;
       for (const order of stocktakingOrders) {
         if (order.items && order.items.length > 0) {
+          // 检查该订单的所有盘点项是否都准确
           const allItemsAccurate = order.items.every(item => 
             item.actualQuantity !== null && item.actualQuantity === item.systemQuantity
           );
@@ -80,6 +81,7 @@ exports.getDashboardData = async (req, res, next) => {
       }
       const relevantOrderCount = stocktakingOrders.filter(o => o.items && o.items.length > 0).length;
       if (relevantOrderCount > 0) {
+        // 准确率 = (准确订单数 / 有效订单数) * 100，保留1位小数
          stocktakingAccuracy = ((accurateOrderCount / relevantOrderCount) * 100).toFixed(1);
       } else {
         stocktakingAccuracy = 100;
